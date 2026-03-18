@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -40,6 +42,7 @@ public class FootballMatch {
     @Column(name = "start_half")
     private LocalDateTime startHalf;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
-    private String status = "NOT_SCHEDULED";
+    private FootballMatchStatus status = FootballMatchStatus.NOT_SCHEDULED;
 }

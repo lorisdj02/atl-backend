@@ -1,7 +1,7 @@
-﻿package com.atl.backend.service;
+package com.atl.backend.service;
 
-import com.atl.backend.model.User;
-import com.atl.backend.repository.UserRepository;
+import com.atl.backend.model.Account;
+import com.atl.backend.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,17 +9,17 @@ import java.util.List;
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserService(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<Account> getAllUsers() {
+        return accountRepository.findAll();
     }
     
-    public User getUserById(Integer id) {
-        return userRepository.findById(id).orElse(null);
+    public Account getUserById(Integer id) {
+        return accountRepository.findById(id).orElse(null);
     }
 }

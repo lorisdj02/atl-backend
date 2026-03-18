@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -20,8 +22,9 @@ public class FootballMatchEvent {
     @Column(name = "player_id")
     private Integer playerId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
-    private String type;
+    private FootballEventType type;
 
     @Column(nullable = false)
     private Short minute;

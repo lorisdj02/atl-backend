@@ -1,9 +1,9 @@
 package com.atl.backend.repository;
 
-import com.atl.backend.model.User;
+import com.atl.backend.model.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Integer> {
+public interface AccountRepository extends JpaRepository<Account, Integer> {
 }

@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -44,8 +46,9 @@ public class Team {
     @Column(name = "rank_pts", nullable = false)
     private Integer rankPts = 0;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "sport_category", nullable = false, length = 15)
-    private String sportCategory;
+    private SportCategory sportCategory;
 
     private Boolean vip = false;
 }

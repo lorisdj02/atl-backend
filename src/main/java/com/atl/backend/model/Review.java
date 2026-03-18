@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -16,29 +18,32 @@ public class Review {
     @Column(name = "tournament_id", nullable = false)
     private Integer tournamentId;
 
-    @Column(name = "reviewer_user_id", nullable = false)
-    private Integer reviewerUserId;
+    @Column(name = "reviewer_account_id", nullable = false)
+    private Integer reviewerAccountId;
 
-    @Column(name = "reviewed_user_id", nullable = false)
-    private Integer reviewedUserId;
+    @Column(name = "reviewed_account_id", nullable = false)
+    private Integer reviewedAccountId;
 
     @Column(length = 255)
     private String comment;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 3, scale = 2)
     private BigDecimal rating;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 3, scale = 2)
     private BigDecimal weight = new BigDecimal("0.5");
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "review_type", nullable = false, length = 31)
-    private String reviewType;
+    private ReviewType reviewType;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
-    private String status = "WAITING";
+    private ReviewStatus status = ReviewStatus.WAITING;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "sport_category", nullable = false, length = 15)
-    private String sportCategory;
+    private SportCategory sportCategory;
 
     @Column(name = "linked_transaction_id")
     private Integer linkedTransactionId;

@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -29,9 +31,11 @@ public class Match {
     @Column(name = "finish_match")
     private LocalDateTime finishMatch;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "coordinator_status", nullable = false)
-    private String coordinatorStatus = "ASSIGNED";
+    private PresenceStatus coordinatorStatus = PresenceStatus.ASSIGNED;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "sport_category", nullable = false, length = 15)
-    private String sportCategory;
+    private SportCategory sportCategory;
 }

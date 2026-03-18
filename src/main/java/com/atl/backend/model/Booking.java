@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -18,11 +20,13 @@ public class Booking {
     @Column(name = "cancel_description", length = 255)
     private String cancelDescription;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
-    private String status = "BOOKED";
+    private BookingStatus status = BookingStatus.BOOKED;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "sport_category", nullable = false, length = 15)
-    private String sportCategory;
+    private SportCategory sportCategory;
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;

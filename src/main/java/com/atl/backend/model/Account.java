@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -7,8 +9,8 @@ import java.time.LocalDate;
 
 @Data
 @Entity
-@Table(name = "\"user\"")
-public class User {
+@Table(name = "account")
+public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -36,8 +38,9 @@ public class User {
 
     private Boolean vip = false;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "vip_type", length = 15)
-    private String vipType = "NONE";
+    private VipType vipType = VipType.NONE;
 
     @Column(name = "vip_start")
     private LocalDate vipStart;
@@ -45,11 +48,13 @@ public class User {
     @Column(name = "vip_end")
     private LocalDate vipEnd;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
-    private String role;
+    private AccountRole role;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 15)
-    private String status = "ACTIVE";
+    private AccountStatus status = AccountStatus.ACTIVE;
 
     @Column(name = "preferred_city_id")
     private Integer preferredCityId;

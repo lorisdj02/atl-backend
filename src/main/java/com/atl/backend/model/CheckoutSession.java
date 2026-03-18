@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -13,14 +15,16 @@ public class CheckoutSession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "user_id")
-    private Integer userId;
+    @Column(name = "account_id")
+    private Integer accountId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
-    private String type;
+    private CheckoutType type;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
-    private String status;
+    private CheckoutStatus status;
 
     @Column(nullable = false, columnDefinition = "jsonb")
     private String payload;

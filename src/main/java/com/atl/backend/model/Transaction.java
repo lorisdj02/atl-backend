@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -13,17 +15,20 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    @Column(name = "account_id", nullable = false)
+    private Integer accountId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
-    private String source;
+    private TransactionSource source;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
-    private String status = "PENDING";
+    private TransactionStatus status = TransactionStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
-    private String type;
+    private TransactionType type;
 
     @Column(nullable = false)
     private BigDecimal amount;
@@ -44,8 +49,9 @@ public class Transaction {
     @Column(name = "idempotency_key", length = 255)
     private String idempotencyKey;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "pending_reason", length = 31)
-    private String pendingReason;
+    private TransactionPendingReason pendingReason;
 
     @Column(name = "group_id", nullable = false)
     private Integer groupId;

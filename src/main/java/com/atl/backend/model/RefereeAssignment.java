@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -6,15 +8,14 @@ import java.math.BigDecimal;
 
 @Data
 @Entity
+@IdClass(RefereeAssignmentId.class)
 @Table(name = "referee_assignment")
 public class RefereeAssignment {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
     @Column(name = "match_id", nullable = false)
     private Integer matchId;
 
+    @Id
     @Column(name = "referee_id", nullable = false)
     private Integer refereeId;
 
@@ -24,6 +25,7 @@ public class RefereeAssignment {
     @Column(nullable = false)
     private BigDecimal pay;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
-    private String status = "ASSIGNED";
+    private PresenceStatus status = PresenceStatus.ASSIGNED;
 }

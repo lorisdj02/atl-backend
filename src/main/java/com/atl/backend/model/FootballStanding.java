@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -16,8 +18,8 @@ public class FootballStanding {
     @Column(name = "team_id")
     private Integer teamId;
 
-    @Column(name = "\"group\"")
-    private String group = "NA";
+    @Column(name = "group_name")
+    private String groupName = "NA";
 
     @Column(nullable = false)
     private Short won = 0;

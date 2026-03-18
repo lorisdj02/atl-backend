@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -16,6 +18,7 @@ public class Palmares {
     @Column(name = "team_id", nullable = false)
     private Integer teamId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
-    private String position = "GROUP_STAGE";
+    private PalmaresEnum position = PalmaresEnum.GROUP_STAGE;
 }

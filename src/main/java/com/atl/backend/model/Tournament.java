@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -25,7 +27,7 @@ public class Tournament {
     @Column(name = "sport_id", nullable = false)
     private Integer sportId;
 
-    @Column(nullable = false)
+    @Column(name = "\"public\"", nullable = false)
     private Boolean isPublic = true;
 
     @Column(nullable = false)
@@ -64,11 +66,13 @@ public class Tournament {
     @Column(nullable = false, length = 511)
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
-    private String status = "CREATED";
+    private TournamentStatus status = TournamentStatus.CREATED;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
-    private String phase = "GROUP_STAGE";
+    private TournamentPhase phase = TournamentPhase.GROUP;
 
     @Column(name = "paid_teams", nullable = false)
     private Short paidTeams = 0;

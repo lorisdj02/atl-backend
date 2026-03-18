@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -12,8 +14,8 @@ public class Coordinator {
     @Column(name = "coordinator_id")
     private Integer coordinatorId;
 
-    @Column(name = "user_id", unique = true, nullable = false)
-    private Integer userId;
+    @Column(name = "account_id", unique = true, nullable = false)
+    private Integer accountId;
 
     @Column(nullable = false)
     private Short level = 1;

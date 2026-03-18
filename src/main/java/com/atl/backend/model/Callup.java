@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -14,12 +16,11 @@ public class Callup {
     private Integer tournamentId;
 
     @Id
-    @Column(name = "team_id")
-    private Integer teamId;
-
-    @Id
     @Column(name = "player_id")
     private Integer playerId;
+
+    @Column(name = "team_id")
+    private Integer teamId;
 
     @Column(name = "prizeToRedeem")
     private BigDecimal prizeToRedeem;

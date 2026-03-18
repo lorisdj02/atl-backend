@@ -1,6 +1,6 @@
-﻿package com.atl.backend.controller;
+package com.atl.backend.controller;
 
-import com.atl.backend.model.User;
+import com.atl.backend.model.Account;
 import com.atl.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,13 +21,13 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<Account>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Integer id) {
-        User user = userService.getUserById(id);
-        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+    public ResponseEntity<Account> getUserById(@PathVariable Integer id) {
+        Account account = userService.getUserById(id);
+        return account != null ? ResponseEntity.ok(account) : ResponseEntity.notFound().build();
     }
 }

@@ -1,4 +1,6 @@
-﻿package com.atl.backend.model;
+package com.atl.backend.model;
+
+import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -12,8 +14,8 @@ public class Organization {
     @Column(name = "organization_id")
     private Integer organizationId;
 
-    @Column(name = "user_id", unique = true, nullable = false)
-    private Integer userId;
+    @Column(name = "account_id", unique = true, nullable = false)
+    private Integer accountId;
 
     @Column(name = "org_name", nullable = false)
     private String orgName;
