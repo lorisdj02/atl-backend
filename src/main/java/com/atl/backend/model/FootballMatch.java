@@ -13,11 +13,28 @@ public class FootballMatch {
     @Id
     private Integer id;
 
-    @Column(name = "home_team_id")
-    private Integer homeTeamId;
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id", insertable = false, updatable = false)
+    private Match match;
 
-    @Column(name = "away_team_id")
-    private Integer awayTeamId;
+    /*
+     * @Column(name = "home_team_id")
+     * private Integer homeTeamId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "home_team_id")
+    private Team homeTeam;
+
+    /*
+     * @Column(name = "away_team_id")
+     * private Integer awayTeamId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "away_team_id")
+    private Team awayTeam;
 
     @Column(name = "score_home")
     private Short scoreHome;
@@ -37,6 +54,7 @@ public class FootballMatch {
     @Column(name = "missed_penalty_away")
     private Short missedPenaltyAway;
 
+    @Column(name = "halftime")
     private LocalDateTime halftime;
 
     @Column(name = "start_half")

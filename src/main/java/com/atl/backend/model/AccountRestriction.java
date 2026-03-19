@@ -15,17 +15,23 @@ public class AccountRestriction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "account_id", nullable = false)
-    private Integer accountId;
+    /*
+     * @Column(name = "account_id", nullable = false)
+     * private Integer accountId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
     private RestrictionType type;
 
-    @Column(name = "validFrom", nullable = false)
+    @Column(name = "valid_from", nullable = false)
     private LocalDate validFrom;
 
-    @Column(name = "validTo")
+    @Column(name = "valid_to")
     private LocalDate validTo;
 
     @Column(name = "created_at", nullable = false)

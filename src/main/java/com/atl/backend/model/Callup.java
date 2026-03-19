@@ -1,7 +1,5 @@
 package com.atl.backend.model;
 
-import com.atl.backend.model.enums.*;
-
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -15,12 +13,28 @@ public class Callup {
     @Column(name = "tournament_id")
     private Integer tournamentId;
 
+    @MapsId("tournamentId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_id", nullable = false, insertable = false, updatable = false)
+    private Tournament tournament;
+
     @Id
     @Column(name = "player_id")
     private Integer playerId;
 
-    @Column(name = "team_id")
-    private Integer teamId;
+    @MapsId("playerId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", nullable = false, insertable = false, updatable = false)
+    private Player player;
+
+    /*
+     * @Column(name = "team_id")
+     * private Integer teamId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id", nullable = true)
+    private Team team;
 
     @Column(name = "prizeToRedeem")
     private BigDecimal prizeToRedeem;

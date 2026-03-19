@@ -1,7 +1,5 @@
 package com.atl.backend.model;
 
-import com.atl.backend.model.enums.*;
-
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -13,9 +11,21 @@ public class FailedTournamentParticipation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tournament_id")
-    private Integer tournamentId;
+    /*
+     * @Column(name = "tournament_id")
+     * private Integer tournamentId;
+     */
 
-    @Column(name = "team_id")
-    private Integer teamId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_id", nullable = false)
+    private Tournament tournament;
+
+    /*
+     * @Column(name = "team_id")
+     * private Integer teamId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id", nullable = false)
+    private Team team;
 }

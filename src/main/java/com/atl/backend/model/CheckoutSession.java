@@ -15,8 +15,14 @@ public class CheckoutSession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "account_id")
-    private Integer accountId;
+    /*
+     * @Column(name = "account_id")
+     * private Integer accountId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)

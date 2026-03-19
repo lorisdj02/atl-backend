@@ -10,11 +10,12 @@ import lombok.Data;
 @Table(name = "friend_invite")
 public class FriendInvite {
     @Id
-    private Integer invited;
+    @Column(name = "invited_account_id")
+    private Integer invitedAccountId;
 
-    @Column(nullable = false)
-    private Integer inviter;
+    @Column(name = "inviter_account_id", nullable = false)
+    private Integer inviterAccountId;
 
-    @Column(nullable = false)
+    @Column(name = "redeemed", nullable = false)
     private Boolean redeemed = false;
 }

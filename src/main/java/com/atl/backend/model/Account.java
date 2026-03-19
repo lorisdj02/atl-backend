@@ -56,8 +56,14 @@ public class Account {
     @Column(length = 15)
     private AccountStatus status = AccountStatus.ACTIVE;
 
-    @Column(name = "preferred_city_id")
-    private Integer preferredCityId;
+    /*
+     * @Column(name = "preferred_city_id")
+     * private Integer preferredCityId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "preferred_city_id")
+    private City preferredCity;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

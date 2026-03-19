@@ -14,8 +14,14 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "field_id", nullable = false)
-    private Integer fieldId;
+    /*
+     * @Column(name = "field_id", nullable = false)
+     * private Integer fieldId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "field_id", nullable = false)
+    private Field field;
 
     @Column(name = "cancel_description", length = 255)
     private String cancelDescription;

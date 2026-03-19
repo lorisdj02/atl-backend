@@ -14,8 +14,14 @@ public class Organization {
     @Column(name = "organization_id")
     private Integer organizationId;
 
+    /*
     @Column(name = "account_id", unique = true, nullable = false)
     private Integer accountId;
+     */
+
+    @OneToOne
+    @JoinColumn(name = "account_id", unique = true, nullable = false)
+    private Account account;
 
     @Column(name = "org_name", nullable = false)
     private String orgName;

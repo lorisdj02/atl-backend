@@ -1,7 +1,5 @@
 package com.atl.backend.model;
 
-import com.atl.backend.model.enums.*;
-
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalTime;
@@ -15,11 +13,23 @@ public class Field {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "organization_id", nullable = false)
-    private Integer organizationId;
+    /*
+     * @Column(name = "organization_id", nullable = false)
+     * private Integer organizationId;
+     */
 
-    @Column(name = "city_id", nullable = false)
-    private Integer cityId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
+
+    /*
+     * @Column(name = "city_id", nullable = false)
+     * private Integer cityId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "city_id", nullable = false)
+    private City city;
 
     @Column(length = 31)
     private String name;

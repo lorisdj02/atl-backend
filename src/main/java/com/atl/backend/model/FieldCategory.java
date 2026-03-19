@@ -14,6 +14,11 @@ public class FieldCategory {
     @Column(name = "field_id", nullable = false)
     private Integer fieldId;
 
+    @MapsId("fieldId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "field_id", nullable = false, insertable = false, updatable = false)
+    private Field field;
+
     @Id
     @Enumerated(EnumType.STRING)
     @Column(name = "sport_category", nullable = false, length = 15)
