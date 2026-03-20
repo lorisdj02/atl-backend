@@ -16,7 +16,6 @@ public class GrowthStep {
     @Column(nullable = false, length = 15)
     private GrowthStepType type;
 
-    @Id
     @Column(nullable = false, length = 31)
     private String title;
 

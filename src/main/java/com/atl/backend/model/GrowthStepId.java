@@ -8,6 +8,5 @@ import java.io.Serializable;
 @Data
 public class GrowthStepId implements Serializable {
     private GrowthStepType type;
-    private String title;
     private Short level;
 }

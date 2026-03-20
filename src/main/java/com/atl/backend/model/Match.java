@@ -14,10 +14,23 @@ public class Match {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tournament_id", nullable = false)
-    private Integer tournamentId;
+    /*
+     * @Column(name = "tournament_id", nullable = false)
+     * private Integer tournamentId;
+     */
 
-    private Integer motm;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_id", nullable = false)
+    private Tournament tournament;
+
+    /*
+     * @Column(name = "motm_player_id")
+     * private Integer motmPlayerId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "motm_player_id")
+    private Player motmPlayer;
 
     @Column(name = "group_name", length = 3)
     private String groupName;
@@ -38,4 +51,17 @@ public class Match {
     @Enumerated(EnumType.STRING)
     @Column(name = "sport_category", nullable = false, length = 15)
     private SportCategory sportCategory;
+
+    /*
+     * @Column(name = "final_stage_bracket_id")
+     * private Integer finalStageBracketId;
+     */
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "final_stage_bracket_id")
+    private FinalStageBracket finalStageBracket;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "leg", length = 15)
+    private LegOrderType leg;
 }

@@ -1,7 +1,5 @@
 package com.atl.backend.model;
 
-import com.atl.backend.model.enums.*;
-
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -14,6 +12,11 @@ public class RefereeRole {
     @Id
     @Column(name = "sport_id", nullable = false)
     private Integer sportId;
+
+    @MapsId("sportId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sport_id", nullable = false, insertable = false, updatable = false)
+    private Sport sport;
 
     @Id
     @Column(nullable = false, length = 15)

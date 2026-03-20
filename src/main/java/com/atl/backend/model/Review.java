@@ -15,14 +15,32 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tournament_id", nullable = false)
-    private Integer tournamentId;
+    /*
+     * @Column(name = "tournament_id", nullable = false)
+     * private Integer tournamentId;
+     */
 
-    @Column(name = "reviewer_account_id", nullable = false)
-    private Integer reviewerAccountId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_id", nullable = false)
+    private Tournament tournament;
 
-    @Column(name = "reviewed_account_id", nullable = false)
-    private Integer reviewedAccountId;
+    /*
+     * @Column(name = "reviewer_account_id", nullable = false)
+     * private Integer reviewerAccountId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewer_account_id", nullable = false)
+    private Account reviewerAccount;
+
+    /*
+     * @Column(name = "reviewed_account_id", nullable = false)
+     * private Integer reviewedAccountId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_account_id", nullable = false)
+    private Account reviewedAccount;
 
     @Column(length = 255)
     private String comment;
@@ -45,8 +63,14 @@ public class Review {
     @Column(name = "sport_category", nullable = false, length = 15)
     private SportCategory sportCategory;
 
-    @Column(name = "linked_transaction_id")
-    private Integer linkedTransactionId;
+    /*
+     * @Column(name = "linked_transaction_id")
+     * private Integer linkedTransactionId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "linked_transaction_id")
+    private Transaction linkedTransaction;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

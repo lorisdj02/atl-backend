@@ -1,7 +1,5 @@
 package com.atl.backend.model;
 
-import com.atl.backend.model.enums.*;
-
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -12,8 +10,19 @@ public class PrivateBooking {
     @Id
     private Integer id;
 
-    @Column(name = "player_id", nullable = false)
-    private Integer playerId;
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id", insertable = false, updatable = false)
+    private Booking booking;
+
+    /*
+     * @Column(name = "player_id", nullable = false)
+     * private Integer playerId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", nullable = false)
+    private Player player;
 
     @Column(nullable = false)
     private java.math.BigDecimal cost;

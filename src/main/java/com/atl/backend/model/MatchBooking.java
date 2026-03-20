@@ -1,7 +1,5 @@
 package com.atl.backend.model;
 
-import com.atl.backend.model.enums.*;
-
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -12,9 +10,21 @@ public class MatchBooking {
     @Id
     private Integer id;
 
-    @Column(name = "coordinator_id", nullable = false)
-    private Integer coordinatorId;
+    /*
+     * @Column(name = "coordinator_id", nullable = false)
+     * private Integer coordinatorId;
+     */
 
-    @Column(name = "match_id", nullable = false)
-    private Integer matchId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coordinator_id", nullable = false)
+    private Player coordinator;
+
+    /*
+     * @Column(name = "match_id", nullable = false)
+     * private Integer matchId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "match_id", nullable = false)
+    private Match match;
 }

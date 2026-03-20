@@ -27,15 +27,16 @@ public class Account {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false, length = 15)
+    @Column(name = "phone", unique = true, nullable = false, length = 15)
     private String phone;
 
-    @Column(nullable = false, length = 31)
+    @Column(name = "name", nullable = false, length = 31)
     private String name;
 
-    @Column(nullable = false, length = 31)
+    @Column(name = "surname", nullable = false, length = 31)
     private String surname;
 
+    @Column(name = "vip", nullable = false)
     private Boolean vip = false;
 
     @Enumerated(EnumType.STRING)
@@ -49,11 +50,11 @@ public class Account {
     private LocalDate vipEnd;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15)
+    @Column(name = "role", nullable = false, length = 15)
     private AccountRole role;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 15)
+    @Column(name = "status", nullable = false, length = 15)
     private AccountStatus status = AccountStatus.ACTIVE;
 
     /*

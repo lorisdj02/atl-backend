@@ -1,7 +1,5 @@
 package com.atl.backend.model;
 
-import com.atl.backend.model.enums.*;
-
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -14,8 +12,14 @@ public class Referee {
     @Column(name = "referee_id")
     private Integer refereeId;
 
-    @Column(name = "account_id", unique = true, nullable = false)
-    private Integer accountId;
+    /*
+     * @Column(name = "account_id", unique = true, nullable = false)
+     * private Integer accountId;
+     */
+
+    @OneToOne
+    @JoinColumn(name = "account_id", unique = true, nullable = false)
+    private Account account;
 
     @Column(nullable = false)
     private Short level = 1;

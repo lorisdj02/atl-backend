@@ -27,7 +27,7 @@ public class Booking {
     private String cancelDescription;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15)
+    @Column(name = "status", nullable = false, length = 15)
     private BookingStatus status = BookingStatus.BOOKED;
 
     @Enumerated(EnumType.STRING)

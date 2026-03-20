@@ -15,8 +15,14 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "account_id", nullable = false)
-    private Integer accountId;
+    /*
+     * @Column(name = "account_id", nullable = false)
+     * private Integer accountId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
@@ -53,14 +59,26 @@ public class Transaction {
     @Column(name = "pending_reason", length = 31)
     private TransactionPendingReason pendingReason;
 
-    @Column(name = "group_id", nullable = false)
-    private Integer groupId;
+    /*
+     * @Column(name = "transaction_group_id", nullable = false)
+     * private Integer transactionGroupId;
+     */
 
-    @Column(name = "related_transaction_id")
-    private Integer relatedTransactionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_group_id", nullable = false)
+    private TransactionGroup transactionGroup;
+
+    /*
+     * @Column(name = "related_transaction_id")
+     * private Integer relatedTransactionId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "related_transaction_id")
+    private Transaction relatedTransaction;
 
     @Column(nullable = false)
-    private Boolean refundable;
+    private Boolean refundable = true;
 
     @Column(nullable = false)
     private Boolean visible = true;

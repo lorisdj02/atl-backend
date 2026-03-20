@@ -1,7 +1,6 @@
 package com.atl.backend.model;
 
-import com.atl.backend.model.enums.*;
-
+import java.math.BigDecimal;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -12,8 +11,19 @@ public class LobbyBooking {
     @Id
     private Integer id;
 
-    @Column(name = "owner_player_id", nullable = false)
-    private Integer ownerPlayerId;
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id", insertable = false, updatable = false)
+    private Booking booking;
+
+    /*
+     * @Column(name = "owner_player_id", nullable = false)
+     * private Integer ownerPlayerId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_player_id", nullable = false)
+    private Player ownerPlayer;
 
     @Column(name = "players_to_find", nullable = false)
     private Short playersToFind;
@@ -22,5 +32,5 @@ public class LobbyBooking {
     private Short totalPlayers;
 
     @Column(name = "fee_per_player", nullable = false)
-    private java.math.BigDecimal feePerPlayer;
+    private BigDecimal feePerPlayer;
 }

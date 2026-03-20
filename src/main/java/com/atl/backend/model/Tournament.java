@@ -15,17 +15,41 @@ public class Tournament {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "coordinator_id", nullable = false)
-    private Integer coordinatorId;
+    /*
+     * @Column(name = "coordinator_id", nullable = false)
+     * private Integer coordinatorId;
+     */
 
-    @Column(name = "field_id", nullable = false)
-    private Integer fieldId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coordinator_id", nullable = false)
+    private Account coordinator;
 
-    @Column(name = "city_id", nullable = false)
-    private Integer cityId;
+    /*
+     * @Column(name = "field_id", nullable = false)
+     * private Integer fieldId;
+     */
 
-    @Column(name = "sport_id", nullable = false)
-    private Integer sportId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "field_id", nullable = false)
+    private Field field;
+
+    /*
+     * @Column(name = "city_id", nullable = false)
+     * private Integer cityId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "city_id", nullable = false)
+    private City city;
+
+    /*
+     * @Column(name = "sport_id", nullable = false)
+     * private Integer sportId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sport_id", nullable = false)
+    private Sport sport;
 
     @Column(name = "\"public\"", nullable = false)
     private Boolean isPublic = true;

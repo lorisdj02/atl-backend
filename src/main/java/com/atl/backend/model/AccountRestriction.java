@@ -25,7 +25,7 @@ public class AccountRestriction {
     private Account account;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 31)
+    @Column(name = "type", nullable = false, length = 31)
     private RestrictionType type;
 
     @Column(name = "valid_from", nullable = false)

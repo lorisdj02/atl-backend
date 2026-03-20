@@ -16,9 +16,19 @@ public class RefereeLicense {
     @Column(name = "sport_id", nullable = false)
     private Integer sportId;
 
+    @MapsId("sportId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sport_id", nullable = false, insertable = false, updatable = false)
+    private Sport sport;
+
     @Id
     @Column(name = "referee_id", nullable = false)
     private Integer refereeId;
+
+    @MapsId("refereeId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "referee_id", nullable = false, insertable = false, updatable = false)
+    private Referee referee;
 
     @Column(name = "photo_url", length = 255)
     private String photoUrl;

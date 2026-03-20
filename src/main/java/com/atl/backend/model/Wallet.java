@@ -1,7 +1,5 @@
 package com.atl.backend.model;
 
-import com.atl.backend.model.enums.*;
-
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -15,8 +13,14 @@ public class Wallet {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "account_id", unique = true, nullable = false)
-    private Integer accountId;
+    /*
+     * @Column(name = "account_id", unique = true, nullable = false)
+     * private Integer accountId;
+     */
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", unique = true, nullable = false)
+    private Account account;
 
     @Column(name = "prize_balance", nullable = false)
     private BigDecimal prizeBalance = BigDecimal.ZERO;

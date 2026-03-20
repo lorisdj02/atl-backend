@@ -1,7 +1,5 @@
 package com.atl.backend.model;
 
-import com.atl.backend.model.enums.*;
-
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -14,9 +12,19 @@ public class FootballTeamStat {
     @Column(name = "player_id", nullable = false)
     private Integer playerId;
 
+    @MapsId("playerId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", nullable = false, insertable = false, updatable = false)
+    private Player player;
+
     @Id
     @Column(name = "team_id", nullable = false)
     private Integer teamId;
+
+    @MapsId("teamId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id", nullable = false, insertable = false, updatable = false)
+    private Team team;
 
     @Column(nullable = false)
     private Integer goals = 0;

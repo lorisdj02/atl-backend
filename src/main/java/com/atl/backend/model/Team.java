@@ -7,23 +7,50 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "team")
+@Table(name = "team", uniqueConstraints = { @UniqueConstraint(columnNames = { "captain_player_id", "sport_category" }),
+        @UniqueConstraint(columnNames = { "vice1_player_id", "sport_category" }),
+        @UniqueConstraint(columnNames = { "vice2_player_id", "sport_category" }),
+        @UniqueConstraint(columnNames = { "name", "sport_category" }) })
 public class Team {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "city_id")
-    private Integer cityId;
+    /*
+     * @Column(name = "city_id")
+     * private Integer cityId;
+     */
 
-    @Column(name = "captain_id", nullable = false)
-    private Integer captainId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "city_id")
+    private City city;
 
-    @Column(name = "vice1_id")
-    private Integer vice1Id;
+    /*
+     * @Column(name = "captain_player_id")
+     * private Integer captainPlayerId;
+     */
 
-    @Column(name = "vice2_id")
-    private Integer vice2Id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "captain_player_id", nullable = false)
+    private Player captainPlayer;
+
+    /*
+     * @Column(name = "vice1_player_id")
+     * private Integer vice1PlayerId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vice1_player_id")
+    private Player vice1Player;
+
+    /*
+     * @Column(name = "vice2_player_id")
+     * private Integer vice2PlayerId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vice2_player_id")
+    private Player vice2Player;
 
     @Column(name = "logo_url")
     private String logoUrl;
@@ -50,5 +77,6 @@ public class Team {
     @Column(name = "sport_category", nullable = false, length = 15)
     private SportCategory sportCategory;
 
+    @Column(name = "vip", nullable = false)
     private Boolean vip = false;
 }
