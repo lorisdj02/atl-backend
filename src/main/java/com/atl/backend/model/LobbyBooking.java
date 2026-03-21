@@ -33,4 +33,8 @@ public class LobbyBooking {
 
     @Column(name = "fee_per_player", nullable = false)
     private BigDecimal feePerPlayer;
+
+    public int getCurrentPlayers() {
+        return totalPlayers - playersToFind;
+    }
 }

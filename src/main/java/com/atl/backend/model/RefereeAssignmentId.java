@@ -5,6 +5,6 @@ import java.io.Serializable;
 
 @Data
 public class RefereeAssignmentId implements Serializable {
-    private Integer matchId;
-    private Integer refereeId;
+    private Integer match;
+    private Integer referee;
 }

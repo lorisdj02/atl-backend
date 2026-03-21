@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "sports")
+@Table(name = "sport")
 public class Sport {
     @Id
     private Integer id;
@@ -20,17 +20,17 @@ public class Sport {
     private SportCategory sportCategory;
 
     @Column(name = "min_players_per_team", nullable = false)
-    private Integer minPlayersPerTeam;
+    private Short minPlayersPerTeam;
 
     @Column(name = "max_players_per_team", nullable = false)
-    private Integer maxPlayersPerTeam;
+    private Short maxPlayersPerTeam;
 
     @Column(name = "minutes_per_round", nullable = false)
-    private Integer minutesPerRound;
+    private Short minutesPerRound;
 
     @Column(name = "minutes_per_pause", nullable = false)
-    private Integer minutesPerPause;
+    private Short minutesPerPause;
 
     @Column(name = "min_referee", nullable = false)
-    private Integer minReferee;
+    private Short minReferee;
 }

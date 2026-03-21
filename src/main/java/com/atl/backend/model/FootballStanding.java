@@ -8,26 +8,22 @@ import lombok.Data;
 @IdClass(FootballStandingId.class)
 @Table(name = "football_standing")
 public class FootballStanding {
-    @Id
-    @Column(name = "tournament_id")
-    private Integer tournamentId;
 
-    @MapsId("tournamentId")
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tournament_id", insertable = false, updatable = false)
+    @JoinColumn(name = "tournament_id")
     private Tournament tournament;
 
     @Id
-    @Column(name = "team_id")
-    private Integer teamId;
-
-    @MapsId("teamId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "team_id", insertable = false, updatable = false)
+    @JoinColumn(name = "team_id")
     private Team team;
 
     @Column(name = "group_name", length = 3)
-    private String groupName = "NA";
+    private String groupName;
+
+    @Column(nullable = false)
+    private Short pts = 0;
 
     @Column(nullable = false)
     private Short won = 0;
@@ -45,8 +41,12 @@ public class FootballStanding {
     private Short goalsConceded = 0;
 
     @Column(name = "rank_pos", nullable = false)
-    private Short rankPos;
+    private Short rankPos = 1;
 
     @Column(nullable = false)
-    private Boolean qualified;
+    private Boolean qualified = false;
+
+    public Short getGoalDifference() {
+        return (short) (goalsScored - goalsConceded);
+    }
 }

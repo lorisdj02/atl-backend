@@ -8,21 +8,14 @@ import lombok.Data;
 @IdClass(FavoriteTournamentId.class)
 @Table(name = "favorite_tournament")
 public class FavoriteTournament {
-    @Id
-    @Column(name = "account_id", nullable = false)
-    private Integer accountId;
 
-    @MapsId("accountId")
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
     @Id
-    @Column(name = "tournament_id", nullable = false)
-    private Integer tournamentId;
-
-    @MapsId("tournamentId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tournament_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "tournament_id", nullable = false)
     private Tournament tournament;
 }

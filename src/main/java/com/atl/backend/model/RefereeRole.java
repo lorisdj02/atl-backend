@@ -9,13 +9,10 @@ import java.math.BigDecimal;
 @IdClass(RefereeRoleId.class)
 @Table(name = "referee_role")
 public class RefereeRole {
-    @Id
-    @Column(name = "sport_id", nullable = false)
-    private Integer sportId;
 
-    @MapsId("sportId")
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sport_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "sport_id", nullable = false)
     private Sport sport;
 
     @Id

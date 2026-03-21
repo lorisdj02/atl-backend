@@ -13,21 +13,13 @@ import java.time.LocalDateTime;
 @Table(name = "referee_license")
 public class RefereeLicense {
     @Id
-    @Column(name = "sport_id", nullable = false)
-    private Integer sportId;
-
-    @MapsId("sportId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sport_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "sport_id", nullable = false)
     private Sport sport;
 
     @Id
-    @Column(name = "referee_id", nullable = false)
-    private Integer refereeId;
-
-    @MapsId("refereeId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "referee_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "referee_id", nullable = false)
     private Referee referee;
 
     @Column(name = "photo_url", length = 255)

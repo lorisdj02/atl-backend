@@ -62,6 +62,6 @@ public class Match {
     private FinalStageBracket finalStageBracket;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "leg", length = 15)
-    private LegOrderType leg;
+    @Column(name = "leg_order", length = 15)
+    private LegOrderType legOrder;
 }

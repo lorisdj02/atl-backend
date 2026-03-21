@@ -5,6 +5,6 @@ import java.io.Serializable;
 
 @Data
 public class CallupId implements Serializable {
-    private Integer tournamentId;
-    private Integer playerId;
+    private Integer tournament;
+    private Integer player;
 }

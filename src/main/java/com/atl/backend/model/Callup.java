@@ -9,22 +9,16 @@ import java.math.BigDecimal;
 @IdClass(CallupId.class)
 @Table(name = "callup")
 public class Callup {
-    @Id
-    @Column(name = "tournament_id")
-    private Integer tournamentId;
 
-    @MapsId("tournamentId")
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tournament_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "tournament_id", nullable = false)
     private Tournament tournament;
 
-    @Id
-    @Column(name = "player_id")
-    private Integer playerId;
 
-    @MapsId("playerId")
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
     /*

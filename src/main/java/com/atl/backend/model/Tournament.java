@@ -22,7 +22,7 @@ public class Tournament {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coordinator_id", nullable = false)
-    private Account coordinator;
+    private Coordinator coordinator;
 
     /*
      * @Column(name = "field_id", nullable = false)
@@ -81,8 +81,8 @@ public class Tournament {
     @Column(name = "round2_final_stage", nullable = false)
     private Boolean round2FinalStage = false;
 
-    @Column(name = "team_qualified", nullable = false)
-    private Short teamQualified = 4;
+    @Column(name = "num_teams_qualified", nullable = false)
+    private Short numTeamsQualified = 4;
 
     @Column(length = 31)
     private String name;
@@ -106,4 +106,7 @@ public class Tournament {
 
     @Column(name = "start_date")
     private LocalDate startDate;
+
+    @Column(name = "photo_url")
+    private String photoUrl;
 }

@@ -39,4 +39,8 @@ public class Booking {
 
     @Column(name = "finish_time", nullable = false)
     private LocalDateTime finishTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "booking_type", nullable = false, length = 15)
+    private BookingType bookingType;
 }

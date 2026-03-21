@@ -10,13 +10,10 @@ import lombok.Data;
 @IdClass(FieldCategoryId.class)
 @Table(name = "field_category")
 public class FieldCategory {
-    @Id
-    @Column(name = "field_id", nullable = false)
-    private Integer fieldId;
 
-    @MapsId("fieldId")
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "field_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "field_id", nullable = false)
     private Field field;
 
     @Id

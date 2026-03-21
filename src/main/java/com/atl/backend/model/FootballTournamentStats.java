@@ -9,21 +9,13 @@ import lombok.Data;
 @Table(name = "football_tournament_stats")
 public class FootballTournamentStats {
     @Id
-    @Column(name = "player_id", nullable = false)
-    private Integer playerId;
-
-    @MapsId("playerId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
     @Id
-    @Column(name = "tournament_id", nullable = false)
-    private Integer tournamentId;
-
-    @MapsId("tournamentId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tournament_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "tournament_id", nullable = false)
     private Tournament tournament;
 
     /*

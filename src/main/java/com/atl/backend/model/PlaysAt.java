@@ -11,22 +11,15 @@ import lombok.Data;
 @Table(name = "plays_at", uniqueConstraints = @UniqueConstraint(columnNames = { "player_id",
         "sport_category" }))
 public class PlaysAt {
-    @Id
-    @Column(name = "team_id", nullable = false)
-    private Integer teamId;
 
-    @MapsId("teamId")
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "team_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "team_id", nullable = false)
     private Team team;
 
     @Id
-    @Column(name = "player_id", nullable = false)
-    private Integer playerId;
-
-    @MapsId("playerId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
     @Enumerated(EnumType.STRING)

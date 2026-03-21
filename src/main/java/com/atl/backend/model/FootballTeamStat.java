@@ -9,7 +9,6 @@ import lombok.Data;
 @Table(name = "football_team_stat")
 public class FootballTeamStat {
     @Id
-    @Column(name = "player_id", nullable = false)
     private Integer playerId;
 
     @MapsId("playerId")
@@ -18,12 +17,11 @@ public class FootballTeamStat {
     private Player player;
 
     @Id
-    @Column(name = "team_id", nullable = false)
     private Integer teamId;
 
     @MapsId("teamId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "team_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "team_id", nullable = false)
     private Team team;
 
     @Column(nullable = false)

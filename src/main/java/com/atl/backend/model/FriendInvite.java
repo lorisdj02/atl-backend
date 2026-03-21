@@ -8,12 +8,11 @@ import lombok.Data;
 @Table(name = "friend_invite")
 public class FriendInvite {
     @Id
-    @Column(name = "invited_account_id")
     private Integer invitedAccountId;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invited_account_id", insertable = false, updatable = false)
+    @JoinColumn(name = "invited_account_id")
     private Account invitedAccount;
 
     /*
