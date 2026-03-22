@@ -10,6 +10,12 @@ public class MatchBooking {
     @Id
     private Integer id;
 
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id")
+    private Booking booking;
+
+
     /*
      * @Column(name = "coordinator_id", nullable = false)
      * private Integer coordinatorId;

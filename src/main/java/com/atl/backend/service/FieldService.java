@@ -69,4 +69,7 @@ public class FieldService {
         fieldRepository.deleteAll();
     }
 
+    public List<Field> getFieldsByOrganizationId(Integer organizationId) {
+        return fieldRepository.findByOrganization_OrganizationId(organizationId);
+    }
 }

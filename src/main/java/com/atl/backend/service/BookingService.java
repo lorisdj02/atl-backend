@@ -4,31 +4,37 @@ import org.springframework.stereotype.Service;
 
 import com.atl.backend.repository.BookingRepository;
 import com.atl.backend.repository.LobbyBookingRepository;
+import com.atl.backend.repository.MatchBookingRepository;
 import com.atl.backend.repository.PrivateBookingRepository;
 import com.atl.backend.repository.LobbyBookingParticipateRepository;
 
 import com.atl.backend.model.PrivateBooking;
 import com.atl.backend.model.enums.BookingStatus;
 import com.atl.backend.model.enums.TransactionStatus;
+import com.atl.backend.model.Booking;
 import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.model.LobbyBookingParticipate;
+import com.atl.backend.model.MatchBooking;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BookingService {
+    private final MatchBookingRepository matchBookingRepository;
     private final BookingRepository bookingRepository;
     private final LobbyBookingRepository lobbyBookingRepository;
     private final PrivateBookingRepository privateBookingRepository;
     private final LobbyBookingParticipateRepository lobbyBookingParticipateRepository;
 
     public BookingService(BookingRepository bookingRepository, LobbyBookingRepository lobbyBookingRepository,
-            PrivateBookingRepository privateBookingRepository,
+            PrivateBookingRepository privateBookingRepository, MatchBookingRepository matchBookingRepository,
             LobbyBookingParticipateRepository lobbyBookingParticipateRepository) {
         this.bookingRepository = bookingRepository;
         this.lobbyBookingRepository = lobbyBookingRepository;
         this.privateBookingRepository = privateBookingRepository;
         this.lobbyBookingParticipateRepository = lobbyBookingParticipateRepository;
+        this.matchBookingRepository = matchBookingRepository;
     }
 
     public List<PrivateBooking> getPrivateBookingsByPlayerId(Integer playerId) {
@@ -94,5 +100,33 @@ public class BookingService {
             return 0;
         }
         return participations.get(0).getPlayersPaid();
+    }
+
+    public List<LobbyBooking> getLobbyBookingsByFieldId(Integer fieldId) {
+        return lobbyBookingRepository.findByBooking_Field_Id(fieldId);
+    }
+
+    public List<PrivateBooking> getPrivateBookingsByFieldId(Integer fieldId) {
+        return privateBookingRepository.findByBooking_Field_Id(fieldId);
+    }
+
+    public List<MatchBooking> getMatchBookingsByFieldId(Integer fieldId) {
+        return matchBookingRepository.findByBooking_Field_Id(fieldId);
+    }
+
+    public List<Booking> getBookingsByFieldId(Integer fieldId) {
+        return bookingRepository.findByField_Id(fieldId);
+    }
+
+    public Optional<LobbyBooking> getLobbyBookingByBookingId(Integer bookingId) {
+        return lobbyBookingRepository.findById(bookingId);
+    }
+
+    public Optional<PrivateBooking> getPrivateBookingByBookingId(Integer bookingId) {
+        return privateBookingRepository.findById(bookingId);
+    }
+
+    public Optional<MatchBooking> getMatchBookingByBookingId(Integer bookingId) {
+        return matchBookingRepository.findById(bookingId);
     }
 }

@@ -9,4 +9,6 @@ import java.util.List;
 public interface PrivateBookingRepository extends JpaRepository<PrivateBooking, Integer> {
 
     List<PrivateBooking> findByPlayer_PlayerId(Integer playerId);
+    
+    List<PrivateBooking> findByBooking_Field_Id(Integer fieldId);
 }

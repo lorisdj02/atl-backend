@@ -8,4 +8,6 @@ import java.util.List;
 public interface LobbyBookingRepository extends JpaRepository<LobbyBooking, Integer> {
 
     List<LobbyBooking> findByOwnerPlayer_PlayerId(Integer ownerPlayerId);
+
+    List<LobbyBooking> findByBooking_Field_Id(Integer fieldId);
 }

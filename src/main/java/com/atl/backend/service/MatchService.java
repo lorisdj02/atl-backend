@@ -3,9 +3,11 @@ package com.atl.backend.service;
 import com.atl.backend.repository.FinalStageBracketRepository;
 import com.atl.backend.repository.FootballMatchRepository;
 import com.atl.backend.repository.MatchRepository;
+import com.atl.backend.repository.RefereeAssignmentRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.classfile.ClassFile.Option;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,6 +21,7 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.Match;
+import com.atl.backend.model.RefereeAssignment;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.enums.LegOrderType;
@@ -32,15 +35,18 @@ public class MatchService {
     private final MatchRepository matchRepository;
     private final TournamentService tournamentService;
     private final FinalStageBracketRepository finalStageBracketRepository;
+    private final RefereeAssignmentRepository refereeAssignmentRepository;
 
     public MatchService(FootballMatchRepository footballMatchRepository, MatchRepository matchRepository,
             TournamentService tournamentService, TeamService teamService,
-            FinalStageBracketRepository finalStageBracketRepository) {
+            FinalStageBracketRepository finalStageBracketRepository,
+            RefereeAssignmentRepository refereeAssignmentRepository) {
         this.footballMatchRepository = footballMatchRepository;
         this.matchRepository = matchRepository;
         this.tournamentService = tournamentService;
         this.teamService = teamService;
         this.finalStageBracketRepository = finalStageBracketRepository;
+        this.refereeAssignmentRepository = refereeAssignmentRepository;
     }
 
     public Integer calculateMatchesInTournament(Integer tournamentId) {
@@ -72,8 +78,8 @@ public class MatchService {
         return footballMatchRepository.findAll();
     }
 
-    public FootballMatch getFootballMatchById(Integer id) {
-        return footballMatchRepository.findById(id).orElse(null);
+    public Optional<FootballMatch> getFootballMatchById(Integer id) {
+        return footballMatchRepository.findById(id);
     }
 
     public FootballMatch saveFootballMatch(FootballMatch match) {
@@ -374,4 +380,36 @@ public class MatchService {
         footballMatchRepository.deleteAll();
         finalStageBracketRepository.deleteAll();
     }
+
+    public List<FootballMatch> getAssignedFootballMatchesByRefereeId(Integer refereeId) {
+        List<RefereeAssignment> refereeAssignments = refereeAssignmentRepository.findByReferee_RefereeId(refereeId);
+        List<FootballMatch> assignedFootballMatches = new ArrayList<>();
+        for (RefereeAssignment refereeAssignment : refereeAssignments) {
+            Match match = refereeAssignment.getMatch();
+            if (match.getSportCategory() == SportCategory.FOOTBALL) {
+                Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(match.getId());
+                footballMatchOptional.ifPresent(assignedFootballMatches::add);
+            }
+        }
+        return assignedFootballMatches;
+    }
+
+    public List<Team> getTeamsByMatchId(Integer matchId){
+        Optional<Match> matchOptional = matchRepository.findById(matchId);
+        if(matchOptional.isEmpty()) {
+            throw new IllegalArgumentException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        Match match = matchOptional.get();
+        if(match.getSportCategory() == SportCategory.FOOTBALL){
+            Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(matchId);
+            if(footballMatchOptional.isEmpty()) {
+                throw new IllegalArgumentException(ErrorsString.MATCH_NOT_FOUND);
+            }
+            FootballMatch footballMatch = footballMatchOptional.get();
+            return List.of(footballMatch.getHomeTeam(), footballMatch.getAwayTeam());
+        } else {
+            throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+    }
+
 }

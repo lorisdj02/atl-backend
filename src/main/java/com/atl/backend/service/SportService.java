@@ -6,11 +6,21 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.atl.backend.model.Sport;
+import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.repository.SportRepository;
 
 @Service
 public class SportService {
     final SportRepository sportRepository;
+
+    public Boolean isSupportedSportCategory(String sportCategory) {
+        try {
+            SportCategory.valueOf(sportCategory.toUpperCase());
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
 
     public SportService(SportRepository sportRepository) {
         this.sportRepository = sportRepository;

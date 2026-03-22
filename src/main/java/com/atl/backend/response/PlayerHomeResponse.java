@@ -1,10 +1,7 @@
 package com.atl.backend.response;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
 
-import java.util.Map;
+
 
 import com.atl.backend.dto.FootballMatchDTO;
 import com.atl.backend.dto.FootballStandingDTO;
@@ -13,7 +10,13 @@ import com.atl.backend.dto.PrivateBookingDTO;
 import com.atl.backend.dto.TeamDTO;
 import com.atl.backend.dto.FieldDTO;
 import com.atl.backend.dto.TournamentDTO;
+
 import com.atl.backend.config.ApiJsonKeys;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
 
 import lombok.Builder;
 import lombok.Data;

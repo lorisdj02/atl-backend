@@ -4,6 +4,13 @@ public class ApiJsonKeys {
 
     public static final String error = "error"; // String
 
+    // OrganizationHomeScreen
+    public static final String lobbyBookingsCache = "lobbyBookingsCache"; // Map<int, LobbyBooking>
+    // OrganizationHomeScreen
+    public static final String privateBookingsCache = "privateBookingsCache"; // Map<int, PrivateBooking>
+    // OrganizationHomeScreen
+    public static final String matchBookingsCache = "matchBookingsCache"; // Map<int, MatchBooking>
+
     // PlayerHomeScreen,
     public static final String bookings = "bookings"; // List<dynamic>
     // PlayerHomeScreen, CoordinatorHomeScreen

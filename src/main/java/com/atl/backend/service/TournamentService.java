@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.model.Callup;
+import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.FootballTournamentStats;
 import com.atl.backend.model.Player;
@@ -89,18 +90,16 @@ public class TournamentService {
     }
 
     public List<Tournament> getActiveTournaments() {
-        List<Tournament> tournaments = tournamentRepository.findAll();
-        return tournaments.stream()
-                .filter(t -> t.getStatus() != TournamentStatus.CANCELED && t.getStatus() != TournamentStatus.FINISHED
-                        && t.getStatus() != TournamentStatus.PENDING_PAYMENTS)
-                .toList();
+        return tournamentRepository.findActiveTournaments();
     }
 
     public List<Tournament> getActiveTournamentsBySportCategory(SportCategory sportCategory) {
-        List<Tournament> tournaments = getActiveTournaments().stream()
-                .filter(t -> t.getSport().getSportCategory() == sportCategory)
-                .toList();
-        return tournaments;
+        return tournamentRepository.findActiveTournamentsBySportCategory(sportCategory);
+    }
+
+    public List<Tournament> getActiveTournamentsByCoordinatorIdAndSportCategory(Integer coordinatorId,
+            SportCategory sportCategory) {
+        return tournamentRepository.findActiveTournamentsByCoordinatorIdAndSportCategory(coordinatorId, sportCategory);
     }
 
     public List<Tournament> getTournamentsByTeamId(Integer teamId) {
@@ -259,8 +258,9 @@ public class TournamentService {
                     List<Integer> teamIds = matchService.getTeamIdsByTournamentIdAndGroupStage(tournament.getId(),
                             groupName);
 
-                    System.out.println("[DEBUG - TournamentService] - Generating standings for tournament " + tournament.getId()
-                            + " and group " + groupName + " with teams " + teamIds);
+                    System.out.println(
+                            "[DEBUG - TournamentService] - Generating standings for tournament " + tournament.getId()
+                                    + " and group " + groupName + " with teams " + teamIds);
                     for (Integer teamId : teamIds) {
                         FootballStanding footballStanding = new FootballStanding();
                         footballStanding.setTournament(tournament);
@@ -328,12 +328,12 @@ public class TournamentService {
             case FOOTBALL:
                 for (int groupIndex = 1; groupIndex <= tournament.getNumGroups(); groupIndex++) {
                     String groupName = "" + (char) ('A' + groupIndex - 1);
-                    System.out.println("[DEBUG - TournamentService] - Evaluating qualification for tournament " + tournamentId
-                            + " and group " + groupName);
+                    System.out.println(
+                            "[DEBUG - TournamentService] - Evaluating qualification for tournament " + tournamentId
+                                    + " and group " + groupName);
 
                     List<FootballStanding> allFootballStadings = footballStandingRepository.findAll();
-                    System.out.println("[DEBUG - TournamentService] - All football standings: " + allFootballStadings
-                            );
+                    System.out.println("[DEBUG - TournamentService] - All football standings: " + allFootballStadings);
                     List<FootballStanding> footballStandings = footballStandingRepository
                             .findByTournament_IdAndGroupName(tournamentId, groupName);
 
@@ -389,7 +389,8 @@ public class TournamentService {
         Tournament tournament = tournamentOptional.get();
         switch (tournament.getSport().getSportCategory()) {
             case FOOTBALL:
-                List<FootballStanding> footballStandings = new ArrayList<>(footballStandingRepository.findByTournament_Id(tournamentId));
+                List<FootballStanding> footballStandings = new ArrayList<>(
+                        footballStandingRepository.findByTournament_Id(tournamentId));
                 footballStandings.sort(StandingsComparators.FOOTBALL_STANDING);
                 for (int i = 0; i < footballStandings.size(); i++) {
                     FootballStanding footballStanding = footballStandings.get(i);
