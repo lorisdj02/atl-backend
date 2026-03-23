@@ -5,13 +5,19 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.atl.backend.model.Referee;
+import com.atl.backend.model.RefereeRole;
 import com.atl.backend.model.Sport;
 import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.repository.RefereeLicenseRepository;
+import com.atl.backend.repository.RefereeRoleRepository;
 import com.atl.backend.repository.SportRepository;
 
 @Service
 public class SportService {
     final SportRepository sportRepository;
+    final RefereeLicenseRepository refereeLicenseRepository;
+    final RefereeRoleRepository refereeRoleRepository;
 
     public Boolean isSupportedSportCategory(String sportCategory) {
         try {
@@ -22,8 +28,11 @@ public class SportService {
         }
     }
 
-    public SportService(SportRepository sportRepository) {
+    public SportService(SportRepository sportRepository, RefereeLicenseRepository refereeLicenseRepository,
+            RefereeRoleRepository refereeRoleRepository) {
         this.sportRepository = sportRepository;
+        this.refereeLicenseRepository = refereeLicenseRepository;
+        this.refereeRoleRepository = refereeRoleRepository;
     }
 
     public void saveSport(com.atl.backend.model.Sport sport) {
@@ -44,5 +53,29 @@ public class SportService {
 
     public void deleteAllSports() {
         sportRepository.deleteAll();
+    }
+
+    public void saveRefereeRole(RefereeRole refereeRole) {
+        refereeRoleRepository.save(refereeRole);
+    }
+
+    public void deleteAllRefereeRoles() {
+        refereeRoleRepository.deleteAll();
+    }
+
+    public List<RefereeRole> getAllRefereeRoles() {
+        return refereeRoleRepository.findAll();
+    }
+
+    public List<Sport> getSportsBySportCategory(SportCategory sportCategory) {
+        return sportRepository.findBySportCategory(sportCategory);
+    }
+
+    public List<RefereeRole> getRefereeRolesBySportId(Integer sportId) {
+        return refereeRoleRepository.findBySport_Id(sportId);
+    }
+
+    public List<RefereeRole> getRefereeRolesBySportIdAndLevel(Integer sportId, Short level) {
+        return refereeRoleRepository.findBySport_IdAndLevel(sportId, level);
     }
 }

@@ -23,13 +23,16 @@ import com.atl.backend.model.City;
 import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.Field;
 import com.atl.backend.model.FieldCategory;
+import com.atl.backend.model.GrowthStep;
 import com.atl.backend.model.Organization;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.PlaysAt;
+import com.atl.backend.model.RefereeRole;
 import com.atl.backend.model.Sport;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.enums.AccountRole;
+import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TournamentPhase;
 import com.atl.backend.model.enums.TournamentStatus;
@@ -234,6 +237,254 @@ public class MockDbPopulate {
         System.out.println("[DEBUG] - Created 3 fields: Campo 1, Campo 2, Campo 3");
     }
 
+    public void createRefereeRoles(){
+        RefereeRole role1 = new RefereeRole();
+        role1.setSport(sportService.getSportById(1).get());
+        role1.setName("MAIN");
+        role1.setLevel((short) 1);
+        role1.setPayPerMatch(new BigDecimal(15));
+        sportService.saveRefereeRole(role1);
+
+        RefereeRole role2 = new RefereeRole();
+        role2.setSport(sportService.getSportById(1).get());
+        role2.setName("MAIN");
+        role2.setLevel((short) 2);
+        role2.setPayPerMatch(new BigDecimal(20));
+        sportService.saveRefereeRole(role2);
+
+        RefereeRole role3 = new RefereeRole();
+        role3.setSport(sportService.getSportById(1).get());
+        role3.setName("MAIN");
+        role3.setLevel((short) 3);
+        role3.setPayPerMatch(new BigDecimal(25));
+        sportService.saveRefereeRole(role3);
+
+        RefereeRole role4 = new RefereeRole();
+        role4.setSport(sportService.getSportById(1).get());
+        role4.setName("MAIN");
+        role4.setLevel((short) 4);
+        role4.setPayPerMatch(new BigDecimal(30));
+        sportService.saveRefereeRole(role4);
+
+        RefereeRole role5 = new RefereeRole();
+        role5.setSport(sportService.getSportById(2).get());
+        role5.setName("MAIN");
+        role5.setLevel((short) 1);
+        role5.setPayPerMatch(new BigDecimal(18));
+        sportService.saveRefereeRole(role5);
+
+        RefereeRole role6 = new RefereeRole();
+        role6.setSport(sportService.getSportById(2).get());
+        role6.setName("MAIN");
+        role6.setLevel((short) 2);
+        role6.setPayPerMatch(new BigDecimal(22));
+        sportService.saveRefereeRole(role6);
+
+        RefereeRole role7 = new RefereeRole();
+        role7.setSport(sportService.getSportById(2).get());
+        role7.setName("MAIN");
+        role7.setLevel((short) 3);
+        role7.setPayPerMatch(new BigDecimal(28));
+        sportService.saveRefereeRole(role7);
+
+        RefereeRole role8 = new RefereeRole();
+        role8.setSport(sportService.getSportById(2).get());
+        role8.setName("MAIN");
+        role8.setLevel((short) 4);
+        role8.setPayPerMatch(new BigDecimal(35));
+        sportService.saveRefereeRole(role8);
+
+        RefereeRole role9 = new RefereeRole();
+        role9.setSport(sportService.getSportById(3).get());
+        role9.setName("MAIN");
+        role9.setLevel((short) 1);
+        role9.setPayPerMatch(new BigDecimal(20));
+        sportService.saveRefereeRole(role9);
+
+        RefereeRole role10 = new RefereeRole();
+        role10.setSport(sportService.getSportById(3).get());
+        role10.setName("MAIN");
+        role10.setLevel((short) 2);
+        role10.setPayPerMatch(new BigDecimal(25));
+        sportService.saveRefereeRole(role10);
+
+        RefereeRole role11 = new RefereeRole();
+        role11.setSport(sportService.getSportById(3).get());
+        role11.setName("MAIN");
+        role11.setLevel((short) 3);
+        role11.setPayPerMatch(new BigDecimal(30));
+        sportService.saveRefereeRole(role11);
+
+        RefereeRole role12 = new RefereeRole();
+        role12.setSport(sportService.getSportById(3).get());
+        role12.setName("MAIN");
+        role12.setLevel((short) 4);
+        role12.setPayPerMatch(new BigDecimal(35));
+        sportService.saveRefereeRole(role12);
+
+        RefereeRole role13 = new RefereeRole();
+        role13.setSport(sportService.getSportById(4).get());
+        role13.setName("MAIN");
+        role13.setLevel((short) 1);
+        role13.setPayPerMatch(new BigDecimal(30));
+        sportService.saveRefereeRole(role13);
+
+        RefereeRole role14 = new RefereeRole();
+        role14.setSport(sportService.getSportById(4).get());
+        role14.setName("MAIN");
+        role14.setLevel((short) 2);
+        role14.setPayPerMatch(new BigDecimal(35));
+        sportService.saveRefereeRole(role14);
+
+        RefereeRole role15 = new RefereeRole();
+        role15.setSport(sportService.getSportById(4).get());
+        role15.setName("MAIN");
+        role15.setLevel((short) 3);
+        role15.setPayPerMatch(new BigDecimal(40));
+        sportService.saveRefereeRole(role15);
+
+        RefereeRole role16 = new RefereeRole();
+        role16.setSport(sportService.getSportById(4).get());
+        role16.setName("MAIN");
+        role16.setLevel((short) 4);
+        role16.setPayPerMatch(new BigDecimal(50));
+        sportService.saveRefereeRole(role16);
+
+        RefereeRole role17 = new RefereeRole();
+        role17.setSport(sportService.getSportById(4).get());
+        role17.setName("ASSISTANT1");
+        role17.setLevel((short) 1);
+        role17.setPayPerMatch(new BigDecimal(15));
+        sportService.saveRefereeRole(role17);
+
+        RefereeRole role18 = new RefereeRole();
+        role18.setSport(sportService.getSportById(4).get());
+        role18.setName("ASSISTANT1");
+        role18.setLevel((short) 2);
+        role18.setPayPerMatch(new BigDecimal(18));
+        sportService.saveRefereeRole(role18);
+
+        RefereeRole role19 = new RefereeRole();
+        role19.setSport(sportService.getSportById(4).get());
+        role19.setName("ASSISTANT1");
+        role19.setLevel((short) 3);
+        role19.setPayPerMatch(new BigDecimal(20));
+        sportService.saveRefereeRole(role19);
+
+        RefereeRole role20 = new RefereeRole();
+        role20.setSport(sportService.getSportById(4).get());
+        role20.setName("ASSISTANT1");
+        role20.setLevel((short) 4);
+        role20.setPayPerMatch(new BigDecimal(25));
+        sportService.saveRefereeRole(role20);
+
+        RefereeRole role21 = new RefereeRole();
+        role21.setSport(sportService.getSportById(4).get());
+        role21.setName("ASSISTANT2");
+        role21.setLevel((short) 1);
+        role21.setPayPerMatch(new BigDecimal(15));
+        sportService.saveRefereeRole(role21);
+
+        RefereeRole role22 = new RefereeRole();
+        role22.setSport(sportService.getSportById(4).get());
+        role22.setName("ASSISTANT2");
+        role22.setLevel((short) 2);
+        role22.setPayPerMatch(new BigDecimal(18));
+        sportService.saveRefereeRole(role22);
+
+        RefereeRole role23 = new RefereeRole();
+        role23.setSport(sportService.getSportById(4).get());
+        role23.setName("ASSISTANT2");
+        role23.setLevel((short) 3);
+        role23.setPayPerMatch(new BigDecimal(20));
+        sportService.saveRefereeRole(role23);
+
+        RefereeRole role24 = new RefereeRole();
+        role24.setSport(sportService.getSportById(4).get());
+        role24.setName("ASSISTANT2");
+        role24.setLevel((short) 4);
+        role24.setPayPerMatch(new BigDecimal(25));
+        sportService.saveRefereeRole(role24);
+    }
+
+    public void createGrowthSteps(){
+        GrowthStep step1 = new GrowthStep();
+        step1.setType(GrowthStepType.REFEREE);
+        step1.setTitle("Amateur Referee");
+        step1.setLevel((short) 1);
+        step1.setX(0);
+        step1.setMinRatingOverLastXGames(BigDecimal.valueOf(0));
+        step1.setMinRefereedGames((short)0);
+        accountService.saveGrowthStep(step1);
+
+        GrowthStep step2 = new GrowthStep();
+        step2.setType(GrowthStepType.REFEREE);
+        step2.setTitle("Pro Referee");
+        step2.setLevel((short) 2);
+        step2.setX(10);
+        step2.setMinRatingOverLastXGames(BigDecimal.valueOf(4.0));
+        step2.setMinRefereedGames((short)30);
+        accountService.saveGrowthStep(step2);
+
+        GrowthStep step3 = new GrowthStep();
+        step3.setType(GrowthStepType.REFEREE);
+        step3.setTitle("Elite Referee");
+        step3.setLevel((short) 3);
+        step3.setX(20);
+        step3.setMinRatingOverLastXGames(BigDecimal.valueOf(4.5));
+        step3.setMinRefereedGames((short)60);
+        accountService.saveGrowthStep(step3);
+
+        GrowthStep step4 = new GrowthStep();
+        step4.setType(GrowthStepType.REFEREE);
+        step4.setTitle("ATL Referee");
+        step4.setLevel((short) 4);
+        step4.setX(30);
+        step4.setMinRatingOverLastXGames(BigDecimal.valueOf(4.8));
+        step4.setMinRefereedGames((short)100);
+        accountService.saveGrowthStep(step4);
+
+        GrowthStep step5 = new GrowthStep();
+        step5.setType(GrowthStepType.COORDINATOR);
+        step5.setTitle("Amateur Coordinator");
+        step5.setLevel((short) 1);
+        step5.setX(0);
+        step5.setMinRatingOverLastXTournaments(BigDecimal.valueOf(0));
+        step5.setMinCoordinatedTournaments((short)0);
+        step5.setCoordinatorPayPerGame(BigDecimal.valueOf(12.5));
+        accountService.saveGrowthStep(step5);
+
+        GrowthStep step6 = new GrowthStep();
+        step6.setType(GrowthStepType.COORDINATOR);
+        step6.setTitle("Pro Coordinator");
+        step6.setLevel((short) 2);
+        step6.setX(3);
+        step6.setMinRatingOverLastXTournaments(BigDecimal.valueOf(3.5));
+        step6.setMinCoordinatedTournaments((short)3);
+        step6.setCoordinatorPayPerGame(BigDecimal.valueOf(15));
+        accountService.saveGrowthStep(step6);
+
+        GrowthStep step7 = new GrowthStep();
+        step7.setType(GrowthStepType.COORDINATOR);
+        step7.setTitle("Elite Coordinator");
+        step7.setLevel((short) 3);
+        step7.setX(5);
+        step7.setMinRatingOverLastXTournaments(BigDecimal.valueOf(4.0));
+        step7.setMinCoordinatedTournaments((short)10);
+        step7.setCoordinatorPayPerGame(BigDecimal.valueOf(17.5));
+        accountService.saveGrowthStep(step7);
+
+        GrowthStep step8 = new GrowthStep();
+        step8.setType(GrowthStepType.COORDINATOR);
+        step8.setTitle("ATL Coordinator");
+        step8.setLevel((short) 4);
+        step8.setX(10);
+        step8.setMinRatingOverLastXTournaments(BigDecimal.valueOf(4.5));
+        step8.setMinCoordinatedTournaments((short)20);
+        step8.setCoordinatorPayPerGame(BigDecimal.valueOf(20));
+        accountService.saveGrowthStep(step8);
+    }
+
     @Transactional
     public void createTournaments() {
         List<Coordinator> coordinators = accountService.getAllCoordinators();
@@ -317,6 +568,8 @@ public class MockDbPopulate {
         teamService.deleteAllTeams();
         accountService.deleteAllAccounts();
         sportService.deleteAllSports();
+        sportService.deleteAllRefereeRoles();
+        accountService.deleteAllGrowthSteps();
 
         // restore FK checks
         try (Connection c = dataSource.getConnection(); Statement s = c.createStatement()) {
@@ -330,7 +583,9 @@ public class MockDbPopulate {
                 && fieldService.getAllFields().isEmpty()
                 && teamService.getAllTeams().isEmpty()
                 && accountService.getAllAccounts().isEmpty()
-                && sportService.getAllSports().isEmpty();
+                && sportService.getAllSports().isEmpty()
+                && sportService.getAllRefereeRoles().isEmpty()
+                && accountService.getAllGrowthSteps().isEmpty();
         if (!ok) {
             System.out.println("[DEBUG] - clearDb: verification FAILED, some tables are not empty");
         } else {
@@ -342,6 +597,8 @@ public class MockDbPopulate {
     public void populateDb() {
         createSports();
         createAccounts();
+        createRefereeRoles();
+        createGrowthSteps();
         createTeams();
         createCities();
         createFields();

@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.*;
-
+import com.atl.backend.exception.*;
 import com.atl.backend.model.*;
 
 import com.atl.backend.model.enums.*;
@@ -19,7 +19,7 @@ import com.atl.backend.model.enums.*;
 import com.atl.backend.response.*;
 
 @Service
-public class HomeService {
+public class HomeScreenService {
 
         private final FieldService fieldService;
         private final MatchService matchService;
@@ -27,7 +27,7 @@ public class HomeService {
         private final TournamentService tournamentService;
         private final BookingService bookingService;
 
-        public HomeService(TeamService teamService, TournamentService tournamentService,
+        public HomeScreenService(TeamService teamService, TournamentService tournamentService,
                         BookingService bookingService,
                         MatchService matchService, FieldService fieldService) {
                 this.teamService = teamService;
@@ -286,8 +286,7 @@ public class HomeService {
                                                 Optional<LobbyBooking> optionalLobbyBooking = bookingService
                                                                 .getLobbyBookingByBookingId(booking.getId());
                                                 if (optionalLobbyBooking.isEmpty()) {
-                                                        throw new IllegalArgumentException(
-                                                                        ErrorsString.BOOKING_NOT_FOUND);
+                                                        throw new NotFoundException(ErrorsString.BOOKING_NOT_FOUND);
                                                 }
 
                                                 LobbyBooking lobbyBooking = optionalLobbyBooking.get();
@@ -306,8 +305,7 @@ public class HomeService {
                                                 Optional<PrivateBooking> optionalPrivateBooking = bookingService
                                                                 .getPrivateBookingByBookingId(booking.getId());
                                                 if (optionalPrivateBooking.isEmpty()) {
-                                                        throw new IllegalArgumentException(
-                                                                        ErrorsString.BOOKING_NOT_FOUND);
+                                                        throw new NotFoundException(ErrorsString.BOOKING_NOT_FOUND);
                                                 }
 
                                                 PrivateBooking privateBooking = optionalPrivateBooking.get();
@@ -322,8 +320,7 @@ public class HomeService {
                                                 Optional<MatchBooking> optionalMatchBooking = bookingService
                                                                 .getMatchBookingByBookingId(booking.getId());
                                                 if (optionalMatchBooking.isEmpty()) {
-                                                        throw new IllegalArgumentException(
-                                                                        ErrorsString.BOOKING_NOT_FOUND);
+                                                        throw new NotFoundException(ErrorsString.BOOKING_NOT_FOUND);
                                                 }
 
                                                 MatchBooking matchBooking = optionalMatchBooking.get();
@@ -334,8 +331,7 @@ public class HomeService {
                                                                 Optional<FootballMatch> optionalFootballMatch = matchService
                                                                                 .getFootballMatchById(match.getId());
                                                                 if (optionalFootballMatch.isEmpty()) {
-                                                                        throw new IllegalArgumentException(
-                                                                                        ErrorsString.MATCH_NOT_FOUND);
+                                                                        throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
                                                                 }
 
                                                                 FootballMatch footballMatch = optionalFootballMatch
@@ -350,11 +346,11 @@ public class HomeService {
                                                                                 footballMatch);
                                                                 break;
                                                         default:
-                                                                throw new IllegalArgumentException(
+                                                                throw new BadRequestException(
                                                                                 ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
                                                 }
                                         default:
-                                                throw new IllegalArgumentException(
+                                                throw new BadRequestException(
                                                                 ErrorsString.UNSUPPORTED_BOOKING_TYPE);
                                 }
                         }

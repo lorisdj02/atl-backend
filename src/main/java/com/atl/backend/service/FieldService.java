@@ -6,6 +6,7 @@ import com.atl.backend.model.FieldCategory;
 import com.atl.backend.model.enums.SportCategory;
 
 import java.util.Optional;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +45,10 @@ public class FieldService {
         return cityRepository.save(city);
     }
 
+    public FieldCategory saveFieldCategory(FieldCategory fieldCategory) {
+        return fieldCategoryRepository.save(fieldCategory);
+    }
+
     public Optional<Field> getFieldById(Integer id) {
         return fieldRepository.findById(id);
     }
@@ -52,12 +57,12 @@ public class FieldService {
         return cityRepository.findById(id);
     }
 
-    public FieldCategory saveFieldCategory(FieldCategory fieldCategory) {
-        return fieldCategoryRepository.save(fieldCategory);
-    }
-
     public List<Field> getAllFields() {
         return fieldRepository.findAll();
+    }
+
+    public List<City> getAllCities() {
+        return cityRepository.findAll();
     }
 
     public void deleteFieldById(Integer id) {
@@ -72,4 +77,13 @@ public class FieldService {
     public List<Field> getFieldsByOrganizationId(Integer organizationId) {
         return fieldRepository.findByOrganization_OrganizationId(organizationId);
     }
+
+    public LocalTime getMinOpeningTimeByCityId(Integer cityId) {
+        return cityRepository.findMinOpeningTimeByCity_Id(cityId);
+    }
+
+    public LocalTime getMaxClosingTimeByCityId(Integer cityId) {
+        return cityRepository.findMaxClosingTimeByCity_Id(cityId);
+    }
+
 }

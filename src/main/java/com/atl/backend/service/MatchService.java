@@ -4,6 +4,7 @@ import com.atl.backend.repository.FinalStageBracketRepository;
 import com.atl.backend.repository.FootballMatchRepository;
 import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.RefereeAssignmentRepository;
+import com.atl.backend.repository.RefereeLicenseRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.exception.*;
 import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.Match;
@@ -52,7 +54,7 @@ public class MatchService {
     public Integer calculateMatchesInTournament(Integer tournamentId) {
         Optional<Tournament> tournamentOptional = tournamentService.getTournamentById(tournamentId);
         if (tournamentOptional.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.TOURNAMENT_NOT_FOUND);
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
         }
 
         final Tournament tournament = tournamentOptional.get();
@@ -104,7 +106,7 @@ public class MatchService {
     public void generateMatchesForTournament(Integer tournamentId) {
         Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
         if (optionalTournament.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.TOURNAMENT_NOT_FOUND);
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
         }
 
         System.out.println("[DEBUG - MatchService] - Generating matches for tournament " + tournamentId);
@@ -181,7 +183,7 @@ public class MatchService {
                         }
                         switch (sportCategory) {
                             case FOOTBALL -> matchEntity.setSportCategory(sportCategory);
-                            default -> throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+                            default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
                         }
                         Match savedMatch = saveMatch(matchEntity);
 
@@ -190,7 +192,7 @@ public class MatchService {
                                 final Optional<Team> homeTeamOptional = teamService.getTeamById(homeTeamId);
                                 final Optional<Team> awayTeamOptional = teamService.getTeamById(awayTeamId);
                                 if (homeTeamOptional.isEmpty() || awayTeamOptional.isEmpty()) {
-                                    throw new IllegalArgumentException(ErrorsString.TEAM_NOT_FOUND);
+                                    throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
                                 }
 
                                 FootballMatch footballMatch = new FootballMatch();
@@ -208,7 +210,7 @@ public class MatchService {
                             matchEntity2.setLegOrder(LegOrderType.SECOND_LEG);
                             switch (sportCategory) {
                                 case FOOTBALL -> matchEntity2.setSportCategory(sportCategory);
-                                default -> throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+                                default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
                             }
                             Match savedMatch2 = saveMatch(matchEntity2);
 
@@ -217,7 +219,7 @@ public class MatchService {
                                     final Optional<Team> homeTeamOptional = teamService.getTeamById(homeTeamId);
                                     final Optional<Team> awayTeamOptional = teamService.getTeamById(awayTeamId);
                                     if (homeTeamOptional.isEmpty() || awayTeamOptional.isEmpty()) {
-                                        throw new IllegalArgumentException(ErrorsString.TEAM_NOT_FOUND);
+                                        throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
                                     }
 
                                     FootballMatch footballMatch = new FootballMatch();
@@ -284,7 +286,7 @@ public class MatchService {
                     }
                     switch (sportCategory) {
                         case FOOTBALL -> matchEntity.setSportCategory(sportCategory);
-                        default -> throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+                        default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
                     }
                     Match savedMatch = saveMatch(matchEntity);
 
@@ -304,7 +306,7 @@ public class MatchService {
                         matchEntity2.setLegOrder(LegOrderType.SECOND_LEG);
                         switch (sportCategory) {
                             case FOOTBALL -> matchEntity2.setSportCategory(sportCategory);
-                            default -> throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+                            default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
                         }
                         Match savedMatch2 = saveMatch(matchEntity2);
 
@@ -353,7 +355,7 @@ public class MatchService {
     public List<Integer> getTeamIdsByTournamentIdAndGroupStage(Integer tournamentId, String groupName) {
         Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
         if (optionalTournament.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.TOURNAMENT_NOT_FOUND);
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
         }
 
         System.out.println("[DEBUG - MatchService] - Retrieving team IDs for tournament " + tournamentId + " and group "
@@ -364,14 +366,14 @@ public class MatchService {
                 List<FootballMatch> footballMatches = footballMatchRepository
                         .findByMatch_Tournament_IdAndMatch_GroupName(tournamentId, groupName);
                 if (footballMatches.isEmpty()) {
-                    throw new IllegalArgumentException(ErrorsString.TOURNAMENT_NOT_FOUND);
+                    throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
                 }
                 return footballMatches.stream()
                         .flatMap(match -> List.of(match.getHomeTeam().getId(), match.getAwayTeam().getId()).stream())
                         .distinct()
                         .toList();
             }
-            default -> throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+            default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
     }
 
@@ -397,18 +399,18 @@ public class MatchService {
     public List<Team> getTeamsByMatchId(Integer matchId){
         Optional<Match> matchOptional = matchRepository.findById(matchId);
         if(matchOptional.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.MATCH_NOT_FOUND);
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
         }
         Match match = matchOptional.get();
         if(match.getSportCategory() == SportCategory.FOOTBALL){
             Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(matchId);
             if(footballMatchOptional.isEmpty()) {
-                throw new IllegalArgumentException(ErrorsString.MATCH_NOT_FOUND);
+                throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
             }
             FootballMatch footballMatch = footballMatchOptional.get();
             return List.of(footballMatch.getHomeTeam(), footballMatch.getAwayTeam());
         } else {
-            throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+            throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
     }
 

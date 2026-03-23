@@ -34,9 +34,11 @@ public class FootballStandingDTO {
     @NotNull
     @JsonProperty("lost")
     private Short lost = 0;
+
     @NotNull
     @JsonProperty("goalsScored")
     private Short goalsScored = 0;
+    
     @NotNull
     @JsonProperty("goalsConceded")
     private Short goalsConceded = 0;

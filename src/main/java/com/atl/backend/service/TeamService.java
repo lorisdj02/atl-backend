@@ -15,6 +15,8 @@ import com.atl.backend.repository.TeamRequestRepository;
 import com.atl.backend.repository.FootballTeamStatRepository;
 import com.atl.backend.repository.PlayerRepository;
 
+import com.atl.backend.exception.*;
+
 import java.util.Optional;
 import java.util.List;
 
@@ -80,7 +82,7 @@ public class TeamService {
         }
         Optional<Player> playerOptional = playerRepository.findById(playerId);
         if (playerOptional.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.PLAYER_NOT_FOUND);
+            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
         }
 
         Team team = teamOptional.get();
@@ -90,7 +92,7 @@ public class TeamService {
         } else if (team.getVice2Player() == null) {
             team.setVice2Player(player);
         } else {
-            throw new IllegalStateException(ErrorsString.TEAM_ALREADY_HAS_VICE_CAPTAINS);
+            throw new ConflictException(ErrorsString.TEAM_ALREADY_HAS_VICE_CAPTAINS);
         }
         return teamRepository.save(team);
     }
@@ -105,7 +107,7 @@ public class TeamService {
             final PlaysAt playsAt = playsAtOptional.get();
 
             if (team.getCaptainPlayer().getPlayerId().equals(playerId) && team.getVice1Player() == null) {
-                throw new IllegalStateException(ErrorsString.CAPTAIN_CANNOT_LEAVE_TEAM_WITHOUT_VICE_CAPTAIN);
+                throw new ConflictException(ErrorsString.CAPTAIN_CANNOT_LEAVE_TEAM_WITHOUT_VICE_CAPTAIN);
             } else {
 
             }
@@ -113,7 +115,7 @@ public class TeamService {
             final Integer activeTournamentsCount = tournamentService.countActiveTournamentsByTeamIdAndPlayerId(teamId,
                     playerId);
             if (activeTournamentsCount > 0) {
-                throw new IllegalStateException(ErrorsString.PLAYER_IS_IN_ACTIVE_TOURNAMENTS);
+                throw new ConflictException(ErrorsString.PLAYER_IS_IN_ACTIVE_TOURNAMENTS);
             }
 
             playsAtRepository.delete(playsAt);
@@ -129,7 +131,7 @@ public class TeamService {
             Optional<PlaysAt> existingPlaysAt = playsAtRepository.findByPlayer_PlayerIdAndSportCategory(playerId,
                     team.getSportCategory());
             if (existingPlaysAt.isPresent()) {
-                throw new IllegalStateException(ErrorsString.PLAYER_ALREADY_IN_TEAM);
+                throw new ConflictException(ErrorsString.PLAYER_ALREADY_IN_TEAM);
             }
 
             teamRequestRepository.deleteByPlayer_PlayerId(playerId);
@@ -151,7 +153,7 @@ public class TeamService {
     public List<Player> getPlayersByTeamId(Integer teamId) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.TEAM_NOT_FOUND);
+            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
         }
         List<PlaysAt> playsAts = playsAtRepository.findByTeam_Id(teamId);
         return playsAts.stream().map(PlaysAt::getPlayer).toList();

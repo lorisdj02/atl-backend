@@ -1,5 +1,8 @@
 package com.atl.backend.dto;
 
+import com.atl.backend.model.City;
+import java.util.Optional;
+
 import lombok.Data;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
@@ -65,19 +68,18 @@ public class TeamDTO {
 
         TeamDTO dto = new TeamDTO();
         dto.setId(team.getId());
-        dto.setCityId(team.getCity().getId());
+        dto.setCityId(team.getCity() != null ? team.getCity().getId() : null);
         dto.setCaptainPlayerId(team.getCaptainPlayer().getPlayerId());
-        if (team.getVice1Player() != null) {
-            dto.setVice1PlayerId(team.getVice1Player().getPlayerId());
-        }
-        if (team.getVice2Player() != null) {
-            dto.setVice2PlayerId(team.getVice2Player().getPlayerId());
-        }
-        dto.setLogoUrl(team.getLogoUrl());
+        dto.setVice1PlayerId(team.getVice1Player() != null ? team.getVice1Player().getPlayerId() : null);
+
+        dto.setVice2PlayerId(team.getVice2Player() != null ? team.getVice2Player().getPlayerId() : null);
+
+        dto.setLogoUrl(team.getLogoUrl() != null ? team.getLogoUrl() : null);
+
         dto.setRankPts(team.getRankPts());
         dto.setName(team.getName());
         dto.setAlias(team.getAlias());
-        dto.setDescription(team.getDescription());
+        dto.setDescription(team.getDescription() != null ? team.getDescription() : null);
         dto.setVip(team.getVip());
         dto.setMaxPlayers(team.getMaxPlayers());
         dto.setPlayers(team.getPlayers());

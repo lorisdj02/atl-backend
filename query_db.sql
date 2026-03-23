@@ -30,6 +30,7 @@ CREATE TABLE "account" (
   "role" varchar(15) NOT NULL,
   "status" varchar(15) DEFAULT 'ACTIVE',
   "preferred_city_id" int,
+  "favorite_sport_category" varchar(15) NOT NULL DEFAULT 'FOOTBALL',
   "created_at" timestamp DEFAULT now(),
   "last_login" timestamp DEFAULT now()
 );

@@ -3,6 +3,7 @@ package com.atl.backend.dto;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import com.atl.backend.model.Field;
 
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
@@ -43,7 +44,7 @@ public class FieldDTO {
     @JsonProperty("hourCostPrivate")
     private BigDecimal hourCostPrivate;
 
-    public static FieldDTO fromField(com.atl.backend.model.Field field) {
+    public static FieldDTO fromField(Field field) {
         if (field == null) {
             return null;
         }

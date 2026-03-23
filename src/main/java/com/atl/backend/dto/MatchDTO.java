@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+import com.atl.backend.model.Match;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 
@@ -39,8 +40,8 @@ public class MatchDTO {
     @JsonProperty("sportCategory")
     private String sportCategory;
 
-    @JsonProperty("legType")
-    private String legType;
+    @JsonProperty("legOrder")
+    private String legOrder;
 
     @JsonProperty("coordinatorStatus")
     @NotNull
@@ -48,4 +49,25 @@ public class MatchDTO {
 
     @JsonProperty("finalStageBracketId")
     private Integer finalStageBracketId;
+
+    public static MatchDTO fromMatch(Match match) {
+        if (match == null) {
+            return null;
+        }
+        MatchDTO dto = new MatchDTO();
+        dto.setId(match.getId());
+        dto.setScheduledStart(match.getScheduledStart());
+        dto.setStartMatch(match.getStartMatch() != null ? match.getStartMatch() : null);
+        dto.setFinishMatch(match.getFinishMatch() != null ? match.getFinishMatch() : null);
+        dto.setTournamentId(match.getTournament().getId());
+        dto.setMotmPlayerId(match.getMotmPlayer() != null ? match.getMotmPlayer().getPlayerId() : null);
+        dto.setGroupName(match.getGroupName());
+        dto.setSportCategory(match.getSportCategory().toString());
+        dto.setLegOrder(match.getLegOrder() != null ? match.getLegOrder().toString() : null);
+        dto.setCoordinatorStatus(match.getCoordinatorStatus() != null ? match.getCoordinatorStatus().toString() : null);
+        dto.setFinalStageBracketId(
+                match.getFinalStageBracket() != null ? match.getFinalStageBracket().getId() : null);
+
+        return dto;
+    }
 }

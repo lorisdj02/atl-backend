@@ -407,4 +407,6 @@ public class TournamentService {
         List<Callup> callups = callupRepository.findByTournament_Id(tournamentId);
         return callups.stream().map(callup -> callup.getPlayer().getPlayerId()).toList();
     }
+
+    
 }

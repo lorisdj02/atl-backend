@@ -27,6 +27,7 @@ public class TournamentDTO {
     @Size(max = 511)
     private String description;
 
+    @NotNull
     @JsonProperty("coordinatorId")
     private Integer coordinatorId;
 
@@ -58,7 +59,6 @@ public class TournamentDTO {
     @JsonProperty("numTeams")
     private Short numTeams;
 
-    
     @NotNull
     @JsonProperty("paidTeams")
     private Short paidTeams;
@@ -101,11 +101,11 @@ public class TournamentDTO {
     @NotNull
     private Short numTeamsQualified;
 
-    public static TournamentDTO fromTournament(Tournament tournament){
+    public static TournamentDTO fromTournament(Tournament tournament) {
         TournamentDTO dto = new TournamentDTO();
         dto.setId(tournament.getId());
         dto.setName(tournament.getName());
-        dto.setDescription(tournament.getDescription());
+        dto.setDescription(tournament.getDescription() != null ? tournament.getDescription() : null);
         dto.setCoordinatorId(tournament.getCoordinator().getCoordinatorId());
         dto.setFieldId(tournament.getField().getId());
         dto.setCityId(tournament.getField().getCity().getId());
@@ -122,6 +122,8 @@ public class TournamentDTO {
         dto.setRound2GroupStage(tournament.getRound2GroupStage());
         dto.setRound2FinalStage(tournament.getRound2FinalStage());
         dto.setNumTeamsQualified(tournament.getNumTeamsQualified());
+
+        dto.setPhotoUrl(tournament.getPhotoUrl() != null ? tournament.getPhotoUrl() : null);
         return dto;
     }
 }

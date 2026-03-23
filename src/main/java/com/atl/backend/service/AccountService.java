@@ -1,17 +1,23 @@
 package com.atl.backend.service;
 
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.exception.ForbiddenException;
+import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.Coordinator;
+import com.atl.backend.model.GrowthStep;
 import com.atl.backend.model.Organization;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Referee;
 import com.atl.backend.model.enums.AccountStatus;
+import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.repository.AccountRepository;
 import com.atl.backend.repository.CoordinatorRepository;
+import com.atl.backend.repository.GrowthStepRepository;
 import com.atl.backend.repository.OrganizationRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.RefereeRepository;
+import com.atl.backend.response.MyGrowthResponse;
 
 import org.springframework.stereotype.Service;
 
@@ -26,15 +32,17 @@ public class AccountService {
     private final OrganizationRepository organizationRepository;
     private final RefereeRepository refereeRepository;
     private final CoordinatorRepository coordinatorRepository;
+    private final GrowthStepRepository growthStepRepository;
 
     public AccountService(AccountRepository accountRepository, PlayerRepository playerRepository,
             OrganizationRepository organizationRepository, RefereeRepository refereeRepository,
-            CoordinatorRepository coordinatorRepository) {
+            CoordinatorRepository coordinatorRepository, GrowthStepRepository growthStepRepository) {
         this.accountRepository = accountRepository;
         this.playerRepository = playerRepository;
         this.organizationRepository = organizationRepository;
         this.refereeRepository = refereeRepository;
         this.coordinatorRepository = coordinatorRepository;
+        this.growthStepRepository = growthStepRepository;
     }
 
     public Account registerAccount(Account account, Optional<String> OrgName) {
@@ -72,16 +80,24 @@ public class AccountService {
         return accountRepository.save(account);
     }
 
+    public Referee saveReferee(Referee referee) {
+        return refereeRepository.save(referee);
+    }
+
+    public Organization saveOrganization(Organization organization) {
+        return organizationRepository.save(organization);
+    }
+
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
     }
 
-    public Account getAccountById(Integer id) {
-        return accountRepository.findById(id).orElse(null);
+    public Optional<Account> getAccountById(Integer id) {
+        return accountRepository.findById(id);
     }
 
-    public Account getAccountByFirebaseUid(String firebaseUid) {
-        return accountRepository.findByFirebaseUid(firebaseUid).orElse(null);
+    public Optional<Account> getAccountByFirebaseUid(String firebaseUid) {
+        return accountRepository.findByFirebaseUid(firebaseUid);
     }
 
     public Player savePlayer(Player player) {
@@ -92,12 +108,33 @@ public class AccountService {
         return coordinatorRepository.save(coordinator);
     }
 
-    public Referee saveReferee(Referee referee) {
-        return refereeRepository.save(referee);
+    public GrowthStep saveGrowthStep(GrowthStep growthStep) {
+        return growthStepRepository.save(growthStep);
     }
 
-    public Organization saveOrganization(Organization organization) {
-        return organizationRepository.save(organization);
+    public Short getAccountLevel(Integer accountId) {
+        Optional<Account> accountOptional = getAccountById(accountId);
+        if (accountOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
+        }
+        Account account = accountOptional.get();
+        switch (account.getRole()) {
+            case COORDINATOR -> {
+                Optional<Coordinator> coordinatorOptional = getCoordinatorByAccountId(accountId);
+                if (coordinatorOptional.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND);
+                }
+                return coordinatorOptional.get().getLevel();
+            }
+            case REFEREE -> {
+                Optional<Referee> refereeOptional = getRefereeByAccountId(accountId);
+                if (refereeOptional.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.REFEREE_NOT_FOUND);
+                }
+                return refereeOptional.get().getLevel();
+            }
+            default -> throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
+        }
     }
 
     // Soft delete: set status to PURGED instead of deleting the record
@@ -136,6 +173,10 @@ public class AccountService {
         coordinatorRepository.deleteByAccount_Id(id);
     }
 
+    public void deleteAllGrowthSteps() {
+        growthStepRepository.deleteAll();
+    }
+
     public Optional<Player> getPlayerByPlayerId(Integer playerId) {
         return playerRepository.findById(playerId);
     }
@@ -143,7 +184,7 @@ public class AccountService {
     public Optional<Player> getPlayerByAccountId(Integer accountId) {
         return playerRepository.findByAccount_Id(accountId);
     }
-    
+
     public Optional<Organization> getOrganizationByAccountId(Integer accountId) {
         return organizationRepository.findByAccount_Id(accountId);
     }
@@ -168,6 +209,11 @@ public class AccountService {
         return coordinatorRepository.findById(coordinatorId);
     }
 
+    public List<GrowthStep> getGrowthStepsByType(GrowthStepType type) {
+        return growthStepRepository.findByType(type);
+    }
+
+
     public List<Player> getAllPlayers() {
         return playerRepository.findAll();
     }
@@ -183,4 +229,9 @@ public class AccountService {
     public List<Coordinator> getAllCoordinators() {
         return coordinatorRepository.findAll();
     }
+
+    public List<GrowthStep> getAllGrowthSteps() {
+        return growthStepRepository.findAll();
+    }
+
 }

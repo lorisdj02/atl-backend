@@ -1,5 +1,7 @@
 package com.atl.backend.controller;
 
+import com.atl.backend.config.ErrorsString;
+import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
 import com.atl.backend.service.AccountService;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -20,14 +23,14 @@ public class AccountController {
         this.accountService = accountService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Account>> getAllAccounts() {
-        return ResponseEntity.ok(accountService.getAllAccounts());
+    @GetMapping("/{accountId}/level")
+    public ResponseEntity<Short> getAccountLevel(@PathVariable Integer accountId) {
+        Optional<Account> account = accountService.getAccountById(accountId);
+        if (account.isEmpty()) {
+            throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
+        }
+        return ResponseEntity.ok(accountService.getAccountLevel(accountId));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Account> getAccountById(@PathVariable Integer id) {
-        Account account = accountService.getAccountById(id);
-        return account != null ? ResponseEntity.ok(account) : ResponseEntity.notFound().build();
-    }
+
 }

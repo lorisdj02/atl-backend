@@ -67,8 +67,12 @@ public class Account {
     private City preferredCity;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
+
+    @Column(name = "favorite_sport_category", length = 15)
+    @Enumerated(EnumType.STRING)
+    private SportCategory favoriteSportCategory = SportCategory.FOOTBALL;
 }
