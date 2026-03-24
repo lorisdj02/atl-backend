@@ -11,6 +11,8 @@ public class ApiJsonKeys {
     // OrganizationHomeScreen
     public static final String matchBookingsCache = "matchBookingsCache"; // Map<int, MatchBooking>
 
+    public static final String lobbyBooking = "lobbyBooking"; // LobbyBooking
+
     // PlayerHomeScreen,
     public static final String bookings = "bookings"; // List<dynamic>
     // PlayerHomeScreen, CoordinatorHomeScreen

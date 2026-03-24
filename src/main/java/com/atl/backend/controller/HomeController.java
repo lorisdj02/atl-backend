@@ -16,8 +16,8 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.ErrorResponse;
 import com.atl.backend.exception.*;
 import com.atl.backend.service.AccountService;
-import com.atl.backend.service.HomeScreenService;
 import com.atl.backend.service.SportService;
+import com.atl.backend.service.screen.HomeScreenService;
 
 import java.util.Optional;
 
@@ -53,7 +53,7 @@ public class HomeController {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        PlayerHomeResponse response = homeService.getPlayerHomeResponse(playerId,
+        PlayerHomeResponse response = homeService.getPlayerHomeScreen(playerId,
                 SportCategory.valueOf(sportCategory.toUpperCase()));
         return ResponseEntity.ok(response);
 
@@ -71,7 +71,7 @@ public class HomeController {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        CoordinatorHomeResponse response = homeService.getCoordinatorHomeResponse(coordinatorId,
+        CoordinatorHomeResponse response = homeService.getCoordinatorHomeScreen(coordinatorId,
                 SportCategory.valueOf(sportCategory.toUpperCase()));
         return ResponseEntity.ok(response);
     }
@@ -88,7 +88,7 @@ public class HomeController {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        RefereeHomeResponse response = homeService.getRefereeHomeResponse(refereeId,
+        RefereeHomeResponse response = homeService.getRefereeHomeScreen(refereeId,
                 SportCategory.valueOf(sportCategory.toUpperCase()));
         return ResponseEntity.ok(response);
 
@@ -106,7 +106,7 @@ public class HomeController {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        OrganizationHomeResponse response = homeService.getOrganizationHomeResponse(organizationId,
+        OrganizationHomeResponse response = homeService.getOrganizationHomeScreen(organizationId,
                 SportCategory.valueOf(sportCategory.toUpperCase()));
 
         return ResponseEntity.ok(response);

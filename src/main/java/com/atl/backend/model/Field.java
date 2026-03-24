@@ -57,4 +57,8 @@ public class Field {
 
     @Column(name = "closed_days", nullable = false, length = 7)
     private String closedDays = "0000001";
+
+    public String getCompleteAddress(){
+        return address + ", " + city.getName();
+    }
 }

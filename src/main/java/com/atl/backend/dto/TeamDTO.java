@@ -1,15 +1,12 @@
 package com.atl.backend.dto;
 
-import com.atl.backend.model.City;
-import java.util.Optional;
-
-import lombok.Data;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
+import lombok.Data;
+
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TeamDTO {
 
     @NotNull
@@ -48,14 +45,17 @@ public class TeamDTO {
     @Size(max = 511)
     private String description;
 
+    @NotNull
     @JsonProperty("vip")
     private Boolean vip = false;
 
+    @NotNull
     @JsonProperty("maxPlayers")
-    private Integer maxPlayers;
+    private Short maxPlayers = 24;
 
-    @JsonProperty("players")
-    private Integer players;
+    @NotNull
+    @JsonProperty("numPlayers")
+    private Short numPlayers = 1;
 
     @NotNull
     @JsonProperty("sportCategory")
@@ -65,25 +65,25 @@ public class TeamDTO {
         if (team == null) {
             return null;
         }
-
         TeamDTO dto = new TeamDTO();
+
         dto.setId(team.getId());
         dto.setCityId(team.getCity() != null ? team.getCity().getId() : null);
         dto.setCaptainPlayerId(team.getCaptainPlayer().getPlayerId());
         dto.setVice1PlayerId(team.getVice1Player() != null ? team.getVice1Player().getPlayerId() : null);
-
         dto.setVice2PlayerId(team.getVice2Player() != null ? team.getVice2Player().getPlayerId() : null);
 
-        dto.setLogoUrl(team.getLogoUrl() != null ? team.getLogoUrl() : null);
+        dto.setLogoUrl(team.getLogoUrl());
 
-        dto.setRankPts(team.getRankPts());
+        dto.setRankPts(team.getRankPts() != null ? team.getRankPts() : 0);
         dto.setName(team.getName());
         dto.setAlias(team.getAlias());
-        dto.setDescription(team.getDescription() != null ? team.getDescription() : null);
-        dto.setVip(team.getVip());
-        dto.setMaxPlayers(team.getMaxPlayers());
-        dto.setPlayers(team.getPlayers());
-        dto.setSportCategory(team.getSportCategory().toString());
+        dto.setDescription(team.getDescription());
+        dto.setVip(team.getVip() != null ? team.getVip() : false);
+        dto.setMaxPlayers(team.getMaxPlayers() != null ? team.getMaxPlayers() : 24);
+        dto.setNumPlayers(team.getNumPlayers() != null ? team.getNumPlayers() : 1);
+        dto.setSportCategory(team.getSportCategory() != null ? team.getSportCategory().toString() : null);
+
         return dto;
     }
 }

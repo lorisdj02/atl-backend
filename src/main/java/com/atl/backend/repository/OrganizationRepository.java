@@ -15,4 +15,9 @@ public interface OrganizationRepository extends JpaRepository<Organization, Inte
     Optional<Organization> findByAccount_Id(Integer accountId);
 
     void deleteByAccount_Id(Integer accountId);
+
+    boolean existsByAccount_Id(Integer accountId);
+
+    boolean existsByOrganizationId(Integer organizationId);
+
 }

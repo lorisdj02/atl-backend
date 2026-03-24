@@ -15,4 +15,8 @@ public interface CoordinatorRepository extends JpaRepository<Coordinator, Intege
     Optional<Coordinator> findByCoordinatorId(Integer coordinatorId);
 
     void deleteByAccount_Id(Integer accountId);
+
+    boolean existsByAccount_Id(Integer accountId);
+
+    boolean existsByCoordinatorId(Integer coordinatorId);
 }

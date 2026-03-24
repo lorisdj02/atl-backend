@@ -138,11 +138,12 @@ CREATE TABLE "team" (
   "name" varchar(31) NOT NULL,
   "alias" char(3) NOT NULL,
   "description" varchar(511),
-  "players" int NOT NULL DEFAULT 1,
-  "max_players" int NOT NULL DEFAULT 24,
+  "num_players" smallint NOT NULL DEFAULT 1,
+  "max_players" smallint NOT NULL DEFAULT 24,
   "rank_pts" int NOT NULL DEFAULT 0,
   "sport_category" varchar(15) NOT NULL,
   "vip" bool NOT NULL DEFAULT false
+  "visible" bool NOT NULL DEFAULT true
 );
 
 CREATE TABLE "plays_at" (
@@ -161,10 +162,10 @@ CREATE TABLE "team_request" (
 CREATE TABLE "football_team_stat" (
   "player_id" int NOT NULL,
   "team_id" int NOT NULL,
-  "goals" int NOT NULL DEFAULT 0,
-  "motm" int NOT NULL DEFAULT 0,
-  "red_cards" int NOT NULL DEFAULT 0,
-  "yellow_cards" int NOT NULL DEFAULT 0
+  "goals" smallint NOT NULL DEFAULT 0,
+  "motm" smallint NOT NULL DEFAULT 0,
+  "red_cards" smallint NOT NULL DEFAULT 0,
+  "yellow_cards" smallint NOT NULL DEFAULT 0
 );
 
 CREATE TABLE "booking" (
@@ -271,10 +272,10 @@ CREATE TABLE "football_tournament_stats" (
   "player_id" int NOT NULL,
   "tournament_id" int NOT NULL,
   "team_id" int NOT NULL,
-  "goals" int NOT NULL DEFAULT 0,
-  "motm" int NOT NULL DEFAULT 0,
-  "yellow_cards" int NOT NULL DEFAULT 0,
-  "red_cards" int NOT NULL DEFAULT 0,
+  "goals" smallint NOT NULL DEFAULT 0,
+  "motm" smallint NOT NULL DEFAULT 0,
+  "yellow_cards" smallint NOT NULL DEFAULT 0,
+  "red_cards" smallint NOT NULL DEFAULT 0,
   PRIMARY KEY ("player_id", "tournament_id")
 );
 

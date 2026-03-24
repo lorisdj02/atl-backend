@@ -20,6 +20,7 @@ import com.atl.backend.repository.RefereeRepository;
 import com.atl.backend.response.MyGrowthResponse;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -112,6 +113,24 @@ public class AccountService {
         return growthStepRepository.save(growthStep);
     }
 
+    public boolean existsByPlayerId(Integer playerId) {
+        return playerRepository.existsByPlayerId(playerId);
+    }
+
+    public boolean existsByOrganizationId(Integer orgId) {
+        return organizationRepository.existsByOrganizationId(orgId);
+    }
+
+    public boolean existsByRefereeId(Integer refereeId) {
+        return refereeRepository.existsByRefereeId(refereeId);
+    }
+
+    public boolean existsByCoordinatorId(Integer coordinatorId) {
+        return coordinatorRepository.existsByCoordinatorId(coordinatorId);
+    }
+
+
+    @Transactional(readOnly = true)
     public Short getAccountLevel(Integer accountId) {
         Optional<Account> accountOptional = getAccountById(accountId);
         if (accountOptional.isEmpty()) {

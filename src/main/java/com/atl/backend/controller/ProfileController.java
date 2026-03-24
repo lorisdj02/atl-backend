@@ -12,7 +12,7 @@ import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
 import com.atl.backend.response.MyGrowthResponse;
 import com.atl.backend.service.AccountService;
-import com.atl.backend.service.ProfileScreenService;
+import com.atl.backend.service.screen.ProfileScreenService;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -31,7 +31,7 @@ public class ProfileController {
         if(account.isEmpty()){
             throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
         }
-        MyGrowthResponse response = profileScreenService.getMyGrowthResponse(accountId);
+        MyGrowthResponse response = profileScreenService.getMyGrowthScreen(accountId);
         return ResponseEntity.ok(response);
     }
 }

@@ -15,4 +15,9 @@ public interface RefereeRepository extends JpaRepository<Referee, Integer> {
     Optional<Referee> findByRefereeId(Integer refereeId);
 
     void deleteByAccount_Id(Integer accountId);
+
+    boolean existsByAccount_Id(Integer accountId);
+
+    boolean existsByRefereeId(Integer refereeId);
+
 }

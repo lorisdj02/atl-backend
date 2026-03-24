@@ -64,11 +64,11 @@ public class Team {
     @Column(length = 511)
     private String description;
 
-    @Column(nullable = false)
-    private Integer players = 1;
+    @Column(name = "num_players", nullable = false)
+    private Short numPlayers = 1;
 
     @Column(name = "max_players", nullable = false)
-    private Integer maxPlayers = 24;
+    private Short maxPlayers = 24;
 
     @Column(name = "rank_pts", nullable = false)
     private Integer rankPts = 0;
@@ -79,4 +79,7 @@ public class Team {
 
     @Column(name = "vip", nullable = false)
     private Boolean vip = false;
+
+    @Column(name = "visible")
+    private Boolean visible = true;
 }

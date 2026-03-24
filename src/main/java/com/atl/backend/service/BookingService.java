@@ -6,16 +6,24 @@ import com.atl.backend.repository.BookingRepository;
 import com.atl.backend.repository.LobbyBookingRepository;
 import com.atl.backend.repository.MatchBookingRepository;
 import com.atl.backend.repository.PrivateBookingRepository;
+import com.atl.backend.response.LobbyInfoResponse;
 import com.atl.backend.repository.LobbyBookingParticipateRepository;
 
 import com.atl.backend.model.PrivateBooking;
 import com.atl.backend.model.enums.BookingStatus;
+import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TransactionStatus;
+import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.FieldDTO;
+import com.atl.backend.dto.LobbyBookingDTO;
+import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Booking;
 import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.model.LobbyBookingParticipate;
 import com.atl.backend.model.MatchBooking;
+import com.atl.backend.model.Field;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,7 +66,8 @@ public class BookingService {
     }
 
     public List<LobbyBooking> getLobbyBookingsByPlayerId(Integer playerId) {
-        List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository.findByPlayer_PlayerId(playerId);
+        List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
+                .findByPlayer_PlayerId(playerId);
         List<LobbyBooking> lobbyBookings = List.of();
         for (LobbyBookingParticipate participation : participations) {
             lobbyBookings.add(participation.getLobbyBooking());
@@ -67,7 +76,8 @@ public class BookingService {
     }
 
     public List<LobbyBooking> getActiveLobbyBookingsByPlayerId(Integer playerId) {
-        List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository.findByPlayer_PlayerId(playerId);
+        List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
+                .findByPlayer_PlayerId(playerId);
         List<LobbyBooking> lobbyBookings = List.of();
         for (LobbyBookingParticipate participation : participations) {
             if (participation.getLobbyBooking().getBooking().getStatus() != BookingStatus.CANCELED
@@ -79,7 +89,8 @@ public class BookingService {
     }
 
     public List<LobbyBooking> getNotRefundedLobbyBookingsByPlayerId(Integer playerId) {
-        List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository.findByPlayer_PlayerId(playerId);
+        List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
+                .findByPlayer_PlayerId(playerId);
         List<LobbyBooking> lobbyBookings = List.of();
         for (LobbyBookingParticipate participation : participations) {
             if (participation.getTransactionGroup().getStatus() != TransactionStatus.REFUNDED) {
@@ -95,8 +106,8 @@ public class BookingService {
                         playerId)
                 .stream().filter(p -> p.getTransactionGroup().getStatus() != TransactionStatus.CONFIRMED)
                 .toList();
-        
-        if(participations.size() > 0) {
+
+        if (participations.size() > 0) {
             return 0;
         }
         return participations.get(0).getPlayersPaid();
@@ -128,5 +139,71 @@ public class BookingService {
 
     public Optional<MatchBooking> getMatchBookingByBookingId(Integer bookingId) {
         return matchBookingRepository.findById(bookingId);
+    }
+
+    public List<LobbyBooking> getBookedLobbyBookings(SportCategory sportCategory, Short totalPlayers,
+            Integer selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
+        List<LobbyBooking> lobbyBookings = lobbyBookingRepository
+                .findBookedByBooking_SportCategory(
+                        sportCategory);
+        if (totalPlayers != null) {
+            lobbyBookings = lobbyBookings.stream().filter(lb -> lb.getTotalPlayers() == totalPlayers).toList();
+        }
+
+        if (selectedCityId != null) {
+            lobbyBookings = lobbyBookings.stream()
+                    .filter(lb -> lb.getBooking().getField().getCity().getId() == selectedCityId).toList();
+        }
+
+        if (startTime != null) {
+            lobbyBookings = lobbyBookings.stream().filter(lb -> !lb.getBooking().getStartTime().isBefore(startTime))
+                    .toList();
+        }
+
+        if (finishTime != null) {
+            lobbyBookings = lobbyBookings.stream().filter(lb -> !lb.getBooking().getFinishTime().isAfter(finishTime))
+                    .toList();
+        }
+
+        return lobbyBookings;
+    }
+
+    public LobbyInfoResponse getLobbyInfo(Integer lobbyId, Integer playerId) {
+        Optional<LobbyBooking> lobbyBookingOptional = getLobbyBookingByBookingId(lobbyId);
+        if (lobbyBookingOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.BOOKING_NOT_FOUND);
+        }
+        Optional<LobbyBookingParticipate> lobbyBookingParticipate = getLobbyBookingParticipateByPlayerIdAndLobbyBookingId(
+                playerId, lobbyId);
+        LobbyBooking lobbyBooking = lobbyBookingOptional.get();
+        String usernamePerBooking = lobbyBooking.getOwnerPlayer().getAccount().getUsername() + " ("
+                + lobbyBooking.getOwnerPlayer().getAccount().getName() + " "
+                + lobbyBooking.getOwnerPlayer().getAccount().getSurname() + ")";
+        Short maxPlayers = lobbyBooking.getTotalPlayers();
+        Short currentPlayers = lobbyBooking.getCurrentPlayers();
+        Short playersPaid = 0;
+        String completeAddress = lobbyBooking.getBooking().getField().getCompleteAddress();
+        Field field = lobbyBooking.getBooking().getField();
+        if (lobbyBookingParticipate.isPresent()) {
+            playersPaid = lobbyBookingParticipate.get().getPlayersPaid();
+        }
+
+        return LobbyInfoResponse.builder()
+                .lobbyBooking(LobbyBookingDTO.fromLobbyBooking(lobbyBooking))
+                .usernamePerBooking(usernamePerBooking)
+                .maxPlayersPerLobby(maxPlayers)
+                .currentPlayersPerLobby(currentPlayers)
+                .playersPaidPerBooking(playersPaid)
+                .completeAddressPerField(completeAddress)
+                .field(FieldDTO.fromField(field))
+                .build();
+    }
+
+    public Optional<LobbyBookingParticipate> getLobbyBookingParticipateByPlayerIdAndLobbyBookingId(Integer playerId,
+            Integer lobbyBookingId) {
+        Optional<LobbyBookingParticipate> lobbyBookingParticipateOptional = lobbyBookingParticipateRepository
+                .findByPlayer_PlayerIdAndLobbyBooking_Booking_Id(playerId, lobbyBookingId);
+
+        return lobbyBookingParticipateOptional;
     }
 }

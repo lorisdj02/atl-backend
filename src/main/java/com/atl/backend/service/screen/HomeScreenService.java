@@ -1,6 +1,7 @@
-package com.atl.backend.service;
+package com.atl.backend.service.screen;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +18,11 @@ import com.atl.backend.model.*;
 import com.atl.backend.model.enums.*;
 
 import com.atl.backend.response.*;
+import com.atl.backend.service.BookingService;
+import com.atl.backend.service.FieldService;
+import com.atl.backend.service.MatchService;
+import com.atl.backend.service.TeamService;
+import com.atl.backend.service.TournamentService;
 
 @Service
 public class HomeScreenService {
@@ -38,7 +44,8 @@ public class HomeScreenService {
 
         }
 
-        public PlayerHomeResponse getPlayerHomeResponse(Integer playerId, SportCategory sportCategory) {
+        @Transactional(readOnly = true)
+        public PlayerHomeResponse getPlayerHomeScreen(Integer playerId, SportCategory sportCategory) {
 
                 List<Tournament> activeTournaments = new ArrayList<>();
                 Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
@@ -162,7 +169,8 @@ public class HomeScreenService {
                                 .playersPaidPerBooking(playersPaidPerBooking).build();
         }
 
-        public CoordinatorHomeResponse getCoordinatorHomeResponse(Integer coordinatorId, SportCategory sportCategory) {
+        @Transactional(readOnly = true)
+        public CoordinatorHomeResponse getCoordinatorHomeScreen(Integer coordinatorId, SportCategory sportCategory) {
                 List<Tournament> activeTournaments = new ArrayList<>();
                 Map<Integer, List<FootballMatch>> footballMatchesPerTournament = new HashMap<>();
                 Map<Integer, Team> teamsCache = new HashMap<>();
@@ -217,7 +225,8 @@ public class HomeScreenService {
                                 .build();
         }
 
-        public RefereeHomeResponse getRefereeHomeResponse(Integer refereeId, SportCategory sportCategory) {
+        @Transactional(readOnly = true)
+        public RefereeHomeResponse getRefereeHomeScreen(Integer refereeId, SportCategory sportCategory) {
                 List<FootballMatch> assignedFootballMatches = new ArrayList<>();
                 Map<Integer, Team> teamsCache = new HashMap<>();
                 Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
@@ -258,7 +267,8 @@ public class HomeScreenService {
 
         }
 
-        public OrganizationHomeResponse getOrganizationHomeResponse(Integer organizationId,
+        @Transactional(readOnly = true)
+        public OrganizationHomeResponse getOrganizationHomeScreen(Integer organizationId,
                         SportCategory sportCategory) {
                 List<Field> fields = new ArrayList<>();
                 List<Booking> generalBookings = new ArrayList<>();

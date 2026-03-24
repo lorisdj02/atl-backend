@@ -78,12 +78,12 @@ public class FieldService {
         return fieldRepository.findByOrganization_OrganizationId(organizationId);
     }
 
-    public LocalTime getMinOpeningTimeByCityId(Integer cityId) {
-        return cityRepository.findMinOpeningTimeByCity_Id(cityId);
+    public LocalTime getMinOpeningTimeByCityId(Integer cityId, SportCategory sportCategory) {
+        return fieldCategoryRepository.findMinOpeningTimeByCity_IdAndSportCategory(cityId, sportCategory);
     }
 
-    public LocalTime getMaxClosingTimeByCityId(Integer cityId) {
-        return cityRepository.findMaxClosingTimeByCity_Id(cityId);
+    public LocalTime getMaxClosingTimeByCityId(Integer cityId, SportCategory sportCategory) {
+        return fieldCategoryRepository.findMaxClosingTimeByCity_IdAndSportCategory(cityId, sportCategory);
     }
 
 }

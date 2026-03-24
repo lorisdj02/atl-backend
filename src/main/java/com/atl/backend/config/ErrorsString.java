@@ -31,6 +31,8 @@ public class ErrorsString {
 
     static final public String INVALID_ACCOUNT_ROLE = "INVALID_ACCOUNT_ROLE";
 
+    static final public String INVALID_TIME_RANGE = "INVALID_TIME_RANGE";
+
     // Conflict errors
 
     static final public String PLAYER_IS_IN_ACTIVE_TOURNAMENTS = "PLAYER_IS_IN_ACTIVE_TOURNAMENTS";

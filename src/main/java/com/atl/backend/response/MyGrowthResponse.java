@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.atl.backend.config.ApiJsonKeys;
-import com.atl.backend.dto.CityDTO;
 import com.atl.backend.dto.GrowthStepDTO;
 import com.atl.backend.model.enums.SportCategory;
 import com.fasterxml.jackson.annotation.*;

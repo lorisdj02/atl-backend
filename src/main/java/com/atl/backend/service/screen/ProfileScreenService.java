@@ -1,4 +1,4 @@
-package com.atl.backend.service;
+package com.atl.backend.service.screen;
 
 import com.atl.backend.repository.MatchRepository;
 
@@ -21,8 +21,12 @@ import com.atl.backend.model.Sport;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.MyGrowthResponse;
+import com.atl.backend.service.AccountService;
+import com.atl.backend.service.SportService;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.atl.backend.exception.*;
 
 @Service
@@ -38,7 +42,8 @@ public class ProfileScreenService {
         this.sportService = sportService;
     }
 
-    public MyGrowthResponse getMyGrowthResponse(Integer accountId) {
+    @Transactional(readOnly = true)
+    public MyGrowthResponse getMyGrowthScreen(Integer accountId) {
         Optional<Account> optionalAccount = accountService.getAccountById(accountId);
         if (optionalAccount.isEmpty()) {
             throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);

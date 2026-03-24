@@ -15,4 +15,9 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
     Optional<Player> findByPlayerId(Integer playerId);
 
     void deleteByAccount_Id(Integer accountId);
+
+    boolean existsByAccount_Id(Integer accountId);
+
+    boolean existsByPlayerId(Integer playerId);
+
 }
