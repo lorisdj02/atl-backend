@@ -1,6 +1,8 @@
 package com.atl.backend.service;
 
+import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
@@ -73,6 +75,7 @@ public class AccountService {
                 coordinator.setAccount(account);
                 saveCoordinator(coordinator);
             }
+            default -> throw new BadRequestException(ErrorsString.INVALID_ACCOUNT_ROLE);
         }
         return account;
     }
@@ -99,6 +102,14 @@ public class AccountService {
 
     public Optional<Account> getAccountByFirebaseUid(String firebaseUid) {
         return accountRepository.findByFirebaseUid(firebaseUid);
+    }
+
+    public Optional<Account> getAccountByEmail(String email) {
+        return accountRepository.findByEmail(email);
+    }
+
+    public Optional<Account> getAccountByUsername(String username) {
+        return accountRepository.findByUsername(username);
     }
 
     public Player savePlayer(Player player) {
@@ -131,7 +142,8 @@ public class AccountService {
 
 
     @Transactional(readOnly = true)
-    public Short getAccountLevel(Integer accountId) {
+    public Short getAccountLevel() {
+        Integer accountId = AccountContext.getAccountId();
         Optional<Account> accountOptional = getAccountById(accountId);
         if (accountOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);

@@ -41,73 +41,50 @@ public class HomeController {
         this.sportService = sportService;
     }
 
-    @GetMapping("/{sportCategory}/player/{playerId}")
-    public ResponseEntity<PlayerHomeResponse> getPlayerHomeResponse(@PathVariable String sportCategory,
-            @PathVariable Integer playerId) {
-        Optional<Player> player = accountService.getPlayerByPlayerId(playerId);
-        if (player.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
-        }
+    @GetMapping("/{sportCategory}/player")
+    public ResponseEntity<PlayerHomeResponse> getPlayerHomeResponse(@PathVariable String sportCategory) {
 
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        PlayerHomeResponse response = homeService.getPlayerHomeScreen(playerId,
+        PlayerHomeResponse response = homeService.getPlayerHomeScreen(
                 SportCategory.valueOf(sportCategory.toUpperCase()));
         return ResponseEntity.ok(response);
 
     }
 
-    @GetMapping("/{sportCategory}/coordinator/{coordinatorId}")
-    public ResponseEntity<CoordinatorHomeResponse> getCoordinatorHomeResponse(@PathVariable String sportCategory,
-            @PathVariable Integer coordinatorId) {
-        Optional<Coordinator> coordinator = accountService.getCoordinatorByCoordinatorId(coordinatorId);
-        if (coordinator.isEmpty()) {
-            throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND);
-        }
-
+    @GetMapping("/{sportCategory}/coordinator")
+    public ResponseEntity<CoordinatorHomeResponse> getCoordinatorHomeResponse(@PathVariable String sportCategory) {
+  
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        CoordinatorHomeResponse response = homeService.getCoordinatorHomeScreen(coordinatorId,
-                SportCategory.valueOf(sportCategory.toUpperCase()));
+        CoordinatorHomeResponse response = homeService.getCoordinatorHomeScreen(SportCategory.valueOf(sportCategory.toUpperCase()));
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{sportCategory}/referee/{refereeId}")
-    public ResponseEntity<RefereeHomeResponse> getRefereeHomeResponse(@PathVariable String sportCategory,
-            @PathVariable Integer refereeId) {
-        Optional<Referee> referee = accountService.getRefereeByRefereeId(refereeId);
-        if (referee.isEmpty()) {
-            throw new NotFoundException(ErrorsString.REFEREE_NOT_FOUND);
-        }
+    @GetMapping("/{sportCategory}/referee")
+    public ResponseEntity<RefereeHomeResponse> getRefereeHomeResponse(@PathVariable String sportCategory) {
 
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        RefereeHomeResponse response = homeService.getRefereeHomeScreen(refereeId,
-                SportCategory.valueOf(sportCategory.toUpperCase()));
+        RefereeHomeResponse response = homeService.getRefereeHomeScreen(SportCategory.valueOf(sportCategory.toUpperCase()));
         return ResponseEntity.ok(response);
 
     }
 
-    @GetMapping("/{sportCategory}/organization/{organizationId}")
-    public ResponseEntity<OrganizationHomeResponse> getOrganizationHomeResponse(@PathVariable String sportCategory,
-            @PathVariable Integer organizationId) {
-        Optional<Organization> organization = accountService.getOrganizationByOrganizationId(organizationId);
-        if (organization.isEmpty()) {
-            throw new NotFoundException(ErrorsString.ORGANIZATION_NOT_FOUND);
-        }
+    @GetMapping("/{sportCategory}/organization")
+    public ResponseEntity<OrganizationHomeResponse> getOrganizationHomeResponse(@PathVariable String sportCategory) {
 
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        OrganizationHomeResponse response = homeService.getOrganizationHomeScreen(organizationId,
-                SportCategory.valueOf(sportCategory.toUpperCase()));
+        OrganizationHomeResponse response = homeService.getOrganizationHomeScreen(SportCategory.valueOf(sportCategory.toUpperCase()));
 
         return ResponseEntity.ok(response);
 

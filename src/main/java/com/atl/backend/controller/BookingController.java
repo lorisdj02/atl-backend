@@ -47,17 +47,12 @@ public class BookingController {
 
     // Funziona così:
     // /football/1/join-lobby?totalPlayers=4&selectedCityId=1&startTime=2024-07-01T10:00:00&finishTime=2024-07-01T12:00:00
-    @GetMapping("/{sportCategory}/{playerId}/join-lobby")
+    @GetMapping("/{sportCategory}/join-lobby")
     public ResponseEntity<JoinLobbyResponse> getJoinLobbyResponse(@PathVariable String sportCategory,
-            @PathVariable Integer playerId,
             @RequestParam(required = false) Short totalPlayers, @RequestParam(required = false) Integer selectedCityId,
             @RequestParam(required = false) String startTime, @RequestParam(required = false) String finishTime) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
-        }
-
-        if (!accountService.existsByPlayerId(playerId)) {
-            throw new BadRequestException(ErrorsString.PLAYER_NOT_FOUND);
         }
 
         LocalDateTime start = null;
@@ -79,7 +74,7 @@ public class BookingController {
         }
 
         SportCategory sportCat = SportCategory.valueOf(sportCategory.toUpperCase());
-        return ResponseEntity.ok(bookingScreenService.getJoinLobbyScreen(playerId, sportCat, totalPlayers,
+        return ResponseEntity.ok(bookingScreenService.getJoinLobbyScreen(sportCat, totalPlayers,
                 selectedCityId, start, end));
     }
 }

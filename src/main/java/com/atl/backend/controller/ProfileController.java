@@ -25,13 +25,9 @@ public class ProfileController {
         this.accountService = accountService;
     }
 
-    @RequestMapping("/{accountId}/growth-screen")
-    public ResponseEntity<MyGrowthResponse> getMyGrowthResponse(@PathVariable Integer accountId){
-        Optional<Account> account = accountService.getAccountById(accountId);
-        if(account.isEmpty()){
-            throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
-        }
-        MyGrowthResponse response = profileScreenService.getMyGrowthScreen(accountId);
+    @RequestMapping("/growth-screen")
+    public ResponseEntity<MyGrowthResponse> getMyGrowthResponse() {
+        MyGrowthResponse response = profileScreenService.getMyGrowthScreen();
         return ResponseEntity.ok(response);
     }
 }

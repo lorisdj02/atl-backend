@@ -3,5 +3,7 @@ public enum AccountRole {
     PLAYER,
     COORDINATOR,
     REFEREE,
-    ORGANIZATION
+    ORGANIZATION,
+    GUEST,
+    ADMIN
 }

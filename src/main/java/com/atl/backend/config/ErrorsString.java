@@ -63,4 +63,16 @@ public class ErrorsString {
 
     static final public String FORBIDDEN = "FORBIDDEN";
 
+    static final public String PLAYER_ROLE_REQUIRED = "PLAYER_ROLE_REQUIRED";
+
+    static final public String COORDINATOR_ROLE_REQUIRED = "COORDINATOR_ROLE_REQUIRED";
+
+    static final public String REFEREE_ROLE_REQUIRED = "REFEREE_ROLE_REQUIRED";
+
+    static final public String ORGANIZATION_ROLE_REQUIRED = "ORGANIZATION_ROLE_REQUIRED";
+
+    static final public String ADMIN_ROLE_REQUIRED = "ADMIN_ROLE_REQUIRED";
+
+    static final public String AUTHENTICATION_REQUIRED = "AUTHENTICATION_REQUIRED";
+
 }

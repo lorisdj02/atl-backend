@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 
 import com.atl.backend.dto.GrowthStepDTO;
@@ -43,7 +44,8 @@ public class ProfileScreenService {
     }
 
     @Transactional(readOnly = true)
-    public MyGrowthResponse getMyGrowthScreen(Integer accountId) {
+    public MyGrowthResponse getMyGrowthScreen() {
+        Integer accountId = AccountContext.getAccountId();
         Optional<Account> optionalAccount = accountService.getAccountById(accountId);
         if (optionalAccount.isEmpty()) {
             throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);

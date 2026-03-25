@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.CityDTO;
 import com.atl.backend.dto.FieldDTO;
@@ -22,7 +23,6 @@ import com.atl.backend.response.BookFieldResponse;
 import com.atl.backend.service.AccountService;
 import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
-
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,8 +46,10 @@ public class BookingScreenService {
         Map<Integer, LocalTime> maxClosingTimePerCity = new HashMap<>();
         List<City> cities = fieldService.getAllCities();
         for (City city : cities) {
-            minOpeningTimePerCity.put(city.getId(), fieldService.getMinOpeningTimeByCityId(city.getId(), sportCategory));
-            maxClosingTimePerCity.put(city.getId(), fieldService.getMaxClosingTimeByCityId(city.getId(), sportCategory));
+            minOpeningTimePerCity.put(city.getId(),
+                    fieldService.getMinOpeningTimeByCityId(city.getId(), sportCategory));
+            maxClosingTimePerCity.put(city.getId(),
+                    fieldService.getMaxClosingTimeByCityId(city.getId(), sportCategory));
         }
         return BookFieldResponse.builder()
                 .cities(cities.stream().map(CityDTO::fromCity).toList())
@@ -57,8 +59,10 @@ public class BookingScreenService {
     }
 
     @Transactional(readOnly = true)
-    public JoinLobbyResponse getJoinLobbyScreen(Integer playerId, SportCategory sportCategory, Short totalPlayers,
+    public JoinLobbyResponse getJoinLobbyScreen(SportCategory sportCategory, Short totalPlayers,
             Integer selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
+
+        Integer playerId = AccountContext.getPlayerId();
         Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
         if (optionalPlayer.isEmpty()) {
             throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);

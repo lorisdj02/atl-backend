@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.*;
 import com.atl.backend.exception.*;
@@ -45,7 +46,8 @@ public class HomeScreenService {
         }
 
         @Transactional(readOnly = true)
-        public PlayerHomeResponse getPlayerHomeScreen(Integer playerId, SportCategory sportCategory) {
+        public PlayerHomeResponse getPlayerHomeScreen(SportCategory sportCategory) {
+                Integer playerId = AccountContext.getPlayerId();
 
                 List<Tournament> activeTournaments = new ArrayList<>();
                 Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
@@ -170,7 +172,8 @@ public class HomeScreenService {
         }
 
         @Transactional(readOnly = true)
-        public CoordinatorHomeResponse getCoordinatorHomeScreen(Integer coordinatorId, SportCategory sportCategory) {
+        public CoordinatorHomeResponse getCoordinatorHomeScreen(SportCategory sportCategory) {
+                Integer coordinatorId = AccountContext.getCoordinatorId();
                 List<Tournament> activeTournaments = new ArrayList<>();
                 Map<Integer, List<FootballMatch>> footballMatchesPerTournament = new HashMap<>();
                 Map<Integer, Team> teamsCache = new HashMap<>();
@@ -226,7 +229,8 @@ public class HomeScreenService {
         }
 
         @Transactional(readOnly = true)
-        public RefereeHomeResponse getRefereeHomeScreen(Integer refereeId, SportCategory sportCategory) {
+        public RefereeHomeResponse getRefereeHomeScreen(SportCategory sportCategory) {
+                Integer refereeId = AccountContext.getRefereeId();
                 List<FootballMatch> assignedFootballMatches = new ArrayList<>();
                 Map<Integer, Team> teamsCache = new HashMap<>();
                 Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
@@ -268,8 +272,9 @@ public class HomeScreenService {
         }
 
         @Transactional(readOnly = true)
-        public OrganizationHomeResponse getOrganizationHomeScreen(Integer organizationId,
-                        SportCategory sportCategory) {
+        public OrganizationHomeResponse getOrganizationHomeScreen(SportCategory sportCategory) {
+                Integer organizationId = AccountContext.getOrganizationId();
+
                 List<Field> fields = new ArrayList<>();
                 List<Booking> generalBookings = new ArrayList<>();
                 Map<Integer, String> cityNamePerField = new HashMap<>();

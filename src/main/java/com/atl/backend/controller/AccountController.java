@@ -23,13 +23,10 @@ public class AccountController {
         this.accountService = accountService;
     }
 
-    @GetMapping("/{accountId}/level")
-    public ResponseEntity<Short> getAccountLevel(@PathVariable Integer accountId) {
-        Optional<Account> account = accountService.getAccountById(accountId);
-        if (account.isEmpty()) {
-            throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
-        }
-        return ResponseEntity.ok(accountService.getAccountLevel(accountId));
+    @GetMapping("/level")
+    public ResponseEntity<Short> getAccountLevel() {
+        // Ottieni l'accountId dal contesto di autenticazione
+        return ResponseEntity.ok(accountService.getAccountLevel());
     }
 
 
