@@ -9,10 +9,16 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException.Forbidden;
 
+import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.TournamentDTO;
+import com.atl.backend.exception.ForbiddenException;
+import com.atl.backend.model.Account;
 import com.atl.backend.model.Callup;
 import com.atl.backend.model.Coordinator;
+import com.atl.backend.model.FavoriteTournament;
 import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.FootballTournamentStats;
 import com.atl.backend.model.Player;
@@ -22,6 +28,7 @@ import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TournamentStatus;
 import com.atl.backend.repository.CallupRepository;
+import com.atl.backend.repository.FavoriteTournamentRepository;
 import com.atl.backend.repository.FootballStandingRepository;
 import com.atl.backend.repository.FootballTournamentStatsRepository;
 import com.atl.backend.repository.SportRepository;
@@ -39,26 +46,20 @@ public class TournamentService {
     @Autowired
     private MatchService matchService;
 
-    private final AccountService accountService;
-    private final TournamentRepository tournamentRepository;
-    private final FootballStandingRepository footballStandingRepository;
-    private final TournamentParticipationRepository tournamentParticipationRepository;
-    private final CallupRepository callupRepository;
-    private final FootballTournamentStatsRepository footballTournamentStatsRepository;
-
-    public TournamentService(TournamentRepository tournamentRepository,
-            FootballStandingRepository footballStandingRepository,
-            TournamentParticipationRepository tournamentParticipationRepository,
-            CallupRepository callupRepository,
-            FootballTournamentStatsRepository footballTournamentStatsRepository, AccountService accountService) {
-        this.tournamentRepository = tournamentRepository;
-        this.footballStandingRepository = footballStandingRepository;
-        this.tournamentParticipationRepository = tournamentParticipationRepository;
-        this.callupRepository = callupRepository;
-        this.footballTournamentStatsRepository = footballTournamentStatsRepository;
-        this.accountService = accountService;
-
-    }
+    @Autowired
+    private AccountService accountService;
+    @Autowired
+    private TournamentRepository tournamentRepository;
+    @Autowired
+    private FootballStandingRepository footballStandingRepository;
+    @Autowired
+    private TournamentParticipationRepository tournamentParticipationRepository;
+    @Autowired
+    private CallupRepository callupRepository;
+    @Autowired
+    private FootballTournamentStatsRepository footballTournamentStatsRepository;
+    @Autowired
+    private FavoriteTournamentRepository favoriteTournamentRepository;
 
     public void deleteAllTournaments() {
         tournamentRepository.deleteAll();
@@ -99,7 +100,8 @@ public class TournamentService {
 
     public List<Tournament> getActiveTournamentsByCoordinatorIdAndSportCategory(Integer coordinatorId,
             SportCategory sportCategory) {
-        return tournamentRepository.findActiveTournamentsByCoordinatorIdAndSportCategory(coordinatorId, sportCategory);
+        return tournamentRepository.findActiveTournamentsByCoordinator_CoordinatorIdAndSportCategory(coordinatorId,
+                sportCategory);
     }
 
     public List<Tournament> getTournamentsByTeamId(Integer teamId) {
@@ -187,7 +189,6 @@ public class TournamentService {
             tournamentParticipationRepository.save(tournamentParticipation);
             System.out.println("[DEBUG - TournamentService] - New tournament participation created for team " + teamId
                     + " and tournament " + tournamentId);
-            return true;
         }
 
         for (Integer playerId : playerIds) {
@@ -408,5 +409,56 @@ public class TournamentService {
         return callups.stream().map(callup -> callup.getPlayer().getPlayerId()).toList();
     }
 
-    
+    public List<TournamentDTO> getMyTournaments(SportCategory sportCategory) {
+        Integer accountId = AccountContext.getAccountId();
+        if (accountId == null) {
+            throw new ForbiddenException(ErrorsString.AUTHENTICATION_REQUIRED);
+        }
+        Account account = AccountContext.getActiveAccount();
+        List<TournamentDTO> myTournaments = new ArrayList<>();
+        switch (account.getRole()) {
+            case PLAYER:
+                Player player = AccountContext.getActivePlayer();
+                List<Callup> callups = callupRepository.findByPlayer_PlayerId(player.getPlayerId());
+                for (Callup callup : callups) {
+                    Tournament tournament = callup.getTournament();
+                    if (tournament.getSport().getSportCategory() == sportCategory
+                            && tournament.getStatus() != TournamentStatus.CANCELED
+                            && tournament.getStatus() != TournamentStatus.FINISHED) {
+                        TournamentDTO tournamentDTO = TournamentDTO.fromTournament(tournament);
+                        tournamentDTO.setIsParticipating(true);
+                        myTournaments.add(tournamentDTO);
+                    }
+                }
+                break;
+            case COORDINATOR:
+                Coordinator coordinator = AccountContext.getActiveCoordinator();
+                List<Tournament> tournaments = getActiveTournamentsByCoordinatorIdAndSportCategory(
+                        coordinator.getCoordinatorId(), sportCategory);
+                for (Tournament tournament : tournaments) {
+                    TournamentDTO tournamentDTO = TournamentDTO.fromTournament(tournament);
+                    tournamentDTO.setIsParticipating(true);
+                    myTournaments.add(tournamentDTO);
+                }
+                break;
+            default:
+                throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
+        }
+
+        List<FavoriteTournament> favoriteTournaments = favoriteTournamentRepository
+                .findByAccount_IdAndTournament_Sport_SportCategory(accountId, sportCategory);
+
+        for (FavoriteTournament favoriteTournament : favoriteTournaments) {
+            Tournament tournament = favoriteTournament.getTournament();
+            if (tournament.getStatus() != TournamentStatus.CANCELED
+                    && tournament.getStatus() != TournamentStatus.FINISHED) {
+                TournamentDTO tournamentDTO = TournamentDTO.fromTournament(tournament);
+                tournamentDTO.setIsFavorite(true);
+                if (!myTournaments.contains(tournamentDTO)) {
+                    myTournaments.add(tournamentDTO);
+                }
+            }
+        }
+        return myTournaments;
+    }
 }

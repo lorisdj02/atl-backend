@@ -67,6 +67,10 @@ public class AccountContext {
             return get().getOrganizationId();
     }
 
+    public static Account getActiveAccount() {
+        return get().getActiveAccount();
+    }
+
     public static Player getActivePlayer() {
         return get().getActivePlayer();
     }

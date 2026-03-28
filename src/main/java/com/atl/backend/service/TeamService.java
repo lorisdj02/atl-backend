@@ -1,5 +1,6 @@
 package com.atl.backend.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.atl.backend.config.ErrorsString;
@@ -30,26 +31,20 @@ import java.util.List;
 
 @Service
 public class TeamService {
-    private final TeamRepository teamRepository;
-    private final PlayerRepository playerRepository;
-    private final TeamRequestRepository teamRequestRepository;
-    private final PlaysAtRepository playsAtRepository;
-    private final FootballTeamStatRepository footballTeamStatRepository;
-    private final TournamentService tournamentService;
-    private final PalmaresRepository palmaresRepository;
-
-    public TeamService(TeamRepository teamRepository, PlayerRepository playerRepository,
-            TeamRequestRepository teamRequestRepository, PlaysAtRepository playsAtRepository,
-            FootballTeamStatRepository footballTeamStatRepository, TournamentService tournamentService,
-            PalmaresRepository palmaresRepository) {
-        this.teamRepository = teamRepository;
-        this.playerRepository = playerRepository;
-        this.teamRequestRepository = teamRequestRepository;
-        this.playsAtRepository = playsAtRepository;
-        this.footballTeamStatRepository = footballTeamStatRepository;
-        this.tournamentService = tournamentService;
-        this.palmaresRepository = palmaresRepository;
-    }
+    @Autowired
+    private TeamRepository teamRepository;
+    @Autowired
+    private PlayerRepository playerRepository;
+    @Autowired
+    private TeamRequestRepository teamRequestRepository;
+    @Autowired
+    private PlaysAtRepository playsAtRepository;
+    @Autowired
+    private FootballTeamStatRepository footballTeamStatRepository;
+    @Autowired
+    private TournamentService tournamentService;
+    @Autowired
+    private PalmaresRepository palmaresRepository;
 
     public List<TeamRequest> getAllTeamRequests() {
         return teamRequestRepository.findAll();
@@ -165,8 +160,8 @@ public class TeamService {
                 footballTeamStat.setTeam(team);
                 footballTeamStat.setPlayer(player);
             }
-            if(!team.getCaptainPlayer().getPlayerId().equals(playerId)){
-            team.setNumPlayers((short) (team.getNumPlayers() + 1));
+            if (!team.getCaptainPlayer().getPlayerId().equals(playerId)) {
+                team.setNumPlayers((short) (team.getNumPlayers() + 1));
             }
             teamRepository.save(team);
             return Optional.of(playsAtRepository.save(playsAt));

@@ -28,34 +28,42 @@ public class AbstractTeamResponse {
     private TeamDTO team;
 
     @NotNull
+    @Builder.Default
     @JsonProperty(ApiJsonKeys.players)
     private List<PlayerDTO> players = new ArrayList<>();
 
     @NotNull
+    @Builder.Default
     @JsonProperty(ApiJsonKeys.palmares)
     private List<PalmaresDTO> palmares = new ArrayList<>();
 
     @NotNull
+    @Builder.Default
     @JsonProperty(ApiJsonKeys.tournaments)
     private List<TournamentDTO> tournaments = new ArrayList<>();
 
     @NotNull
+    @Builder.Default
     @JsonProperty(ApiJsonKeys.coordinatorsCache)
     private List<CoordinatorDTO> coordinatorsCache = new ArrayList<>();
 
     @NotNull
+    @Builder.Default
     @JsonProperty(ApiJsonKeys.fieldsCache)
     private List<FieldDTO> fieldsCache = new ArrayList<>();
 
     @NotNull
+    @Builder.Default
     @JsonProperty(ApiJsonKeys.footballPlayerStatsCache)
     private List<FootballTeamStatDTO> footballPlayerStatsCache = new ArrayList<>();
 
     @NotNull
+    @Builder.Default
     @JsonProperty(ApiJsonKeys.cityNamePerField)
     private Map<Integer, String> cityNamePerField = new HashMap<>();
 
     @NotNull
+    @Builder.Default
     @JsonProperty(ApiJsonKeys.historicalPlayers)
     private List<PlayerDTO> historicalPlayers = new ArrayList<>();
 }

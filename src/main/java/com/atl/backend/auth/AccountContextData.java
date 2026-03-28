@@ -27,6 +27,7 @@ public class AccountContextData {
     private Integer refereeId;
     private Integer organizationId;
 
+    private Account activeAccount;
     private Player activePlayer;
     private Referee activeReferee;
     private Coordinator activeCoordinator;
@@ -91,5 +92,16 @@ public class AccountContextData {
         }
 
         return activeOrganization;
+    }
+
+    public Account getActiveAccount() {
+        if (activeAccount == null) {
+            Optional<Account> accountOpt = accountService.getAccountById(accountId);
+            if (accountOpt.isEmpty()) {
+                throw new ForbiddenException(ErrorsString.ACCOUNT_NOT_FOUND);
+            }
+            activeAccount = accountOpt.get();
+        }
+        return activeAccount;
     }
 }

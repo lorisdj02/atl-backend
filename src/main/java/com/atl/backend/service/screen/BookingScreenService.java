@@ -24,81 +24,83 @@ import com.atl.backend.service.AccountService;
 import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BookingScreenService {
-    private final BookingService bookingService;
-    private final FieldService fieldService;
-    private final AccountService accountService;
+        @Autowired
+        private BookingService bookingService;
+        @Autowired
+        private FieldService fieldService;
+        @Autowired
+        private AccountService accountService;
 
-    public BookingScreenService(BookingService bookingService, FieldService fieldService,
-            AccountService accountService) {
-        this.bookingService = bookingService;
-        this.fieldService = fieldService;
-        this.accountService = accountService;
-    }
-
-    @Transactional(readOnly = true)
-    public BookFieldResponse getBookFieldScreen(SportCategory sportCategory) {
-        Map<Integer, LocalTime> minOpeningTimePerCity = new HashMap<>();
-        Map<Integer, LocalTime> maxClosingTimePerCity = new HashMap<>();
-        List<City> cities = fieldService.getAllCities();
-        for (City city : cities) {
-            minOpeningTimePerCity.put(city.getId(),
-                    fieldService.getMinOpeningTimeByCityId(city.getId(), sportCategory));
-            maxClosingTimePerCity.put(city.getId(),
-                    fieldService.getMaxClosingTimeByCityId(city.getId(), sportCategory));
-        }
-        return BookFieldResponse.builder()
-                .cities(cities.stream().map(CityDTO::fromCity).toList())
-                .minOpeningTimePerCity(minOpeningTimePerCity)
-                .maxClosingTimePerCity(maxClosingTimePerCity)
-                .build();
-    }
-
-    @Transactional(readOnly = true)
-    public JoinLobbyResponse getJoinLobbyScreen(SportCategory sportCategory, Short totalPlayers,
-            Integer selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
-
-        Integer playerId = AccountContext.getPlayerId();
-        Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
-        if (optionalPlayer.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+        @Transactional(readOnly = true)
+        public BookFieldResponse getBookFieldScreen(SportCategory sportCategory) {
+                Map<Integer, LocalTime> minOpeningTimePerCity = new HashMap<>();
+                Map<Integer, LocalTime> maxClosingTimePerCity = new HashMap<>();
+                List<City> cities = fieldService.getAllCities();
+                for (City city : cities) {
+                        minOpeningTimePerCity.put(city.getId(),
+                                        fieldService.getMinOpeningTimeByCityId(city.getId(), sportCategory));
+                        maxClosingTimePerCity.put(city.getId(),
+                                        fieldService.getMaxClosingTimeByCityId(city.getId(), sportCategory));
+                }
+                return BookFieldResponse.builder()
+                                .cities(cities.stream().map(CityDTO::fromCity).toList())
+                                .minOpeningTimePerCity(minOpeningTimePerCity)
+                                .maxClosingTimePerCity(maxClosingTimePerCity)
+                                .build();
         }
 
-        Map<Integer, String> usernamePerBooking = new HashMap<>();
-        Map<Integer, Short> maxPlayersPerLobby = new HashMap<>();
-        Map<Integer, Short> currentPlayersPerLobby = new HashMap<>();
-        Map<Integer, Short> playersPaidPerBooking = new HashMap<>();
-        Map<Integer, FieldDTO> fieldsCache = new HashMap<>();
-        Map<Integer, String> completeAddressPerField = new HashMap<>();
-        List<CityDTO> cities = fieldService.getAllCities().stream().map(CityDTO::fromCity).toList();
+        @Transactional(readOnly = true)
+        public JoinLobbyResponse getJoinLobbyScreen(SportCategory sportCategory, Short totalPlayers,
+                        Integer selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
 
-        List<LobbyBooking> lobbies = bookingService.getBookedLobbyBookings(sportCategory, totalPlayers, selectedCityId,
-                startTime, finishTime);
-        for (LobbyBooking lobbyBooking : lobbies) {
-            LobbyInfoResponse lobbyInfoResponse = bookingService.getLobbyInfo(lobbyBooking.getBooking().getId(),
-                    playerId);
-            usernamePerBooking.put(lobbyBooking.getBooking().getId(), lobbyInfoResponse.getUsernamePerBooking());
-            maxPlayersPerLobby.put(lobbyBooking.getBooking().getId(), lobbyInfoResponse.getMaxPlayersPerLobby());
-            currentPlayersPerLobby.put(lobbyBooking.getBooking().getId(),
-                    lobbyInfoResponse.getCurrentPlayersPerLobby());
-            playersPaidPerBooking.put(lobbyBooking.getBooking().getId(), lobbyInfoResponse.getPlayersPaidPerBooking());
-            fieldsCache.put(lobbyBooking.getBooking().getId(), lobbyInfoResponse.getField());
-            completeAddressPerField.put(lobbyBooking.getBooking().getId(),
-                    lobbyInfoResponse.getCompleteAddressPerField());
+                Integer playerId = AccountContext.getPlayerId();
+                Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
+                if (optionalPlayer.isEmpty()) {
+                        throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+                }
+
+                Map<Integer, String> usernamePerBooking = new HashMap<>();
+                Map<Integer, Short> maxPlayersPerLobby = new HashMap<>();
+                Map<Integer, Short> currentPlayersPerLobby = new HashMap<>();
+                Map<Integer, Short> playersPaidPerBooking = new HashMap<>();
+                Map<Integer, FieldDTO> fieldsCache = new HashMap<>();
+                Map<Integer, String> completeAddressPerField = new HashMap<>();
+                List<CityDTO> cities = fieldService.getAllCities().stream().map(CityDTO::fromCity).toList();
+
+                List<LobbyBooking> lobbies = bookingService.getBookedLobbyBookings(sportCategory, totalPlayers,
+                                selectedCityId,
+                                startTime, finishTime);
+                for (LobbyBooking lobbyBooking : lobbies) {
+                        LobbyInfoResponse lobbyInfoResponse = bookingService.getLobbyInfo(
+                                        lobbyBooking.getBooking().getId(),
+                                        playerId);
+                        usernamePerBooking.put(lobbyBooking.getBooking().getId(),
+                                        lobbyInfoResponse.getUsernamePerBooking());
+                        maxPlayersPerLobby.put(lobbyBooking.getBooking().getId(),
+                                        lobbyInfoResponse.getMaxPlayersPerLobby());
+                        currentPlayersPerLobby.put(lobbyBooking.getBooking().getId(),
+                                        lobbyInfoResponse.getCurrentPlayersPerLobby());
+                        playersPaidPerBooking.put(lobbyBooking.getBooking().getId(),
+                                        lobbyInfoResponse.getPlayersPaidPerBooking());
+                        fieldsCache.put(lobbyBooking.getBooking().getId(), lobbyInfoResponse.getField());
+                        completeAddressPerField.put(lobbyBooking.getBooking().getId(),
+                                        lobbyInfoResponse.getCompleteAddressPerField());
+                }
+                return JoinLobbyResponse.builder()
+                                .lobbies(lobbies.stream().map(LobbyBookingDTO::fromLobbyBooking).toList())
+                                .usernamePerBooking(usernamePerBooking)
+                                .maxPlayersPerLobby(maxPlayersPerLobby)
+                                .currentPlayersPerLobby(currentPlayersPerLobby)
+                                .playersPaidPerBooking(playersPaidPerBooking)
+                                .fieldsCache(fieldsCache)
+                                .completeAddressPerField(completeAddressPerField)
+                                .cities(cities)
+                                .build();
         }
-        return JoinLobbyResponse.builder()
-                .lobbies(lobbies.stream().map(LobbyBookingDTO::fromLobbyBooking).toList())
-                .usernamePerBooking(usernamePerBooking)
-                .maxPlayersPerLobby(maxPlayersPerLobby)
-                .currentPlayersPerLobby(currentPlayersPerLobby)
-                .playersPaidPerBooking(playersPaidPerBooking)
-                .fieldsCache(fieldsCache)
-                .completeAddressPerField(completeAddressPerField)
-                .cities(cities)
-                .build();
-    }
 }

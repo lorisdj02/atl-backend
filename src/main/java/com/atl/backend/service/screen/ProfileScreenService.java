@@ -1,6 +1,5 @@
 package com.atl.backend.service.screen;
 
-import com.atl.backend.repository.MatchRepository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -25,6 +24,7 @@ import com.atl.backend.response.MyGrowthResponse;
 import com.atl.backend.service.AccountService;
 import com.atl.backend.service.SportService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,16 +32,12 @@ import com.atl.backend.exception.*;
 
 @Service
 public class ProfileScreenService {
-    private final MatchRepository matchRepository;
-    private final AccountService accountService;
-    private final SportService sportService;
+    
+    @Autowired
+    private  AccountService accountService;
+    @Autowired
+    private  SportService sportService;
 
-    public ProfileScreenService(AccountService accountService, MatchRepository matchRepository,
-            SportService sportService) {
-        this.accountService = accountService;
-        this.matchRepository = matchRepository;
-        this.sportService = sportService;
-    }
 
     @Transactional(readOnly = true)
     public MyGrowthResponse getMyGrowthScreen() {

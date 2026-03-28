@@ -1,5 +1,6 @@
 package com.atl.backend.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.atl.backend.repository.BookingRepository;
@@ -29,21 +30,18 @@ import java.util.Optional;
 
 @Service
 public class BookingService {
-    private final MatchBookingRepository matchBookingRepository;
-    private final BookingRepository bookingRepository;
-    private final LobbyBookingRepository lobbyBookingRepository;
-    private final PrivateBookingRepository privateBookingRepository;
-    private final LobbyBookingParticipateRepository lobbyBookingParticipateRepository;
+    @Autowired
+    private MatchBookingRepository matchBookingRepository;
+    @Autowired
+    private BookingRepository bookingRepository;
+    @Autowired
+    private LobbyBookingRepository lobbyBookingRepository;
+    @Autowired
+    private PrivateBookingRepository privateBookingRepository;
+    @Autowired
+    private LobbyBookingParticipateRepository lobbyBookingParticipateRepository;
 
-    public BookingService(BookingRepository bookingRepository, LobbyBookingRepository lobbyBookingRepository,
-            PrivateBookingRepository privateBookingRepository, MatchBookingRepository matchBookingRepository,
-            LobbyBookingParticipateRepository lobbyBookingParticipateRepository) {
-        this.bookingRepository = bookingRepository;
-        this.lobbyBookingRepository = lobbyBookingRepository;
-        this.privateBookingRepository = privateBookingRepository;
-        this.lobbyBookingParticipateRepository = lobbyBookingParticipateRepository;
-        this.matchBookingRepository = matchBookingRepository;
-    }
+
 
     public List<PrivateBooking> getPrivateBookingsByPlayerId(Integer playerId) {
         return privateBookingRepository.findByPlayer_PlayerId(playerId);

@@ -4,11 +4,9 @@ import com.atl.backend.repository.FinalStageBracketRepository;
 import com.atl.backend.repository.FootballMatchRepository;
 import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.RefereeAssignmentRepository;
-import com.atl.backend.repository.RefereeLicenseRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.classfile.ClassFile.Option;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.atl.backend.config.ErrorsString;
@@ -32,24 +31,19 @@ import com.atl.backend.model.enums.SportCategory;
 
 @Service
 public class MatchService {
-    private final TeamService teamService;
-    private final FootballMatchRepository footballMatchRepository;
-    private final MatchRepository matchRepository;
-    private final TournamentService tournamentService;
-    private final FinalStageBracketRepository finalStageBracketRepository;
-    private final RefereeAssignmentRepository refereeAssignmentRepository;
+    @Autowired
+    private TeamService teamService;
+    @Autowired
+    private FootballMatchRepository footballMatchRepository;
+    @Autowired
+    private MatchRepository matchRepository;
+    @Autowired
+    private TournamentService tournamentService;
+    @Autowired
+    private FinalStageBracketRepository finalStageBracketRepository;
+    @Autowired
+    private RefereeAssignmentRepository refereeAssignmentRepository;
 
-    public MatchService(FootballMatchRepository footballMatchRepository, MatchRepository matchRepository,
-            TournamentService tournamentService, TeamService teamService,
-            FinalStageBracketRepository finalStageBracketRepository,
-            RefereeAssignmentRepository refereeAssignmentRepository) {
-        this.footballMatchRepository = footballMatchRepository;
-        this.matchRepository = matchRepository;
-        this.tournamentService = tournamentService;
-        this.teamService = teamService;
-        this.finalStageBracketRepository = finalStageBracketRepository;
-        this.refereeAssignmentRepository = refereeAssignmentRepository;
-    }
 
     public Integer calculateMatchesInTournament(Integer tournamentId) {
         Optional<Tournament> tournamentOptional = tournamentService.getTournamentById(tournamentId);

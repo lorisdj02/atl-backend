@@ -36,6 +36,7 @@ public class AuthFilter extends OncePerRequestFilter {
             // Ottieni l'header di autenticazione
             String authHeader = request.getHeader("Authorization");
             AccountContextData contextData = new AccountContextData();
+            contextData.setAccountService(accountService);
 
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);

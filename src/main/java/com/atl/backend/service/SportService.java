@@ -3,9 +3,9 @@ package com.atl.backend.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.atl.backend.model.Referee;
 import com.atl.backend.model.RefereeRole;
 import com.atl.backend.model.Sport;
 import com.atl.backend.model.enums.SportCategory;
@@ -15,9 +15,12 @@ import com.atl.backend.repository.SportRepository;
 
 @Service
 public class SportService {
-    final SportRepository sportRepository;
-    final RefereeLicenseRepository refereeLicenseRepository;
-    final RefereeRoleRepository refereeRoleRepository;
+    @Autowired
+    private SportRepository sportRepository;
+    @Autowired
+    private RefereeLicenseRepository refereeLicenseRepository;
+    @Autowired
+    private RefereeRoleRepository refereeRoleRepository;
 
     public Boolean isSupportedSportCategory(String sportCategory) {
         try {

@@ -1,5 +1,6 @@
 package com.atl.backend.service.screen;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,23 +28,16 @@ import com.atl.backend.service.TournamentService;
 
 @Service
 public class HomeScreenService {
-
-        private final FieldService fieldService;
-        private final MatchService matchService;
-        private final TeamService teamService;
-        private final TournamentService tournamentService;
-        private final BookingService bookingService;
-
-        public HomeScreenService(TeamService teamService, TournamentService tournamentService,
-                        BookingService bookingService,
-                        MatchService matchService, FieldService fieldService) {
-                this.teamService = teamService;
-                this.tournamentService = tournamentService;
-                this.bookingService = bookingService;
-                this.matchService = matchService;
-                this.fieldService = fieldService;
-
-        }
+        @Autowired
+        private FieldService fieldService;
+        @Autowired
+        private MatchService matchService;
+        @Autowired
+        private TeamService teamService;
+        @Autowired
+        private TournamentService tournamentService;
+        @Autowired
+        private BookingService bookingService;
 
         @Transactional(readOnly = true)
         public PlayerHomeResponse getPlayerHomeScreen(SportCategory sportCategory) {
@@ -346,7 +340,8 @@ public class HomeScreenService {
                                                                 Optional<FootballMatch> optionalFootballMatch = matchService
                                                                                 .getFootballMatchById(match.getId());
                                                                 if (optionalFootballMatch.isEmpty()) {
-                                                                        throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+                                                                        throw new NotFoundException(
+                                                                                        ErrorsString.MATCH_NOT_FOUND);
                                                                 }
 
                                                                 FootballMatch footballMatch = optionalFootballMatch

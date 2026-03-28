@@ -2,6 +2,7 @@ package com.atl.backend.controller;
 
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,13 +18,11 @@ import com.atl.backend.service.screen.ProfileScreenService;
 @RestController
 @RequestMapping("/api/profiles")
 public class ProfileController {
-    private final ProfileScreenService profileScreenService;
-    private final AccountService accountService;
+    @Autowired
+    private ProfileScreenService profileScreenService;
+    @Autowired
+    private AccountService accountService;
     
-    public ProfileController(ProfileScreenService profileScreenService, AccountService accountService) {
-        this.profileScreenService = profileScreenService;
-        this.accountService = accountService;
-    }
 
     @RequestMapping("/growth-screen")
     public ResponseEntity<MyGrowthResponse> getMyGrowthResponse() {

@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,11 +34,8 @@ import com.atl.backend.service.TeamService;
 
 @Service
 public class TeamScreenService {
-    private final TeamService teamService;
-
-    public TeamScreenService(TeamService teamService) {
-        this.teamService = teamService;
-    }
+    @Autowired
+    private TeamService teamService;
 
     @Transactional(readOnly = true)
     public TeamsResponse getTeamsScreen(SportCategory sportCategory) {

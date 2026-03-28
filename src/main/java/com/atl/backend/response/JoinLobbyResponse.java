@@ -9,10 +9,7 @@ import java.util.Map;
 import com.atl.backend.config.ApiJsonKeys;
 import com.atl.backend.dto.CityDTO;
 import com.atl.backend.dto.FieldDTO;
-import com.atl.backend.dto.FootballMatchDTO;
 import com.atl.backend.dto.LobbyBookingDTO;
-import com.atl.backend.dto.TeamDTO;
-import com.atl.backend.dto.TournamentDTO;
 
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;

@@ -10,6 +10,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.atl.backend.repository.CityRepository;
@@ -18,16 +19,12 @@ import com.atl.backend.repository.FieldRepository;
 
 @Service
 public class FieldService {
-    final FieldRepository fieldRepository;
-    final CityRepository cityRepository;
-    final FieldCategoryRepository fieldCategoryRepository;
-
-    public FieldService(FieldRepository fieldRepository, CityRepository cityRepository,
-            FieldCategoryRepository fieldCategoryRepository) {
-        this.fieldRepository = fieldRepository;
-        this.cityRepository = cityRepository;
-        this.fieldCategoryRepository = fieldCategoryRepository;
-    }
+    @Autowired
+    private FieldRepository fieldRepository;
+    @Autowired
+    private CityRepository cityRepository;
+    @Autowired
+    private FieldCategoryRepository fieldCategoryRepository;
 
     public Field saveField(Field field, Map<SportCategory, Short> sportCategories) {
         Field savedField = fieldRepository.save(field);

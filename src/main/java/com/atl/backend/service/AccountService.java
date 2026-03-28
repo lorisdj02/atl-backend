@@ -19,8 +19,8 @@ import com.atl.backend.repository.GrowthStepRepository;
 import com.atl.backend.repository.OrganizationRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.RefereeRepository;
-import com.atl.backend.response.MyGrowthResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,23 +30,19 @@ import java.util.Optional;
 @Service
 public class AccountService {
 
-    private final AccountRepository accountRepository;
-    private final PlayerRepository playerRepository;
-    private final OrganizationRepository organizationRepository;
-    private final RefereeRepository refereeRepository;
-    private final CoordinatorRepository coordinatorRepository;
-    private final GrowthStepRepository growthStepRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private PlayerRepository playerRepository;
+    @Autowired
+    private OrganizationRepository organizationRepository;
+    @Autowired
+    private RefereeRepository refereeRepository;
+    @Autowired
+    private CoordinatorRepository coordinatorRepository;
+    @Autowired
+    private GrowthStepRepository growthStepRepository;
 
-    public AccountService(AccountRepository accountRepository, PlayerRepository playerRepository,
-            OrganizationRepository organizationRepository, RefereeRepository refereeRepository,
-            CoordinatorRepository coordinatorRepository, GrowthStepRepository growthStepRepository) {
-        this.accountRepository = accountRepository;
-        this.playerRepository = playerRepository;
-        this.organizationRepository = organizationRepository;
-        this.refereeRepository = refereeRepository;
-        this.coordinatorRepository = coordinatorRepository;
-        this.growthStepRepository = growthStepRepository;
-    }
 
     public Account registerAccount(Account account, Optional<String> OrgName) {
         saveAccount(account);

@@ -2,6 +2,7 @@ package com.atl.backend.controller;
 
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,16 +28,14 @@ import com.atl.backend.service.screen.TeamScreenService;
 @RestController
 @RequestMapping("/api/teams")
 public class TeamController {
-    private final TeamScreenService teamScreenService;
-    private final SportService sportService;
-    private final TeamService teamService;
+    @Autowired
+    private TeamScreenService teamScreenService;
+    @Autowired
+    private SportService sportService;
+    @Autowired
+    private TeamService teamService;
 
 
-    public TeamController(TeamScreenService teamScreenService, SportService sportService, TeamService teamService) {
-        this.teamScreenService = teamScreenService;
-        this.sportService = sportService;
-        this.teamService = teamService;
-    }
 
     @GetMapping("/{sportCategory}")
     public ResponseEntity<TeamsResponse> getTeamsScreen(@PathVariable String sportCategory) {

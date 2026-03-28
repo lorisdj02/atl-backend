@@ -22,5 +22,5 @@ public interface TournamentRepository extends JpaRepository<Tournament, Integer>
     List<Tournament> findActiveTournamentsBySportCategory(@Param("sportCategory") SportCategory sportCategory);
 
     @Query("SELECT t FROM Tournament t WHERE t.status <> 'CANCELED' AND t.status <> 'FINISHED' AND t.status <> 'PENDING_PAYMENTS' AND t.coordinator.id = :coordinatorId AND t.sport.sportCategory = :sportCategory")
-    List<Tournament> findActiveTournamentsByCoordinatorIdAndSportCategory(@Param("coordinatorId") Integer coordinatorId, @Param("sportCategory") SportCategory sportCategory);
+    List<Tournament> findActiveTournamentsByCoordinator_CoordinatorIdAndSportCategory(@Param("coordinatorId") Integer coordinatorId, @Param("sportCategory") SportCategory sportCategory);
 }
