@@ -1,5 +1,6 @@
 package com.atl.backend.service.screen;
 
+import com.atl.backend.service.TeamService;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,20 +17,31 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.CityDTO;
 import com.atl.backend.dto.CoordinatorDTO;
 import com.atl.backend.dto.FieldDTO;
+import com.atl.backend.dto.PlayerDTO;
+import com.atl.backend.dto.TeamDTO;
 import com.atl.backend.dto.TournamentDTO;
+import com.atl.backend.dto.TournamentParticipationDTO;
+import com.atl.backend.exception.ConflictException;
+import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
+import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.City;
 import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.Tournament;
+import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AllTournamentsResponse;
+import com.atl.backend.response.TournamentDetailsResponse;
 import com.atl.backend.service.AccountService;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.TournamentService;
 import com.atl.backend.model.Field;
+import com.atl.backend.model.Player;
+import com.atl.backend.model.Team;
 
 @Service
 public class TournamentScreenService {
+    private final TeamService teamService;
     @Autowired
     private TournamentService tournamentService;
     @Autowired
@@ -37,7 +49,9 @@ public class TournamentScreenService {
     @Autowired
     private FieldService fieldService;
 
-
+    TournamentScreenService(TeamService teamService) {
+        this.teamService = teamService;
+    }
 
     @Transactional(readOnly = true)
     public AllTournamentsResponse getAllTournamentsScreen(SportCategory sportCategory) {
@@ -63,19 +77,22 @@ public class TournamentScreenService {
         tournamentDTOs.addAll(myTournaments);
         tournamentDTOs.sort((a, b) -> a.getName().compareTo(b.getName()));
 
-        for(TournamentDTO tournament : tournamentDTOs) {
+        for (TournamentDTO tournament : tournamentDTOs) {
             if (!coordinatorCache.containsKey(tournament.getCoordinatorId())) {
-                Optional<Coordinator> optionalCoordinator = accountService.getCoordinatorByCoordinatorId(tournament.getCoordinatorId());
-                if(optionalCoordinator.isEmpty()){
-                    throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND); // This should never happen, but just in case
+                Optional<Coordinator> optionalCoordinator = accountService
+                        .getCoordinatorByCoordinatorId(tournament.getCoordinatorId());
+                if (optionalCoordinator.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND); // This should never happen, but
+                                                                                     // just in case
                 }
                 Coordinator coordinator = optionalCoordinator.get();
                 coordinatorCache.put(tournament.getCoordinatorId(), coordinator);
             }
             if (!fieldsCache.containsKey(tournament.getFieldId())) {
                 Optional<Field> optionalField = fieldService.getFieldById(tournament.getFieldId());
-                if(optionalField.isEmpty()){
-                    throw new NotFoundException(ErrorsString.FIELD_NOT_FOUND); // This should never happen, but just in case
+                if (optionalField.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.FIELD_NOT_FOUND); // This should never happen, but just in
+                                                                               // case
                 }
                 Field field = optionalField.get();
                 fieldsCache.put(tournament.getFieldId(), field);
@@ -135,5 +152,96 @@ public class TournamentScreenService {
                 .feeMin(feeMin)
                 .feeMax(feeMax)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public TournamentDetailsResponse getTournamentDetailsScreen(Integer tournamentId) {
+        // Semplicemente i dettagli del torneo, con eventuale team partecipante
+        // dell'account e partecipazione del team al torneo
+        Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
+        if (optionalTournament.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+        Tournament tournament = optionalTournament.get();
+
+        Map<Integer, Team> teamsCache = new HashMap<>();
+
+        if (!tournament.getAtlEvent()) {
+            // Per gli eventi ATL, le squadre partecipanti rimangono nascoste fino
+            // all'inizio del torneo.
+            List<Integer> teams = tournamentService.getTeamIdsParticipatingInTournament(tournamentId);
+
+            for (Integer teamId : teams) {
+                Optional<Team> optionalTeam = teamService.getTeamById(teamId);
+                if (optionalTeam.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+                }
+                teamsCache.put(teamId, optionalTeam.get());
+            }
+        }
+
+        Team accountTeam = null;
+        TournamentParticipation teamParticipation = null;
+        Player currentPlayer = null;
+
+        if (AccountContext.isPlayer()) {
+            currentPlayer = AccountContext.getActivePlayer();
+            Optional<Team> accountTeamOptional = teamService.getTeamByPlayerIdAndSportCategory(
+                    currentPlayer.getPlayerId(), tournament.getSport().getSportCategory());
+            if (accountTeamOptional.isPresent()) {
+                accountTeam = accountTeamOptional.get();
+                Optional<TournamentParticipation> teamParticipationOptional = tournamentService
+                        .getTournamentParticipationByTeamIdAndTournamentId(accountTeam.getId(), tournamentId);
+                if (teamParticipationOptional.isPresent()) {
+                    teamParticipation = teamParticipationOptional.get();
+                }
+            }
+        }
+
+        return TournamentDetailsResponse.builder()
+                .field(FieldDTO.fromField(tournament.getField()))
+                .cityName(tournament.getField().getCity().getName())
+                .coordinator(CoordinatorDTO.fromCoordinator(tournament.getCoordinator()))
+                .accountTeam(TeamDTO.fromTeam(accountTeam))
+                .currentPlayer(PlayerDTO.fromPlayer(currentPlayer))
+                .teamParticipation(TournamentParticipationDTO.fromTournamentParticipation(teamParticipation))
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlayerDTO> getViewCallupsScreen(Integer tournamentId) {
+        Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
+        if (optionalTournament.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+
+        List<PlayerDTO> players = new ArrayList<>();
+        Player currentPlayer = AccountContext.getActivePlayer();
+        Optional<Team> accountTeam = teamService.getTeamByPlayerIdAndSportCategory(currentPlayer.getPlayerId(),
+                SportCategory.FOOTBALL);
+        if (accountTeam.isEmpty()) {
+            throw new ConflictException(ErrorsString.NEED_TO_BE_IN_TEAM);
+        }
+        Team team = accountTeam.get();
+
+        if (!team.getCaptainPlayer().equals(currentPlayer) && !team.getViceCaptainPlayers().contains(currentPlayer)) {
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
+        }
+
+        List<Integer> teamIds = tournamentService.getTeamIdsParticipatingInTournament(tournamentId);
+        if (!teamIds.contains(team.getId())) {
+            throw new ConflictException(ErrorsString.TEAM_MUST_PARTECIPATE_TO_TOURNAMENT);
+        }
+
+        List<Integer> calluppedPlayerIds = tournamentService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournamentId,
+                team.getId());
+        for (Integer playerId : calluppedPlayerIds) {
+            Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
+            if (optionalPlayer.isEmpty()) {
+                throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+            }
+            players.add(PlayerDTO.fromPlayer(optionalPlayer.get()));
+        }
+        return players;
     }
 }

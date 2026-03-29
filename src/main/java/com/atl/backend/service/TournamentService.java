@@ -36,6 +36,8 @@ import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.util.StandingsComparators;
 
+import jakarta.persistence.criteria.CriteriaBuilder.In;
+
 @Service
 public class TournamentService {
     @Lazy
@@ -409,6 +411,11 @@ public class TournamentService {
         return callups.stream().map(callup -> callup.getPlayer().getPlayerId()).toList();
     }
 
+    public List<Integer> getCalluppedPlayerIdsByTournamentIdAndTeamId(Integer tournamentId, Integer teamId) {
+        List<Callup> callups = callupRepository.findByTournament_IdAndTeam_Id(tournamentId, teamId);
+        return callups.stream().map(callup -> callup.getPlayer().getPlayerId()).toList();
+    }
+
     public List<TournamentDTO> getMyTournaments(SportCategory sportCategory) {
         Integer accountId = AccountContext.getAccountId();
         if (accountId == null) {
@@ -461,4 +468,10 @@ public class TournamentService {
         }
         return myTournaments;
     }
+
+    public Optional<TournamentParticipation> getTournamentParticipationByTeamIdAndTournamentId(Integer teamId,
+            Integer tournamentId) {
+        return tournamentParticipationRepository.findByTeam_IdAndTournament_Id(teamId, tournamentId);
+    }
+
 }

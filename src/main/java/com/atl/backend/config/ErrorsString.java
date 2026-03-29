@@ -53,6 +53,10 @@ public class ErrorsString {
 
     static final public String ACCOUNT_ALREADY_EXISTS = "ACCOUNT_ALREADY_EXISTS";
 
+    static final public String NEED_TO_BE_IN_TEAM = "NEED_TO_BE_IN_TEAM";
+
+    static final public String TEAM_MUST_PARTECIPATE_TO_TOURNAMENT = "TEAM_MUST_PARTECIPATE_TO_TOURNAMENT";
+
     // Authentication errors
 
     static final public String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
@@ -75,4 +79,5 @@ public class ErrorsString {
 
     static final public String AUTHENTICATION_REQUIRED = "AUTHENTICATION_REQUIRED";
 
+    static final public String YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN = "YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN";
 }

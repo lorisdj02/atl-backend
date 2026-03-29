@@ -1,5 +1,8 @@
 package com.atl.backend.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
@@ -82,4 +85,15 @@ public class Team {
 
     @Column(name = "visible")
     private Boolean visible = true;
+
+    public List<Player> getViceCaptainPlayers() {
+        List<Player> viceCaptains = new ArrayList<>();
+        if (vice1Player != null) {
+            viceCaptains.add(vice1Player);
+        }
+        if (vice2Player != null) {
+            viceCaptains.add(vice2Player);
+        }
+        return viceCaptains;
+    }
 }
