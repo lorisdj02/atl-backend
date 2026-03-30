@@ -16,6 +16,7 @@ import com.atl.backend.dto.PlayerDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AllTournamentsResponse;
+import com.atl.backend.response.CallupsResponse;
 import com.atl.backend.response.TournamentDetailsResponse;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.screen.TournamentScreenService;
@@ -49,5 +50,17 @@ public class TournamentController {
     public ResponseEntity<List<PlayerDTO>> getViewCallupsScreen(@PathVariable Integer tournamentId) {
         List<PlayerDTO> response = tournamentScreenService.getViewCallupsScreen(tournamentId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{tournamentId}/callups")
+    public ResponseEntity<CallupsResponse> getCallupsScreen(@PathVariable Integer tournamentId) {
+        CallupsResponse response = tournamentScreenService.getCallupsScreen(tournamentId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{tournamentId}")
+    public ResponseEntity<?> getTournamentScreen(@PathVariable Integer tournamentId) {
+        Optional<?> response = tournamentScreenService.getTournamentScreen(tournamentId);
+        return ResponseEntity.ok(response.get());
     }
 }

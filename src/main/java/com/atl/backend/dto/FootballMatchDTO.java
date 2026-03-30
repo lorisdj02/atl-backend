@@ -58,28 +58,28 @@ public class FootballMatchDTO extends MatchDTO {
         FootballMatchDTO dto = new FootballMatchDTO();
         MatchDTO baseDto = MatchDTO.fromMatch(match);
 
-        dto.setId(baseDto.getId() != null ? baseDto.getId() : null);
-        dto.setScheduledStart(baseDto.getScheduledStart() != null ? baseDto.getScheduledStart() : null);
-        dto.setTournamentId(baseDto.getTournamentId() != null ? baseDto.getTournamentId() : null);
-        dto.setMotmPlayerId(baseDto.getMotmPlayerId() != null ? baseDto.getMotmPlayerId() : null);
-        dto.setGroupName(baseDto.getGroupName() != null ? baseDto.getGroupName() : null);
-        dto.setSportCategory(baseDto.getSportCategory() != null ? baseDto.getSportCategory() : null);
-        dto.setLegOrder(baseDto.getLegOrder() != null ? baseDto.getLegOrder() : null);
-        dto.setCoordinatorStatus(baseDto.getCoordinatorStatus() != null ? baseDto.getCoordinatorStatus() : null);
-        dto.setFinalStageBracketId(baseDto.getFinalStageBracketId() != null ? baseDto.getFinalStageBracketId() : null);
+        dto.setId(baseDto.getId());
+        dto.setScheduledStart(baseDto.getScheduledStart());
+        dto.setTournamentId(baseDto.getTournamentId());
+        dto.setMotmPlayerId(baseDto.getMotmPlayerId());
+        dto.setGroupName(baseDto.getGroupName());
+        dto.setSportCategory(baseDto.getSportCategory());
+        dto.setLegOrder(baseDto.getLegOrder());
+        dto.setCoordinatorStatus(baseDto.getCoordinatorStatus());
+        dto.setFinalStageBracketId(baseDto.getFinalStageBracketId());
         
         dto.setHomeTeamId(footballMatch.getHomeTeam() != null ? footballMatch.getHomeTeam().getId() : null);
-        dto.setScoreHome(footballMatch.getScoreHome() != null ? footballMatch.getScoreHome() : null);
-        dto.setPenaltyScoreHome(footballMatch.getPenaltyScoreHome() != null ? footballMatch.getPenaltyScoreHome() : null);
-        dto.setMissedPenaltyHome(footballMatch.getMissedPenaltyHome() != null ? footballMatch.getMissedPenaltyHome() : null);
+        dto.setScoreHome(footballMatch.getScoreHome());
+        dto.setPenaltyScoreHome(footballMatch.getPenaltyScoreHome());
+        dto.setMissedPenaltyHome(footballMatch.getMissedPenaltyHome());
         
         dto.setAwayTeamId(footballMatch.getAwayTeam() != null ? footballMatch.getAwayTeam().getId() : null);
-        dto.setScoreAway(footballMatch.getScoreAway() != null ? footballMatch.getScoreAway() : null);
-        dto.setPenaltyScoreAway(footballMatch.getPenaltyScoreAway() != null ? footballMatch.getPenaltyScoreAway() : null);
-        dto.setMissedPenaltyAway(footballMatch.getMissedPenaltyAway() != null ? footballMatch.getMissedPenaltyAway() : null);
+        dto.setScoreAway(footballMatch.getScoreAway());
+        dto.setPenaltyScoreAway(footballMatch.getPenaltyScoreAway());
+        dto.setMissedPenaltyAway(footballMatch.getMissedPenaltyAway());
 
-        dto.setHalftime(footballMatch.getHalftime() != null ? footballMatch.getHalftime() : null);
-        dto.setStartHalf(footballMatch.getStartHalf() != null ? footballMatch.getStartHalf() : null);
+        dto.setHalftime(footballMatch.getHalftime());
+        dto.setStartHalf(footballMatch.getStartHalf());
         dto.setStatus(footballMatch.getStatus().toString());
         return dto;
     }

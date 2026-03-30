@@ -19,6 +19,7 @@ import com.atl.backend.model.Account;
 import com.atl.backend.model.Callup;
 import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.FavoriteTournament;
+import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.FootballTournamentStats;
 import com.atl.backend.model.Player;
@@ -29,6 +30,7 @@ import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TournamentStatus;
 import com.atl.backend.repository.CallupRepository;
 import com.atl.backend.repository.FavoriteTournamentRepository;
+import com.atl.backend.repository.FinalStageBracketRepository;
 import com.atl.backend.repository.FootballStandingRepository;
 import com.atl.backend.repository.FootballTournamentStatsRepository;
 import com.atl.backend.repository.SportRepository;
@@ -62,6 +64,8 @@ public class TournamentService {
     private FootballTournamentStatsRepository footballTournamentStatsRepository;
     @Autowired
     private FavoriteTournamentRepository favoriteTournamentRepository;
+    @Autowired
+    private FinalStageBracketRepository finalStageBracketRepository;
 
     public void deleteAllTournaments() {
         tournamentRepository.deleteAll();
@@ -109,6 +113,14 @@ public class TournamentService {
     public List<Tournament> getTournamentsByTeamId(Integer teamId) {
         List<TournamentParticipation> participations = tournamentParticipationRepository.findByTeam_Id(teamId);
         return participations.stream().map(TournamentParticipation::getTournament).toList();
+    }
+
+    public List<FinalStageBracket> getFinalStageBracketsByTournamentId(Integer tournamentId) {
+        return finalStageBracketRepository.findByTournament_Id(tournamentId);
+    }
+
+    public List<FootballTournamentStats> getFootballTournamentStatsByTournamentId(Integer tournamentId) {
+        return footballTournamentStatsRepository.findByTournament_Id(tournamentId);
     }
 
     public List<Tournament> getActiveTournamentsByTeamId(Integer teamId) {
@@ -394,6 +406,8 @@ public class TournamentService {
             case FOOTBALL:
                 List<FootballStanding> footballStandings = new ArrayList<>(
                         footballStandingRepository.findByTournament_Id(tournamentId));
+                List<FootballStanding> 
+                // SISTEMA! LA CLASSIFICA DEVE ESSERE ORDINATA SOLO PER GRUPPO, NON INSIEME. ALTRIMENTI RANK POS NON VALE NULLA
                 footballStandings.sort(StandingsComparators.FOOTBALL_STANDING);
                 for (int i = 0; i < footballStandings.size(); i++) {
                     FootballStanding footballStanding = footballStandings.get(i);

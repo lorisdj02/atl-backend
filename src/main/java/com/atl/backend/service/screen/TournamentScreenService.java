@@ -17,7 +17,12 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.CityDTO;
 import com.atl.backend.dto.CoordinatorDTO;
 import com.atl.backend.dto.FieldDTO;
+import com.atl.backend.dto.FinalStageBracketDTO;
+import com.atl.backend.dto.FootballMatchDTO;
+import com.atl.backend.dto.FootballStandingDTO;
+import com.atl.backend.dto.FootballTeamStatDTO;
 import com.atl.backend.dto.PlayerDTO;
+import com.atl.backend.dto.SportDTO;
 import com.atl.backend.dto.TeamDTO;
 import com.atl.backend.dto.TournamentDTO;
 import com.atl.backend.dto.TournamentParticipationDTO;
@@ -31,11 +36,18 @@ import com.atl.backend.model.Tournament;
 import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AllTournamentsResponse;
+import com.atl.backend.response.CallupsResponse;
+import com.atl.backend.response.FootballTournamentResponse;
 import com.atl.backend.response.TournamentDetailsResponse;
 import com.atl.backend.service.AccountService;
 import com.atl.backend.service.FieldService;
+import com.atl.backend.service.MatchService;
 import com.atl.backend.service.TournamentService;
 import com.atl.backend.model.Field;
+import com.atl.backend.model.FinalStageBracket;
+import com.atl.backend.model.FootballMatch;
+import com.atl.backend.model.FootballStanding;
+import com.atl.backend.model.FootballTournamentStats;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Team;
 
@@ -48,6 +60,8 @@ public class TournamentScreenService {
     private AccountService accountService;
     @Autowired
     private FieldService fieldService;
+    @Autowired
+    private MatchService matchService;
 
     TournamentScreenService(TeamService teamService) {
         this.teamService = teamService;
@@ -224,7 +238,7 @@ public class TournamentScreenService {
         }
         Team team = accountTeam.get();
 
-        if (!team.getCaptainPlayer().equals(currentPlayer) && !team.getViceCaptainPlayers().contains(currentPlayer)) {
+        if (!teamService.isPlayerCaptainOrViceCaptain(team.getId(), currentPlayer.getPlayerId())) {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
         }
 
@@ -243,5 +257,126 @@ public class TournamentScreenService {
             players.add(PlayerDTO.fromPlayer(optionalPlayer.get()));
         }
         return players;
+    }
+
+    @Transactional(readOnly = true)
+    public CallupsResponse getCallupsScreen(Integer tournamentId) {
+        Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
+        if (optionalTournament.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+
+        Tournament tournament = optionalTournament.get();
+
+        Optional<Team> accountTeam = teamService.getTeamByPlayerIdAndSportCategory(
+                AccountContext.getActivePlayer().getPlayerId(), tournament.getSport().getSportCategory());
+
+        if (accountTeam.isEmpty()) {
+            throw new ConflictException(ErrorsString.NEED_TO_BE_IN_TEAM);
+        }
+
+        if (!teamService.isPlayerCaptainOrViceCaptain(accountTeam.get().getId(),
+                AccountContext.getActivePlayer().getPlayerId())) {
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
+        }
+
+        List<Integer> calluppedPlayerIds = tournamentService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournamentId,
+                accountTeam.get().getId());
+
+        List<Player> players = teamService.getPlayersByTeamId(accountTeam.get().getId());
+
+        return CallupsResponse.builder()
+                .tournament(TournamentDTO.fromTournament(tournament))
+                .players(players.stream().map(PlayerDTO::fromPlayer).toList())
+                .calledUpPlayerIds(calluppedPlayerIds)
+                .sport(SportDTO.fromSport(tournament.getSport()))
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<?> getTournamentScreen(Integer tournamentId){
+        Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
+        if (optionalTournament.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+
+        Tournament tournament = optionalTournament.get();
+
+        return switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL -> Optional.of(getFootballTournamentScreen(tournamentId));
+            default -> throw new ConflictException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        };
+    }
+
+    @Transactional(readOnly = true)
+    public FootballTournamentResponse getFootballTournamentScreen(Integer tournamentId) {
+        Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
+        if (optionalTournament.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+
+        Tournament tournament = optionalTournament.get();
+
+        List<FinalStageBracket> finalStageBrackets = tournamentService
+                .getFinalStageBracketsByTournamentId(tournamentId);
+
+        List<FootballMatch> matches = matchService.getFootballMatchesByTournamentId(tournamentId);
+
+        List<FootballStanding> standings = tournamentService.getFootballStandingsByTournamentId(tournamentId);
+
+        List<Integer> teams = tournamentService.getTeamIdsParticipatingInTournament(tournamentId);
+
+        Map<Integer, Team> teamsCache = new HashMap<>();
+        for (Integer teamId : teams) {
+            Optional<Team> optionalTeam = teamService.getTeamById(teamId);
+            if (optionalTeam.isEmpty()) {
+                throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+            }
+            teamsCache.put(teamId, optionalTeam.get());
+        }
+
+        Map<Integer, FootballTeamStatDTO> footballPlayerStatsCache = new HashMap<>();
+        List<FootballTournamentStats> footballTournamentStats = tournamentService
+                .getFootballTournamentStatsByTournamentId(tournamentId);
+
+        for (FootballTournamentStats stat : footballTournamentStats) {
+            if (stat.getGoals() == 0 && stat.getMotm() == 0) {
+                continue; // Non ha senso inviare statistiche vuote, e così evitiamo di popolare la cache
+                          // con dati inutili
+            }
+            FootballTeamStatDTO statDTO = new FootballTeamStatDTO();
+            statDTO.setPlayerId(stat.getPlayer().getPlayerId());
+            statDTO.setTeamId(stat.getTeam().getId());
+            statDTO.setGoals(stat.getGoals());
+            statDTO.setMotm(stat.getMotm());
+            statDTO.setYellowCards(stat.getYellowCards());
+            statDTO.setRedCards(stat.getRedCards());
+            footballPlayerStatsCache.put(stat.getPlayer().getPlayerId(), statDTO);
+        }
+
+        List<Player> players = new ArrayList<>();
+        List<Integer> playerIds = tournamentService.getCalluppedPlayerIdsByTournamentId(tournamentId);
+        for (Integer playerId : playerIds) {
+            Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
+            if (optionalPlayer.isEmpty()) {
+                throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+            }
+            players.add(optionalPlayer.get());
+        }
+
+        return FootballTournamentResponse.builder()
+                .matches(matches.stream().map(FootballMatchDTO::fromFootballMatch).toList())
+                .standings(standings.stream().map(FootballStandingDTO::fromFootballStanding).toList())
+                .players(players.stream().map(PlayerDTO::fromPlayer).toList())
+                .teamsCache(teamsCache.entrySet().stream().collect(
+                        HashMap::new,
+                        (m, e) -> m.put(e.getKey(), TeamDTO.fromTeam(e.getValue())),
+                        HashMap::putAll))
+                .footballPlayerStatsCache(footballPlayerStatsCache)
+                .minutesPerRound(tournament.getSport().getMinutesPerRound())
+                .minutesPerPause(tournament.getSport().getMinutesPerPause())
+                .finalStageBrackets(
+                        finalStageBrackets.stream().map(FinalStageBracketDTO::fromFinalStageBracket).toList())
+                .build();
     }
 }

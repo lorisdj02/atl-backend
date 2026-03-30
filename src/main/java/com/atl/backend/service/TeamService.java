@@ -190,6 +190,24 @@ public class TeamService {
         return palmaresRepository.findByTeam_Id(teamId);
     }
 
+    public boolean isPlayerCaptainOrViceCaptain(Integer teamId, Integer playerId) {
+        Optional<Team> teamOptional = teamRepository.findById(teamId);
+        if (teamOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+        }
+
+        Optional<Player> playerOptional = playerRepository.findById(playerId);
+        if (playerOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+        }
+        Player player = playerOptional.get();
+        Team team = teamOptional.get();
+
+        return (team.getCaptainPlayer().getPlayerId().equals(playerId))
+                || (team.getViceCaptainPlayers().contains(player));
+    }
+
+    @Transactional(readOnly = true)
     public List<FootballTeamStat> getFootballTeamStatsByTeamId(Integer teamId) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isEmpty()) {
