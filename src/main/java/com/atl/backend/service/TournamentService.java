@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy; // Metti questo
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.TournamentDTO;
 import com.atl.backend.exception.ForbiddenException;
+import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.Callup;
 import com.atl.backend.model.Coordinator;
@@ -151,6 +153,7 @@ public class TournamentService {
     }
 
     public Integer countActiveTournamentsByTeamIdAndPlayerId(Integer teamId, Integer playerId) {
+        teamService.checkTeamExists(teamId);
         List<Tournament> tournaments = getActiveTournamentsByTeamId(teamId);
 
         for (Tournament tournament : tournaments) {
@@ -164,18 +167,10 @@ public class TournamentService {
     }
 
     public Boolean participateToTournament(Integer tournamentId, Integer teamId, List<Integer> playerIds) {
-        Optional<Tournament> tournamentOptional = tournamentRepository.findById(tournamentId);
-        if (tournamentOptional.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.TOURNAMENT_NOT_FOUND);
-        }
-
-        Optional<Team> teamOptional = teamService.getTeamById(teamId);
-        if (teamOptional.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.TEAM_NOT_FOUND);
-        }
-
-        Tournament tournament = tournamentOptional.get();
-        Team team = teamOptional.get();
+        checkTournamentExists(tournamentId);
+        teamService.checkTeamExists(teamId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
+        Team team = teamService.getTeamById(teamId).get();
 
         if (!playerIds.contains(team.getCaptainPlayer().getPlayerId()) &&
                 (team.getVice1Player() != null && !playerIds.contains(team.getVice1Player().getPlayerId())) &&
@@ -230,17 +225,23 @@ public class TournamentService {
 
     @Transactional(rollbackFor = Exception.class)
     public void startTournament(Integer tournamentId) {
-        Optional<Tournament> tournamentOptional = tournamentRepository.findById(tournamentId);
-        if (tournamentOptional.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.TOURNAMENT_NOT_FOUND);
-        }
-        Tournament tournament = tournamentOptional.get();
+        checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
         if (tournament.getStatus() != TournamentStatus.CREATED) {
             throw new IllegalStateException(ErrorsString.TOURNAMENT_NOT_IN_CREATED_STATUS);
         }
 
         if (tournament.getNumTeams() != tournament.getPaidTeams()) {
             throw new IllegalStateException(ErrorsString.NUM_TEAMS_DIFFERS_FROM_PAID_TEAMS);
+        }
+
+        // SOLO PER DEBUG, RIMUOVERE DOPO
+
+        List<TournamentParticipation> participations = tournamentParticipationRepository
+                .findByTournament_Id(tournamentId);
+        for (TournamentParticipation participation : participations) {
+            participation.setToPay(BigDecimal.ZERO);
+            tournamentParticipationRepository.save(participation);
         }
 
         System.out.println("\n\n[DEBUG - TournamentService] - Starting tournament " + tournamentId);
@@ -316,11 +317,8 @@ public class TournamentService {
 
     @Transactional(rollbackFor = Exception.class)
     public void updateTeamsQualifiedInTournament(Integer tournamentId, Boolean needToOrder) {
-        Optional<Tournament> tournamentOptional = tournamentRepository.findById(tournamentId);
-        if (tournamentOptional.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.TOURNAMENT_NOT_FOUND);
-        }
-        Tournament tournament = tournamentOptional.get();
+        checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
 
         final short qualifiedPerGroup = (short) (tournament.getNumTeamsQualified() / tournament.getNumGroups());
         final short numTeamsPerGroup = (short) (tournament.getNumTeams() / tournament.getNumGroups());
@@ -347,8 +345,6 @@ public class TournamentService {
                             "[DEBUG - TournamentService] - Evaluating qualification for tournament " + tournamentId
                                     + " and group " + groupName);
 
-                    List<FootballStanding> allFootballStadings = footballStandingRepository.findAll();
-                    System.out.println("[DEBUG - TournamentService] - All football standings: " + allFootballStadings);
                     List<FootballStanding> footballStandings = footballStandingRepository
                             .findByTournament_IdAndGroupName(tournamentId, groupName);
 
@@ -397,23 +393,38 @@ public class TournamentService {
     }
 
     public void orderStandingsForTournament(Integer tournamentId) {
-        Optional<Tournament> tournamentOptional = tournamentRepository.findById(tournamentId);
-        if (tournamentOptional.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.TOURNAMENT_NOT_FOUND);
-        }
-        Tournament tournament = tournamentOptional.get();
+        checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
         switch (tournament.getSport().getSportCategory()) {
             case FOOTBALL:
                 List<FootballStanding> footballStandings = new ArrayList<>(
                         footballStandingRepository.findByTournament_Id(tournamentId));
-                List<FootballStanding> 
-                // SISTEMA! LA CLASSIFICA DEVE ESSERE ORDINATA SOLO PER GRUPPO, NON INSIEME. ALTRIMENTI RANK POS NON VALE NULLA
-                footballStandings.sort(StandingsComparators.FOOTBALL_STANDING);
-                for (int i = 0; i < footballStandings.size(); i++) {
-                    FootballStanding footballStanding = footballStandings.get(i);
-                    footballStanding.setRankPos((short) (i + 1));
-                    footballStandingRepository.save(footballStanding);
+                System.out.println("[DEBUG - TournamentService] - Ordering standings for tournament " + tournamentId
+                        + ". " + footballStandings.size() + " teams");
+                List<FootballStanding> groupFootballStandings = new ArrayList<>();
+                for (int j = 0; j < tournament.getNumGroups(); j++) {
+                    groupFootballStandings = new ArrayList<>();
+                    String groupName = "" + (char) ('A' + j);
+                    for (FootballStanding footballStanding : footballStandings) {
+                        if (footballStanding.getGroupName().equals(groupName)) {
+                            groupFootballStandings.add(footballStanding);
+                        }
+                    }
+                    groupFootballStandings.sort(StandingsComparators.FOOTBALL_STANDING);
+                    System.out.println("[DEBUG - TournamentService] - Ordering standings for group " + groupName + ". "
+                            + groupFootballStandings.size() + " teams");
+                    for (int i = 0; i < groupFootballStandings.size(); i++) {
+                        FootballStanding footballStanding = groupFootballStandings.get(i);
+                        footballStanding.setRankPos((short) (i + 1));
+                        System.out.println(
+                                "[DEBUG - TournamentService] - Setting rank position " + footballStanding.getRankPos()
+                                        + " for team " + footballStanding.getTeam().getName() + " "
+                                        + footballStanding.getTeam().getId() + " in tournament "
+                                        + tournamentId + " and group " + groupName);
+                        footballStandingRepository.save(footballStanding);
+                    }
                 }
+
                 break;
             default:
                 throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -488,4 +499,39 @@ public class TournamentService {
         return tournamentParticipationRepository.findByTeam_IdAndTournament_Id(teamId, tournamentId);
     }
 
+    public List<TournamentParticipation> getTournamentParticipationsByTeamId(Integer teamId) {
+        return tournamentParticipationRepository.findByTeam_Id(teamId);
+    }
+
+    public List<TournamentParticipation> getTournamentParticipationsByTournamentId(Integer tournamentId) {
+        return tournamentParticipationRepository.findByTournament_Id(tournamentId);
+    }
+
+    public List<TournamentParticipation> getPaidTournamentParticipationsByTeamId(Integer teamId) {
+        return tournamentParticipationRepository.findByTeam_IdAndToPay(teamId, BigDecimal.ZERO);
+    }
+
+    public List<TournamentParticipation> getNotPaidTournamentParticipationsByTeamId(Integer teamId) {
+        return tournamentParticipationRepository.findByTeam_IdAndToPayGreaterThan(teamId, BigDecimal.ZERO);
+    }
+
+    public boolean isPlayerCalledUpInTournament(Integer playerId, Integer tournamentId) {
+        Optional<Callup> callupOptional = callupRepository.findByPlayer_PlayerIdAndTournament_Id(playerId,
+                tournamentId);
+        return callupOptional.isPresent();
+    }
+
+    public void checkTournamentExists(Integer tournamentId) {
+        if (tournamentRepository.findById(tournamentId).isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+    }
+
+    public Integer countTournamentsByPlayerIdAndSportCategory(Integer playerId, SportCategory sportCategory) {
+        List<Callup> callups = callupRepository.findByPlayer_PlayerId(playerId);
+        List<Callup> filteredCallups = callups.stream()
+                .filter(callup -> callup.getTournament().getSport().getSportCategory() == sportCategory)
+                .toList();
+        return filteredCallups.size();
+    }
 }

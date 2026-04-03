@@ -23,6 +23,8 @@ public class ErrorsString {
 
     static final public String ORGANIZATION_NOT_FOUND = "ORGANIZATION_NOT_FOUND";
 
+    static final public String WALLET_NOT_FOUND = "WALLET_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";

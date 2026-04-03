@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.atl.backend.model.enums.*;
 
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.*;
@@ -43,7 +44,6 @@ public class MatchService {
     private FinalStageBracketRepository finalStageBracketRepository;
     @Autowired
     private RefereeAssignmentRepository refereeAssignmentRepository;
-
 
     public Integer calculateMatchesInTournament(Integer tournamentId) {
         Optional<Tournament> tournamentOptional = tournamentService.getTournamentById(tournamentId);
@@ -390,15 +390,15 @@ public class MatchService {
         return assignedFootballMatches;
     }
 
-    public List<Team> getTeamsByMatchId(Integer matchId){
+    public List<Team> getTeamsByMatchId(Integer matchId) {
         Optional<Match> matchOptional = matchRepository.findById(matchId);
-        if(matchOptional.isEmpty()) {
+        if (matchOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
         }
         Match match = matchOptional.get();
-        if(match.getSportCategory() == SportCategory.FOOTBALL){
+        if (match.getSportCategory() == SportCategory.FOOTBALL) {
             Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(matchId);
-            if(footballMatchOptional.isEmpty()) {
+            if (footballMatchOptional.isEmpty()) {
                 throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
             }
             FootballMatch footballMatch = footballMatchOptional.get();
@@ -408,4 +408,9 @@ public class MatchService {
         }
     }
 
+    public List<FootballMatch> getScheduledFootballMatches() {
+        return footballMatchRepository.findByStatus(FootballMatchStatus.SCHEDULED);
+    }
+
+    
 }

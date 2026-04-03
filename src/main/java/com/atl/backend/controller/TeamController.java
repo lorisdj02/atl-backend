@@ -17,7 +17,10 @@ import com.atl.backend.model.Team;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AbstractTeamResponse;
 import com.atl.backend.response.MyGrowthResponse;
+import com.atl.backend.response.PayParticipationResponse;
+import com.atl.backend.response.PlayerRequestsResponse;
 import com.atl.backend.response.PlayersInTeamResponse;
+import com.atl.backend.response.TeamDetailsResponse;
 import com.atl.backend.response.TeamsResponse;
 import com.atl.backend.service.AccountService;
 import com.atl.backend.service.SportService;
@@ -49,23 +52,31 @@ public class TeamController {
 
     @GetMapping("/{teamId}/players")
     public ResponseEntity<PlayersInTeamResponse> getPlayersInTeam(@PathVariable Integer teamId) {
-        Optional<Team> team = teamService.getTeamById(teamId);
-        if (team.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
-        }
-
         PlayersInTeamResponse response = teamService.getPlayersInTeamResponse(teamId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{teamId}/abstract")
     public ResponseEntity<AbstractTeamResponse> getAbstractTeamScreen(@PathVariable Integer teamId) {
-        Optional<Team> team = teamService.getTeamById(teamId);
-        if (team.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
-        }
         AbstractTeamResponse response = teamScreenService.getAbstractTeamScreen(teamId);
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{teamId}/pay-participation")
+    public ResponseEntity<PayParticipationResponse> getPayParticipationScreen(@PathVariable Integer teamId) {
+        PayParticipationResponse response = teamScreenService.getPayParticipationScreen(teamId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{teamId}/player-requests")
+    public ResponseEntity<PlayerRequestsResponse> getPlayerRequestsScreen(@PathVariable Integer teamId) {
+        PlayerRequestsResponse response = teamScreenService.getPlayerRequestsScreen(teamId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{teamId}/details")
+    public ResponseEntity<TeamDetailsResponse> getTeamDetailScreen(@PathVariable Integer teamId) {
+        TeamDetailsResponse response = teamScreenService.getTeamDetailsScreen(teamId);
+        return ResponseEntity.ok(response);
+    }
 }

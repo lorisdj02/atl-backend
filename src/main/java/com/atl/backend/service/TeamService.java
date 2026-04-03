@@ -45,6 +45,8 @@ public class TeamService {
     private TournamentService tournamentService;
     @Autowired
     private PalmaresRepository palmaresRepository;
+    @Autowired
+    private AccountService accountService;
 
     public List<TeamRequest> getAllTeamRequests() {
         return teamRequestRepository.findAll();
@@ -243,6 +245,63 @@ public class TeamService {
         }
         return PlayersInTeamResponse.builder().players(players.stream().map(PlayerDTO::fromPlayer).toList())
                 .historicalPlayers(historicalPlayers.stream().map(PlayerDTO::fromPlayer).toList()).build();
+
+    }
+
+    public boolean isPlayerInTeam(Integer teamId, Integer playerId) {
+        Optional<Team> teamOptional = teamRepository.findById(teamId);
+        if (teamOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+        }
+        Team team = teamOptional.get();
+        List<PlaysAt> playsAts = playsAtRepository.findByTeam_Id(teamId);
+        return playsAts.stream().anyMatch(playsAt -> playsAt.getPlayer().getPlayerId().equals(playerId));
+    }
+
+    public void checkTeamExists(Integer teamId) {
+        if (teamRepository.existsById(teamId) == false) {
+            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+        }
+    }
+
+    public List<TeamRequest> getTeamRequestsByTeamId(Integer teamId) {
+        return teamRequestRepository.findByTeam_Id(teamId);
+    }
+
+    public Optional<TeamRequest> getTeamRequestByTeamIdAndPlayerId(Integer teamId, Integer playerId) {
+        return teamRequestRepository.findByTeam_IdAndPlayer_PlayerId(teamId, playerId);
+    }
+
+    public FootballTeamStat getCumulativeFootballTeamStatsByPlayerId(Integer playerId) {
+        accountService.checkPlayerExists(playerId);
+        Team dummyTeam = new Team();
+        dummyTeam.setSportCategory(SportCategory.FOOTBALL);
+        dummyTeam.setNumPlayers((short) 1);
+        dummyTeam.setId(0);
+        dummyTeam.setCaptainPlayer(playerRepository.findById(playerId).get());
+        Player player = playerRepository.findById(playerId).get();
+        FootballTeamStat footballTeamStat = new FootballTeamStat();
+        footballTeamStat.setPlayer(player);
+        footballTeamStat.setTeam(dummyTeam);
+
+        List<FootballTeamStat> footballTeamStats = footballTeamStatRepository.findByPlayer_PlayerId(playerId);
+        if (!footballTeamStats.isEmpty()) {
+            short totalGoals = 0;
+            short totalMotm = 0;
+            short totalRedCards = 0;
+            short totalYellowCards = 0;
+            for (FootballTeamStat stat : footballTeamStats) {
+                totalGoals += stat.getGoals();
+                totalMotm += stat.getMotm();
+                totalRedCards += stat.getRedCards();
+                totalYellowCards += stat.getYellowCards();
+            }
+            footballTeamStat.setGoals(totalGoals);
+            footballTeamStat.setMotm(totalMotm);
+            footballTeamStat.setRedCards(totalRedCards);
+            footballTeamStat.setYellowCards(totalYellowCards);
+        }
+        return footballTeamStat;
 
     }
 }

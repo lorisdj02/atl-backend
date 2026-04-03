@@ -199,6 +199,9 @@ public class ApiJsonKeys {
 
     // WalletScreen
     public static final String wallet = "wallet"; // Wallet
+    // WalletScreen
+    public static final String transactionsHistory = "transactionsHistory"; // List<Transaction>
+
 
     // TeamDetailScreen
     public static final String isPlayerInTeam = "isPlayerInTeam"; // bool
@@ -215,7 +218,7 @@ public class ApiJsonKeys {
     public static final String refereeLicenses = "refereeLicenses"; // List<RefereeLicense>
 
     // AvailableMatchesScreen
-    public static final String matchesPerSport = "matchesPerSport"; // Map<int, List<FootballMatch>>
+    public static final String footballMatchesPerSport = "footballMatchesPerSport"; // Map<int, List<FootballMatch>>
     // AvailableMatchesScreen
     public static final String sportNames = "sportNames"; // Map<int, String>
 

@@ -1,6 +1,8 @@
 package com.atl.backend.repository;
 
 import com.atl.backend.model.FootballMatch;
+import com.atl.backend.model.enums.FootballMatchStatus;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +16,6 @@ public interface FootballMatchRepository extends JpaRepository<FootballMatch, In
     List<FootballMatch> findByMatch_Tournament_IdAndMatch_GroupName(Integer tournamentId, String groupName);
 
     Optional<FootballMatch> findByMatch_Id(Integer id);
+
+    List<FootballMatch> findByStatus(FootballMatchStatus status);
 }

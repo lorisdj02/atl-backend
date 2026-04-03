@@ -6,10 +6,13 @@ import com.atl.backend.model.FootballTeamStatId;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FootballTeamStatRepository extends JpaRepository<FootballTeamStat, FootballTeamStatId> {
 
     List<FootballTeamStat> findByTeam_Id(Integer teamId);
+
+    List<FootballTeamStat> findByPlayer_PlayerId(Integer playerId);
 }

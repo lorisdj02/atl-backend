@@ -95,6 +95,10 @@ public class AccountContextData {
     }
 
     public Account getActiveAccount() {
+        if(accountRole == AccountRole.GUEST){
+            throw new ForbiddenException(ErrorsString.AUTHENTICATION_REQUIRED);
+        }
+
         if (activeAccount == null) {
             Optional<Account> accountOpt = accountService.getAccountById(accountId);
             if (accountOpt.isEmpty()) {

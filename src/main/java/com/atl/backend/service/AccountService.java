@@ -11,14 +11,17 @@ import com.atl.backend.model.GrowthStep;
 import com.atl.backend.model.Organization;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Referee;
+import com.atl.backend.model.Review;
 import com.atl.backend.model.enums.AccountStatus;
 import com.atl.backend.model.enums.GrowthStepType;
+import com.atl.backend.model.enums.ReviewStatus;
 import com.atl.backend.repository.AccountRepository;
 import com.atl.backend.repository.CoordinatorRepository;
 import com.atl.backend.repository.GrowthStepRepository;
 import com.atl.backend.repository.OrganizationRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.RefereeRepository;
+import com.atl.backend.repository.ReviewRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,6 +45,8 @@ public class AccountService {
     private CoordinatorRepository coordinatorRepository;
     @Autowired
     private GrowthStepRepository growthStepRepository;
+    @Autowired
+    private ReviewRepository reviewRepository;
 
 
     public Account registerAccount(Account account, Optional<String> OrgName) {
@@ -261,4 +266,35 @@ public class AccountService {
         return growthStepRepository.findAll();
     }
 
+    public void checkPlayerExists(Integer playerId) {
+        if (!existsByPlayerId(playerId)) {
+            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+        }
+    }
+
+    public void checkOrganizationExists(Integer orgId) {
+        if (!existsByOrganizationId(orgId)) {
+            throw new NotFoundException(ErrorsString.ORGANIZATION_NOT_FOUND);
+        }
+    }
+
+    public void checkRefereeExists(Integer refereeId) {
+        if (!existsByRefereeId(refereeId)) {
+            throw new NotFoundException(ErrorsString.REFEREE_NOT_FOUND);
+        }
+    }
+
+    public void checkCoordinatorExists(Integer coordinatorId) {
+        if (!existsByCoordinatorId(coordinatorId)) {
+            throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND);
+        }
+    }
+
+    public List<Review> getReviewsByReviewerAccountId(Integer reviewerAccountId) {
+        return reviewRepository.findByReviewerAccount_Id(reviewerAccountId);
+    }
+
+    public List<Review> getPendingReviewsByReviewerAccountId(Integer reviewerAccountId) {
+        return reviewRepository.findByReviewerAccount_IdAndStatus(reviewerAccountId, ReviewStatus.PENDING);
+    }
 }

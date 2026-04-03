@@ -204,4 +204,19 @@ public class BookingService {
 
         return lobbyBookingParticipateOptional;
     }
+
+    public Integer countPrivateBookingsByPlayerIdAndSportCategory(Integer playerId, SportCategory sportCategory) {
+        List<PrivateBooking> privateBookings = privateBookingRepository.findByPlayer_PlayerId(playerId);
+        List<PrivateBooking> filteredPrivateBookings = privateBookings.stream()
+                .filter(pb -> pb.getBooking().getSportCategory() == sportCategory).toList();
+        return filteredPrivateBookings.size();
+    }
+
+    public Integer countLobbyParticipationByPlayerIdAndSportCategory(Integer playerId, SportCategory sportCategory) {
+        List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
+                .findByPlayer_PlayerId(playerId);
+        List<LobbyBookingParticipate> filteredParticipations = participations.stream()
+                .filter(p -> p.getLobbyBooking().getBooking().getSportCategory() == sportCategory).toList();
+        return filteredParticipations.size();
+    }
 }

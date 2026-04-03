@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.atl.backend.model.RefereeLicense;
 import com.atl.backend.model.RefereeRole;
 import com.atl.backend.model.Sport;
 import com.atl.backend.model.enums.SportCategory;
@@ -81,4 +82,10 @@ public class SportService {
     public List<RefereeRole> getRefereeRolesBySportIdAndLevel(Integer sportId, Short level) {
         return refereeRoleRepository.findBySport_IdAndLevel(sportId, level);
     }
+
+    public List<RefereeLicense> getRefereeLicensesByRefereeId(Integer refereeId) {
+        return refereeLicenseRepository.findByReferee_RefereeId(refereeId);
+    }
+
+
 }

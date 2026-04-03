@@ -24,6 +24,10 @@ public class Review {
     @JoinColumn(name = "tournament_id", nullable = false)
     private Tournament tournament;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "match_id")
+    private Match match;
+
     /*
      * @Column(name = "reviewer_account_id", nullable = false)
      * private Integer reviewerAccountId;

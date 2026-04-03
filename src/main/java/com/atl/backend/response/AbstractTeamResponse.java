@@ -66,4 +66,6 @@ public class AbstractTeamResponse {
     @Builder.Default
     @JsonProperty(ApiJsonKeys.historicalPlayers)
     private List<PlayerDTO> historicalPlayers = new ArrayList<>();
+
+    
 }

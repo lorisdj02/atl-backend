@@ -3,6 +3,7 @@ package com.atl.backend.repository;
 import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.TournamentParticipationId;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,4 +19,7 @@ public interface TournamentParticipationRepository extends JpaRepository<Tournam
 
     Optional<TournamentParticipation> findByTeam_IdAndTournament_Id(Integer teamId, Integer tournamentId);
 
+    List<TournamentParticipation> findByTeam_IdAndToPay(Integer teamId, BigDecimal toPay);
+
+    List<TournamentParticipation> findByTeam_IdAndToPayGreaterThan(Integer teamId, BigDecimal toPay);
 }
