@@ -33,6 +33,7 @@ import com.atl.backend.model.Transaction;
 import com.atl.backend.model.Wallet;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.response.InviteFriendsResponse;
 import com.atl.backend.response.MyGrowthResponse;
 import com.atl.backend.response.PersonalPlayerStatsResponse;
 import com.atl.backend.response.RefereeLicensesResponse;
@@ -216,4 +217,20 @@ public class ProfileScreenService {
                 .matchTeamsStringPerReview(matchTeamsStringPerReview)
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public InviteFriendsResponse getInviteFriendsScreen() {
+        Account account = AccountContext.getActiveAccount();
+        BigDecimal inviteBalance = paymentService.getInviteBalanceByAccountId(account.getId());
+        String referrealCode = accountService.getReferralCodeByAccountId(account.getId());
+        Integer numRedeemed = accountService.getRedeemedInvitesByAccountId(account.getId());
+        Integer numInvites = accountService.getTotalInvitesByAccountId(account.getId());
+        return InviteFriendsResponse.builder()
+                .inviteBalance(inviteBalance)
+                .referralCode(referrealCode)
+                .numRedeemed(numRedeemed)
+                .numInvites(numInvites)
+                .build();
+    }
+
 }

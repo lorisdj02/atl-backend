@@ -6,4 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FriendInviteRepository extends JpaRepository<FriendInvite, Integer> {
+    Integer countByInviterAccount_IdAndRedeemedTrue(Integer inviterAccountId);
+
+    Integer countByInviterAccount_Id(Integer inviterAccountId);
 }

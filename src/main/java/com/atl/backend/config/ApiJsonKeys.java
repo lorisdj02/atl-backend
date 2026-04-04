@@ -162,6 +162,9 @@ public class ApiJsonKeys {
     public static final String hasRefereeLicense = "hasRefereeLicense"; // bool
     // FootballMatchScreen
     public static final String payPerRole = "payPerRole"; // Map<String, double>
+    // FootballMatchScreen
+    public static final String finalStageBracket = "finalStageBracket"; // FinalStageBracket?
+
 
     // PayParticipationScreen
     public static final String tournamentsCache = "tournamentsCache"; // Map<int, Tournament>
@@ -265,7 +268,7 @@ public class ApiJsonKeys {
     // CheckoutScreen
     public static final String startTime = "startTime"; // DateTime
     // CheckoutScreen
-    public static final String endTime = "endTime"; // DateTime
+    public static final String finishTime = "finishTime"; // DateTime
     // CheckoutScreen
     public static final String maxPlayers = "maxPlayers"; // int
 

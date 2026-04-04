@@ -1,6 +1,7 @@
 package com.atl.backend.service;
 
 import com.atl.backend.repository.FinalStageBracketRepository;
+import com.atl.backend.repository.FootballMatchEventRepository;
 import com.atl.backend.repository.FootballMatchRepository;
 import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.RefereeAssignmentRepository;
@@ -22,16 +23,15 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.*;
 import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
+import com.atl.backend.model.FootballMatchEvent;
 import com.atl.backend.model.Match;
 import com.atl.backend.model.RefereeAssignment;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
-import com.atl.backend.model.enums.LegOrderType;
-import com.atl.backend.model.enums.MatchSlotType;
-import com.atl.backend.model.enums.SportCategory;
 
 @Service
 public class MatchService {
+    private final FootballMatchEventRepository footballMatchEventRepository;
     @Autowired
     private TeamService teamService;
     @Autowired
@@ -44,6 +44,10 @@ public class MatchService {
     private FinalStageBracketRepository finalStageBracketRepository;
     @Autowired
     private RefereeAssignmentRepository refereeAssignmentRepository;
+
+    MatchService(FootballMatchEventRepository footballMatchEventRepository) {
+        this.footballMatchEventRepository = footballMatchEventRepository;
+    }
 
     public Integer calculateMatchesInTournament(Integer tournamentId) {
         Optional<Tournament> tournamentOptional = tournamentService.getTournamentById(tournamentId);
@@ -88,6 +92,10 @@ public class MatchService {
 
     public List<FootballMatch> getFootballMatchesByTournamentId(Integer tournamentId) {
         return footballMatchRepository.findByMatch_Tournament_Id(tournamentId);
+    }
+
+    public Optional<Match> getMatchById(Integer id) {
+        return matchRepository.findById(id);
     }
 
     private record KnockoutPhase(int qualified, String prefix, int matches) {
@@ -412,5 +420,47 @@ public class MatchService {
         return footballMatchRepository.findByStatus(FootballMatchStatus.SCHEDULED);
     }
 
-    
+    public List<RefereeAssignment> getRefereeAssignmentsForMatch(Integer matchId) {
+        return refereeAssignmentRepository.findByMatch_Id(matchId);
+    }
+
+    public Boolean canMatchFinish(Integer matchId) {
+        Optional<Match> optionalMatch = matchRepository.findById(matchId);
+        if (optionalMatch.isEmpty()) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        Match match = optionalMatch.get();
+        switch (match.getSportCategory()) {
+            case FOOTBALL -> {
+                Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(matchId);
+                if (footballMatchOptional.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+                }
+                FootballMatch footballMatch = footballMatchOptional.get();
+                if (footballMatch.getStatus() != FootballMatchStatus.START_HALF
+                        || footballMatch.getStatus() != FootballMatchStatus.PENALTY_SHOOT_OUT) {
+                    return false;
+                }
+            }
+        }
+        if (match.getFinalStageBracket() == null) {
+            return true;
+        }
+        FinalStageBracket finalStageBracket = match.getFinalStageBracket();
+        Short aggregateScoreHome = finalStageBracket.getAggregateScoreHome();
+        Short aggregateScoreAway = finalStageBracket.getAggregateScoreAway();
+        if (aggregateScoreHome == null || aggregateScoreAway == null) {
+            return false;
+        }
+        return aggregateScoreHome != aggregateScoreAway;
+    }
+
+    public List<FootballMatchEvent> getFootballMatchEventsByMatchId(Integer matchId) {
+        Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(matchId);
+        if (footballMatchOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        FootballMatch footballMatch = footballMatchOptional.get();
+        return footballMatchEventRepository.findByMatch_Match_Id(footballMatch.getId());
+    }
 }

@@ -1,5 +1,7 @@
 package com.atl.backend.controller;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.ResponseEntity;
@@ -42,5 +44,14 @@ public class MatchController {
         PastAssignedMatchesResponse response = matchScreenService
                 .getPastAssignedMatchesScreen(SportCategory.valueOf(sportCategory.toUpperCase()));
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/match/{matchId}")
+    public ResponseEntity<?> getMatchScreen(@PathVariable Integer matchId) {
+        Optional<?> response = matchScreenService.getMatchScreen(matchId);
+        if (response.isEmpty()) {
+            throw new BadRequestException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        return ResponseEntity.ok(matchScreenService.getMatchScreen(matchId).get());
     }
 }

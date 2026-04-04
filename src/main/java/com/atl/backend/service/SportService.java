@@ -1,5 +1,6 @@
 package com.atl.backend.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,5 +88,7 @@ public class SportService {
         return refereeLicenseRepository.findByReferee_RefereeId(refereeId);
     }
 
-
+    public Optional<RefereeLicense> getRefereeLicensesByRefereeIdAndSportId(Integer refereeId, Integer sportId) {
+        return refereeLicenseRepository.findByReferee_RefereeIdAndSport_Id(refereeId, sportId);
+    }
 }

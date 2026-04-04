@@ -35,6 +35,9 @@ public class PlayerDTO {
     @JsonProperty("email")
     private String email;
 
+    @JsonProperty("imageUrl")
+    private String imageUrl;
+
     public static PlayerDTO fromPlayer(Player player) {
         if (player == null) {
             return null;
@@ -47,6 +50,7 @@ public class PlayerDTO {
         dto.setName(player.getAccount().getName());
         dto.setSurname(player.getAccount().getSurname());
         dto.setEmail(player.getAccount().getEmail());
+        dto.setImageUrl(player.getAccount().getImageUrl());
         return dto;
     }
 

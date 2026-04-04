@@ -30,6 +30,9 @@ public class CoordinatorDTO {
     @JsonProperty("username")
     private String username;
 
+    @JsonProperty("imageUrl")
+    private String imageUrl;
+
     public static CoordinatorDTO fromCoordinator(Coordinator coordinator) {
         if (coordinator == null) {
             return null;
@@ -41,6 +44,7 @@ public class CoordinatorDTO {
         dto.setSurname(coordinator.getAccount().getSurname());
         dto.setAccountId(coordinator.getAccount().getId());
         dto.setUsername(coordinator.getAccount().getUsername());
+        dto.setImageUrl(coordinator.getAccount().getImageUrl());
         return dto;
     }
 }

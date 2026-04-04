@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
+import com.atl.backend.response.InviteFriendsResponse;
 import com.atl.backend.response.MyGrowthResponse;
 import com.atl.backend.response.PersonalPlayerStatsResponse;
 import com.atl.backend.response.RefereeLicensesResponse;
@@ -55,6 +56,12 @@ public class ProfileController {
     @GetMapping("/reviews")
     public ResponseEntity<ReviewsResponse> getReviewsScreen() {
         ReviewsResponse response = profileScreenService.getReviewsScreen();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/friend-invites")
+    public ResponseEntity<InviteFriendsResponse> getInviteFriendsScreen() {
+        InviteFriendsResponse response = profileScreenService.getInviteFriendsScreen();
         return ResponseEntity.ok(response);
     }
 }

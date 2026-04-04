@@ -17,6 +17,7 @@ import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.ReviewStatus;
 import com.atl.backend.repository.AccountRepository;
 import com.atl.backend.repository.CoordinatorRepository;
+import com.atl.backend.repository.FriendInviteRepository;
 import com.atl.backend.repository.GrowthStepRepository;
 import com.atl.backend.repository.OrganizationRepository;
 import com.atl.backend.repository.PlayerRepository;
@@ -47,6 +48,8 @@ public class AccountService {
     private GrowthStepRepository growthStepRepository;
     @Autowired
     private ReviewRepository reviewRepository;
+    @Autowired
+    private FriendInviteRepository friendInviteRepository;
 
 
     public Account registerAccount(Account account, Optional<String> OrgName) {
@@ -296,5 +299,23 @@ public class AccountService {
 
     public List<Review> getPendingReviewsByReviewerAccountId(Integer reviewerAccountId) {
         return reviewRepository.findByReviewerAccount_IdAndStatus(reviewerAccountId, ReviewStatus.PENDING);
+    }
+
+    public String getReferralCodeByAccountId(Integer accountId) {
+        Optional<Account> accountOptional = getAccountById(accountId);
+        if (accountOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
+        }
+        Account account = accountOptional.get();
+        // TODO: implement referral code generation logic, for now we return the username as referral code
+        return account.getUsername();
+    }
+
+    public Integer getRedeemedInvitesByAccountId(Integer accountId) {
+        return friendInviteRepository.countByInviterAccount_IdAndRedeemedTrue(accountId);
+    }
+
+    public Integer getTotalInvitesByAccountId(Integer accountId) {
+        return friendInviteRepository.countByInviterAccount_Id(accountId);
     }
 }

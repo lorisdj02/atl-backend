@@ -117,6 +117,14 @@ public class TournamentService {
         return participations.stream().map(TournamentParticipation::getTournament).toList();
     }
 
+    public String getTournamentName(Integer tournamentId) {
+        Optional<Tournament> tournamentOpt = tournamentRepository.findById(tournamentId);
+        if (tournamentOpt.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+        return tournamentOpt.get().getName();
+    }
+
     public List<FinalStageBracket> getFinalStageBracketsByTournamentId(Integer tournamentId) {
         return finalStageBracketRepository.findByTournament_Id(tournamentId);
     }

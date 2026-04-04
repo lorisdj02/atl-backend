@@ -25,6 +25,8 @@ public class ErrorsString {
 
     static final public String WALLET_NOT_FOUND = "WALLET_NOT_FOUND";
 
+    static final public String CHECKOUT_SESSION_NOT_FOUND = "CHECKOUT_SESSION_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -34,6 +36,8 @@ public class ErrorsString {
     static final public String INVALID_ACCOUNT_ROLE = "INVALID_ACCOUNT_ROLE";
 
     static final public String INVALID_TIME_RANGE = "INVALID_TIME_RANGE";
+
+    static final public String INVALID_CHECKOUT_SESSION = "INVALID_CHECKOUT_SESSION";
 
     // Conflict errors
 
@@ -58,6 +62,8 @@ public class ErrorsString {
     static final public String NEED_TO_BE_IN_TEAM = "NEED_TO_BE_IN_TEAM";
 
     static final public String TEAM_MUST_PARTECIPATE_TO_TOURNAMENT = "TEAM_MUST_PARTECIPATE_TO_TOURNAMENT";
+
+    static final public String CHECKOUT_SESSION_IS_NOT_PENDING = "CHECKOUT_SESSION_IS_NOT_PENDING";
 
     // Authentication errors
 
