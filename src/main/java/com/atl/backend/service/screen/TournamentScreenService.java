@@ -339,6 +339,8 @@ public class TournamentScreenService {
         List<FootballTournamentStats> footballTournamentStats = tournamentService
                 .getFootballTournamentStatsByTournamentId(tournamentId);
 
+                
+        List<Player> players = new ArrayList<>();
         for (FootballTournamentStats stat : footballTournamentStats) {
             if (stat.getGoals() == 0 && stat.getMotm() == 0) {
                 continue; // Non ha senso inviare statistiche vuote, e così evitiamo di popolare la cache
@@ -352,16 +354,7 @@ public class TournamentScreenService {
             statDTO.setYellowCards(stat.getYellowCards());
             statDTO.setRedCards(stat.getRedCards());
             footballPlayerStatsCache.put(stat.getPlayer().getPlayerId(), statDTO);
-        }
-
-        List<Player> players = new ArrayList<>();
-        List<Integer> playerIds = tournamentService.getCalluppedPlayerIdsByTournamentId(tournamentId);
-        for (Integer playerId : playerIds) {
-            Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
-            if (optionalPlayer.isEmpty()) {
-                throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
-            }
-            players.add(optionalPlayer.get());
+            players.add(stat.getPlayer());
         }
 
         return FootballTournamentResponse.builder()

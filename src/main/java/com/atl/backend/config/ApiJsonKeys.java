@@ -13,6 +13,8 @@ public class ApiJsonKeys {
 
     public static final String lobbyBooking = "lobbyBooking"; // LobbyBooking
 
+    public static final String numMatches = "numMatches"; // int
+
     // PlayerHomeScreen,
     public static final String bookings = "bookings"; // List<dynamic>
     // PlayerHomeScreen, CoordinatorHomeScreen

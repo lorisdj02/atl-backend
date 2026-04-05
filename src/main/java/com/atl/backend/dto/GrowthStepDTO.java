@@ -23,11 +23,11 @@ public class GrowthStepDTO {
     @JsonProperty("x")
     private Integer x;
 
-    @JsonProperty("minRatingOverLastXGames")
-    private Double minRatingOverLastXGames;
+    @JsonProperty("minRatingOverLastXMatches")
+    private Double minRatingOverLastXMatches;
 
-    @JsonProperty("minRefereedGames")
-    private Short minRefereedGames;
+    @JsonProperty("minRefereedMatches")
+    private Short minRefereedMatches;
 
     @JsonProperty("minRatingOverLastXTournaments")
     private Double minRatingOverLastXTournaments;
@@ -35,8 +35,8 @@ public class GrowthStepDTO {
     @JsonProperty("minCoordinatedTournaments")
     private Short minCoordinatedTournaments;
 
-    @JsonProperty("coordinatorPayPerGame")
-    private BigDecimal coordinatorPayPerGame;
+    @JsonProperty("coordinatorPayPerMatch")
+    private BigDecimal coordinatorPayPerMatch;
 
     public static GrowthStepDTO fromGrowthStep(GrowthStep growthStep) {
         if (growthStep == null) {
@@ -47,11 +47,11 @@ public class GrowthStepDTO {
         dto.setTitle(growthStep.getTitle());
         dto.setLevel(growthStep.getLevel());
         dto.setX(growthStep.getX());
-        dto.setMinRatingOverLastXGames(growthStep.getMinRatingOverLastXGames() != null ? growthStep.getMinRatingOverLastXGames().doubleValue() : null);
-        dto.setMinRefereedGames(growthStep.getMinRefereedGames());
+        dto.setMinRatingOverLastXMatches(growthStep.getMinRatingOverLastXMatches() != null ? growthStep.getMinRatingOverLastXMatches().doubleValue() : null);
+        dto.setMinRefereedMatches(growthStep.getMinRefereedMatches());
         dto.setMinRatingOverLastXTournaments(growthStep.getMinRatingOverLastXTournaments() != null ? growthStep.getMinRatingOverLastXTournaments().doubleValue() : null);
         dto.setMinCoordinatedTournaments(growthStep.getMinCoordinatedTournaments());
-        dto.setCoordinatorPayPerGame(growthStep.getCoordinatorPayPerGame());
+        dto.setCoordinatorPayPerMatch(growthStep.getCoordinatorPayPerMatch());
         return dto;
     }
 }

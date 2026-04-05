@@ -26,11 +26,11 @@ public class GrowthStep {
     @Column(nullable = false)
     private Integer x;
 
-    @Column(name = "min_rating_over_last_x_games", precision = 3, scale = 2)
-    private BigDecimal minRatingOverLastXGames;
+    @Column(name = "min_rating_over_last_x_matches", precision = 3, scale = 2)
+    private BigDecimal minRatingOverLastXMatches;
 
-    @Column(name = "min_refereed_games")
-    private Short minRefereedGames;
+    @Column(name = "min_refereed_matches")
+    private Short minRefereedMatches;
 
     @Column(name = "min_rating_over_last_x_tournaments", precision = 3, scale = 2)
     private BigDecimal minRatingOverLastXTournaments;
@@ -38,6 +38,6 @@ public class GrowthStep {
     @Column(name = "min_coordinated_tournaments")
     private Short minCoordinatedTournaments;
 
-    @Column(name = "coordinator_pay_per_game", precision = 10, scale = 2)
-    private BigDecimal coordinatorPayPerGame;
+    @Column(name = "coordinator_pay_per_match", precision = 10, scale = 2)
+    private BigDecimal coordinatorPayPerMatch;
 }

@@ -1,12 +1,17 @@
 package com.atl.backend.service;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.atl.backend.config.ErrorsString;
+import com.atl.backend.exception.BadRequestException;
+import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.RefereeLicense;
 import com.atl.backend.model.RefereeRole;
 import com.atl.backend.model.Sport;
@@ -90,5 +95,22 @@ public class SportService {
 
     public Optional<RefereeLicense> getRefereeLicensesByRefereeIdAndSportId(Integer refereeId, Integer sportId) {
         return refereeLicenseRepository.findByReferee_RefereeIdAndSport_Id(refereeId, sportId);
+    }
+
+    public Map<String, BigDecimal> getRefereePayPerMatchBySportIdAndLevel(Integer sportId, Short level) {
+        Optional<Sport> sportOpt = sportRepository.findById(sportId);
+        if (sportOpt.isEmpty()) {
+            throw new NotFoundException(ErrorsString.SPORT_NOT_FOUND);
+        }
+        List<RefereeRole> roles = refereeRoleRepository.findBySport_IdAndLevel(sportId, level);
+        if (roles == null || roles.isEmpty()) {
+            throw new NotFoundException(ErrorsString.REFEREE_ROLE_NOT_FOUND);
+        }
+        Map<String, BigDecimal> pay = new HashMap<>();
+        for (RefereeRole role : roles) {
+            pay.put(role.getName(), role.getPayPerMatch());
+        }
+        return pay;
+
     }
 }

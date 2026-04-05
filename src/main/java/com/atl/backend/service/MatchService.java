@@ -5,6 +5,7 @@ import com.atl.backend.repository.FootballMatchEventRepository;
 import com.atl.backend.repository.FootballMatchRepository;
 import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.RefereeAssignmentRepository;
+import com.atl.backend.response.FootballMatchEventsResponse;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 import com.atl.backend.model.enums.*;
 
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.FootballMatchEventDTO;
+import com.atl.backend.dto.TournamentDTO;
 import com.atl.backend.exception.*;
 import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
@@ -49,20 +52,15 @@ public class MatchService {
         this.footballMatchEventRepository = footballMatchEventRepository;
     }
 
-    public Integer calculateMatchesInTournament(Integer tournamentId) {
-        Optional<Tournament> tournamentOptional = tournamentService.getTournamentById(tournamentId);
-        if (tournamentOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
-        }
+    public Integer calculateMatchesInTournament(TournamentDTO tournamentDTO) {
 
-        final Tournament tournament = tournamentOptional.get();
-        final int numTeams = tournament.getNumTeams();
-        final int numGroups = tournament.getNumGroups();
-        final int numTeamsQualified = tournament.getNumTeamsQualified();
+        final int numTeams = tournamentDTO.getNumTeams();
+        final int numGroups = tournamentDTO.getNumGroups();
+        final int numTeamsQualified = tournamentDTO.getNumTeamsQualified();
 
         final int numTeamsPerGroup = numTeams / numGroups;
-        final int round2GroupStage = tournament.getRound2GroupStage() ? 1 : 0;
-        final int round2FinalStage = tournament.getRound2FinalStage() ? 1 : 0;
+        final int round2GroupStage = tournamentDTO.getRound2GroupStage() ? 1 : 0;
+        final int round2FinalStage = tournamentDTO.getRound2FinalStage() ? 1 : 0;
 
         final int matchesInGroupStage = numGroups * (numTeamsPerGroup * (numTeamsPerGroup - 1))
                 / (2 - round2GroupStage);
@@ -462,5 +460,25 @@ public class MatchService {
         }
         FootballMatch footballMatch = footballMatchOptional.get();
         return footballMatchEventRepository.findByMatch_Match_Id(footballMatch.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<?> getMatchEvents(Integer matchId) {
+        Optional<Match> matchOptional = matchRepository.findById(matchId);
+        if (matchOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        Match match = matchOptional.get();
+        switch (match.getSportCategory()) {
+            case FOOTBALL -> {
+                List<FootballMatchEvent> footballMatchEvents = getFootballMatchEventsByMatchId(matchId);
+                Boolean canMatchFinish = canMatchFinish(matchId);
+                return Optional.of(FootballMatchEventsResponse.builder()
+                        .events(footballMatchEvents.stream().map(event -> FootballMatchEventDTO.fromFootballMatchEvent(event)).toList())
+                        .canMatchFinish(canMatchFinish)
+                        .build());
+            }
+            default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
     }
 }

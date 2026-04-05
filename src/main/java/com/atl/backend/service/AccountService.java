@@ -12,11 +12,13 @@ import com.atl.backend.model.GrowthStep;
 import com.atl.backend.model.Organization;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Referee;
+import com.atl.backend.model.RefereeRole;
 import com.atl.backend.model.Review;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.enums.AccountStatus;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.ReviewStatus;
+import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.repository.AccountRepository;
 import com.atl.backend.repository.CoordinatorRepository;
 import com.atl.backend.repository.FriendInviteRepository;
@@ -31,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,7 +58,6 @@ public class AccountService {
     private FriendInviteRepository friendInviteRepository;
     @Autowired
     private TeamService teamService;
-
 
     public Account registerAccount(Account account, Optional<String> OrgName) {
         saveAccount(account);
@@ -315,6 +317,31 @@ public class AccountService {
         return account.getUsername();
     }
 
+    public BigDecimal getCoordinatorPayPerMatchByCoordinatorId(Integer coordinatorId) {
+        Optional<Coordinator> coordinatorOptional = getCoordinatorByCoordinatorId(coordinatorId);
+        if (coordinatorOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND);
+        }
+        Coordinator coordinator = coordinatorOptional.get();
+        Short level = coordinator.getLevel();
+        if (level == null) {
+            level = 1; // Default level if not set
+        }
+
+        BigDecimal pay = growthStepRepository.findCoordinatorPayPerMatchByLevel(level);
+        return pay;
+    }
+
+    public Short getMedianRefereeLevel() {
+        List<Short> levels = refereeRepository.findAllLevelsOrdered();
+        if (levels == null || levels.isEmpty()) {
+            throw new NotFoundException(ErrorsString.REFEREE_NOT_FOUND);
+        }
+        int n = levels.size();
+        int index = (n - 1) / 2; // odd -> middle; even -> lower middle
+        return levels.get(index);
+    }
+
     public Integer getRedeemedInvitesByAccountId(Integer accountId) {
         return friendInviteRepository.countByInviterAccount_IdAndRedeemedTrue(accountId);
     }
@@ -323,22 +350,24 @@ public class AccountService {
         return friendInviteRepository.countByInviterAccount_Id(accountId);
     }
 
-    public LoginResponse handleLogin(){
+    @Transactional(readOnly = true)
+    public LoginResponse handleLogin() {
         // AuthFilter fa già tutto il lavoro di autenticazione
         Account account = AccountContext.getActiveAccount();
-        switch(account.getRole()){
+        switch (account.getRole()) {
             case PLAYER:
-                Optional<Team> teamOpt = teamService.getTeamByPlayerIdAndSportCategory(AccountContext.getPlayerId(), account.getFavoriteSportCategory());
+                Optional<Team> teamOpt = teamService.getTeamByPlayerIdAndSportCategory(AccountContext.getPlayerId(),
+                        account.getFavoriteSportCategory());
                 return LoginResponse.builder()
-                    .account(AccountDTO.fromAccount(account))
-                    .roleId(AccountContext.getPlayerId())
-                    .teamId(teamOpt.isPresent() ? teamOpt.get().getId() : null)
-                    .build();
+                        .account(AccountDTO.fromAccount(account))
+                        .roleId(AccountContext.getPlayerId())
+                        .teamId(teamOpt.isPresent() ? teamOpt.get().getId() : null)
+                        .build();
             default:
                 return LoginResponse.builder()
-                    .account(AccountDTO.fromAccount(account))
-                    .roleId(AccountContext.getRoleId())
-                    .build();
+                        .account(AccountDTO.fromAccount(account))
+                        .roleId(AccountContext.getRoleId())
+                        .build();
         }
     }
 }

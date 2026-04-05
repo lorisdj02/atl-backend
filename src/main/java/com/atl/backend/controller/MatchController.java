@@ -15,6 +15,7 @@ import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
+import com.atl.backend.service.MatchService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.screen.MatchScreenService;
 
@@ -25,6 +26,8 @@ public class MatchController {
     private MatchScreenService matchScreenService;
     @Autowired
     private SportService sportService;
+    @Autowired
+    private MatchService matchService;
 
     @GetMapping("/{sportCategory}/referee/available-matches")
     public ResponseEntity<AvailableMatchesResponse> getAvailableMatchesScreen(@PathVariable String sportCategory) {
@@ -37,7 +40,8 @@ public class MatchController {
     }
 
     @GetMapping("/{sportCategory}/referee/past-assigned-matches")
-    public ResponseEntity<PastAssignedMatchesResponse> getPastAssignedMatchesScreen(@PathVariable String sportCategory) {
+    public ResponseEntity<PastAssignedMatchesResponse> getPastAssignedMatchesScreen(
+            @PathVariable String sportCategory) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
@@ -53,5 +57,14 @@ public class MatchController {
             throw new BadRequestException(ErrorsString.MATCH_NOT_FOUND);
         }
         return ResponseEntity.ok(matchScreenService.getMatchScreen(matchId).get());
+    }
+
+    @GetMapping("/match/{matchId}/events")
+    public ResponseEntity<?> getTournamentEvents(@PathVariable Integer matchId) {
+        Optional<?> response = matchService.getMatchEvents(matchId);
+        if (response.isEmpty()) {
+            throw new BadRequestException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        return ResponseEntity.ok(response.get());
     }
 }

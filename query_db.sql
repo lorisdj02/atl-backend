@@ -80,11 +80,11 @@ CREATE TABLE "growth_step" (
   "title" varchar(31) NOT NULL,
   "level" smallint NOT NULL,
   "x" int NOT NULL,
-  "min_rating_over_last_x_games" numeric(3,2),
-  "min_refereed_games" smallint,
+  "min_rating_over_last_x_matches" numeric(3,2),
+  "min_refereed_matches" smallint,
   "min_rating_over_last_x_tournaments" numeric(3,2),
   "min_coordinated_tournaments" smallint,
-  "coordinator_pay_per_game" numeric(10,2)
+  "coordinator_pay_per_match" numeric(10,2)
   primary key ("type", "level")
 );
 

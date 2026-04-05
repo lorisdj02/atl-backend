@@ -5,16 +5,23 @@ import org.springframework.context.annotation.Lazy; // Metti questo
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException.Forbidden;
 
 import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.CoordinatorDTO;
+import com.atl.backend.dto.FieldDTO;
 import com.atl.backend.dto.TournamentDTO;
+import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
@@ -25,11 +32,14 @@ import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.FootballTournamentStats;
 import com.atl.backend.model.Player;
+import com.atl.backend.model.RefereeRole;
+import com.atl.backend.model.Sport;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TournamentStatus;
+import com.atl.backend.model.Field;
 import com.atl.backend.repository.CallupRepository;
 import com.atl.backend.repository.FavoriteTournamentRepository;
 import com.atl.backend.repository.FinalStageBracketRepository;
@@ -38,6 +48,8 @@ import com.atl.backend.repository.FootballTournamentStatsRepository;
 import com.atl.backend.repository.SportRepository;
 import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.repository.TournamentRepository;
+import com.atl.backend.response.ApplyTournamentFiltersResponse;
+import com.atl.backend.response.TournamentParametersResponse;
 import com.atl.backend.util.StandingsComparators;
 
 import jakarta.persistence.criteria.CriteriaBuilder.In;
@@ -53,7 +65,9 @@ public class TournamentService {
     private MatchService matchService;
 
     @Autowired
+    @Lazy
     private AccountService accountService;
+
     @Autowired
     private TournamentRepository tournamentRepository;
     @Autowired
@@ -68,6 +82,10 @@ public class TournamentService {
     private FavoriteTournamentRepository favoriteTournamentRepository;
     @Autowired
     private FinalStageBracketRepository finalStageBracketRepository;
+    @Autowired
+    private FieldService fieldService;
+    @Autowired
+    private SportService sportService;
 
     public void deleteAllTournaments() {
         tournamentRepository.deleteAll();
@@ -541,5 +559,150 @@ public class TournamentService {
                 .filter(callup -> callup.getTournament().getSport().getSportCategory() == sportCategory)
                 .toList();
         return filteredCallups.size();
+    }
+
+    @Transactional(readOnly = true)
+    public ApplyTournamentFiltersResponse applyTournamentFilters(SportCategory sportCategory, Integer cityId,
+            Short minTeams, Short maxTeams, BigDecimal minFee, BigDecimal maxFee, BigDecimal minPrize,
+            BigDecimal maxPrize,
+            String name) {
+        List<Tournament> tournaments = tournamentRepository.findBySport_SportCategory(sportCategory);
+        if (name != null && !name.isEmpty()) {
+            tournaments = tournaments.stream()
+                    .filter(tournament -> tournament.getName().toLowerCase().contains(name.toLowerCase()))
+                    .toList();
+        }
+        if (cityId != null) {
+            tournaments = tournaments.stream()
+                    .filter(tournament -> tournament.getField().getCity().getId().equals(cityId))
+                    .toList();
+        }
+        if (minTeams != null) {
+            tournaments = tournaments.stream()
+                    .filter(tournament -> tournament.getNumTeams() >= minTeams)
+                    .toList();
+        }
+        if (maxTeams != null) {
+            tournaments = tournaments.stream()
+                    .filter(tournament -> tournament.getNumTeams() <= maxTeams)
+                    .toList();
+        }
+        if (minFee != null) {
+            tournaments = tournaments.stream()
+                    .filter(tournament -> tournament.getFee().compareTo(minFee) >= 0)
+                    .toList();
+        }
+        if (maxFee != null) {
+            tournaments = tournaments.stream()
+                    .filter(tournament -> tournament.getFee().compareTo(maxFee) <= 0)
+                    .toList();
+        }
+        if (minPrize != null) {
+            tournaments = tournaments.stream()
+                    .filter(tournament -> tournament.getPrize1().compareTo(minPrize) >= 0)
+                    .toList();
+        }
+        if (maxPrize != null) {
+            tournaments = tournaments.stream()
+                    .filter(tournament -> tournament.getPrize1().compareTo(maxPrize) <= 0)
+                    .toList();
+        }
+
+        Map<Integer, Field> fieldsCache = new HashMap<>();
+        Map<Integer, String> cityNamePerField = new HashMap<>();
+        Map<Integer, Coordinator> coordinatorsCache = new HashMap<>();
+
+        for (Tournament tournament : tournaments) {
+            if (!fieldsCache.containsKey(tournament.getField().getId())) {
+                fieldsCache.put(tournament.getField().getId(), tournament.getField());
+                cityNamePerField.put(tournament.getField().getId(), tournament.getField().getCity().getName());
+            }
+            if (!coordinatorsCache.containsKey(tournament.getCoordinator().getCoordinatorId())) {
+                coordinatorsCache.put(tournament.getCoordinator().getCoordinatorId(),
+                        tournament.getCoordinator());
+            }
+        }
+
+        tournaments.sort((t1, t2) -> t1.getStatus().getPriority() - t2.getStatus().getPriority());
+
+        return ApplyTournamentFiltersResponse.builder()
+                .tournaments(tournaments.stream().map(TournamentDTO::fromTournament).toList())
+                .fieldsCache(fieldsCache.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> FieldDTO.fromField(entry.getValue()))))
+                .cityNamePerField(cityNamePerField)
+                .coordinatorsCache(coordinatorsCache.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                entry -> CoordinatorDTO.fromCoordinator(entry.getValue()))))
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public TournamentParametersResponse getTournamentParameters(TournamentDTO fictitiousTournament) {
+        if (!AccountContext.getCoordinatorId().equals(fictitiousTournament.getCoordinatorId())) {
+            throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
+        }
+        // TODO: Implementare in base ai parametri del torneo
+        Integer numMatches = matchService.calculateMatchesInTournament(fictitiousTournament);
+        Optional<Sport> optionalSport = sportService.getSportById(fictitiousTournament.getSportId());
+        if (optionalSport.isEmpty()) {
+            throw new NotFoundException(ErrorsString.SPORT_NOT_FOUND);
+        }
+        Sport sport = optionalSport.get();
+
+        BigDecimal hoursPerMatch;
+
+        switch (sport.getSportCategory()) {
+            case FOOTBALL:
+                // Calcolo approssimativo: 2 tempi da x minuti + pausa da y minuti + 15 minuti
+                // per preparazione e pulizia campo, tutto arrotondato per eccesso per arrivare
+                // al quarto d'ora
+                int totalMinutes = sport.getMinutesPerPause() + sport.getMinutesPerRound() * 2 + 15;
+                BigDecimal quarters = BigDecimal.valueOf(totalMinutes)
+                        .divide(BigDecimal.valueOf(15), 10, RoundingMode.HALF_UP);
+                BigDecimal roundedQuarters = quarters.setScale(0, RoundingMode.HALF_UP);
+                hoursPerMatch = roundedQuarters.multiply(BigDecimal.valueOf(0.25)).setScale(2, RoundingMode.HALF_UP);
+                break;
+            default:
+                throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+
+        BigDecimal coordinatorPayPerMatch = accountService
+                .getCoordinatorPayPerMatchByCoordinatorId(fictitiousTournament.getCoordinatorId());
+        // La finale vale 1.5 volte un match normale
+        BigDecimal coordinatorPay = coordinatorPayPerMatch.multiply(BigDecimal.valueOf(numMatches + 0.5))
+                .setScale(2, RoundingMode.HALF_UP);
+
+        Optional<Field> field = fieldService.getFieldById(fictitiousTournament.getFieldId());
+        if (field.isEmpty()) {
+            throw new NotFoundException(ErrorsString.FIELD_NOT_FOUND);
+        }
+
+        BigDecimal fieldCostPerHour = field.get().getHourCostTournament().multiply(hoursPerMatch)
+                .multiply(BigDecimal.valueOf(numMatches)).setScale(2, RoundingMode.HALF_UP);
+
+        Short medianRefereeLevel = accountService.getMedianRefereeLevel();
+        Map<String, BigDecimal> refereeRolesPayPerMatch = sportService.getRefereePayPerMatchBySportIdAndLevel(
+                sport.getId(), medianRefereeLevel);
+
+        BigDecimal totalRefereePay = BigDecimal.ZERO;
+        for (String role : refereeRolesPayPerMatch.keySet()) {
+            totalRefereePay = totalRefereePay
+                    .add(refereeRolesPayPerMatch.get(role).multiply(BigDecimal.valueOf(numMatches)));
+        }
+        // TODO: Aggiungere la logica di calcolo dei premi in base ai parametri
+        BigDecimal atlFee = BigDecimal.valueOf(150);
+        BigDecimal prize1 = fictitiousTournament.getPrize1().compareTo(BigDecimal.ZERO) > 0 ? BigDecimal.valueOf(150)
+                : BigDecimal.ZERO;
+        BigDecimal prize2 = fictitiousTournament.getPrize2().compareTo(BigDecimal.ZERO) > 0 ? BigDecimal.valueOf(100)
+                : BigDecimal.ZERO;
+        BigDecimal totalFee = BigDecimal.valueOf(10000);
+
+        return TournamentParametersResponse.builder()
+                .numMatches(numMatches)
+                .coordinatorPay(coordinatorPay)
+                .prize1(prize1)
+                .prize2(prize2)
+                .fee(totalFee)
+                .build();
     }
 }

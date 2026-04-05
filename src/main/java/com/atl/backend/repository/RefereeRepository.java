@@ -2,9 +2,11 @@ package com.atl.backend.repository;
 
 import com.atl.backend.model.Referee;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -20,4 +22,6 @@ public interface RefereeRepository extends JpaRepository<Referee, Integer> {
 
     boolean existsByRefereeId(Integer refereeId);
 
+    @Query("SELECT r.level FROM Referee r WHERE r.level IS NOT NULL ORDER BY r.level ASC")
+    List<Short> findAllLevelsOrdered();
 }

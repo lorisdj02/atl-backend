@@ -14,6 +14,6 @@ public interface TeamRepository extends JpaRepository<Team, Integer> {
 
     List<Team> findBySportCategoryAndVisibleTrue(SportCategory sportCategory);
 
-    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Team t WHERE t.teamName = :teamName AND t.sportCategory = :sportCategory")
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Team t WHERE t.name = :teamName AND t.sportCategory = :sportCategory")
     Boolean existsByTeamNameAndSportCategory(String teamName, SportCategory sportCategory);
 }

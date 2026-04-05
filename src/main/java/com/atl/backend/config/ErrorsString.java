@@ -27,6 +27,10 @@ public class ErrorsString {
 
     static final public String CHECKOUT_SESSION_NOT_FOUND = "CHECKOUT_SESSION_NOT_FOUND";
 
+    static final public String SPORT_NOT_FOUND = "SPORT_NOT_FOUND";
+
+    static final public String REFEREE_ROLE_NOT_FOUND = "REFEREE_ROLE_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -38,6 +42,8 @@ public class ErrorsString {
     static final public String INVALID_TIME_RANGE = "INVALID_TIME_RANGE";
 
     static final public String INVALID_CHECKOUT_SESSION = "INVALID_CHECKOUT_SESSION";
+
+    static final public String INVALID_REFEREE_ROLE = "INVALID_REFEREE_ROLE";
 
     // Conflict errors
 

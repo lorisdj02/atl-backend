@@ -1,6 +1,7 @@
 package com.atl.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.atl.backend.config.ErrorsString;
@@ -31,6 +32,11 @@ import java.util.List;
 
 @Service
 public class TeamService {
+
+    @Autowired
+    @Lazy
+    private AccountService accountService;
+
     @Autowired
     private TeamRepository teamRepository;
     @Autowired
@@ -45,8 +51,7 @@ public class TeamService {
     private TournamentService tournamentService;
     @Autowired
     private PalmaresRepository palmaresRepository;
-    @Autowired
-    private AccountService accountService;
+
 
     public List<TeamRequest> getAllTeamRequests() {
         return teamRequestRepository.findAll();

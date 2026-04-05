@@ -413,8 +413,8 @@ public class MockDbPopulate {
         step1.setTitle("Amateur Referee");
         step1.setLevel((short) 1);
         step1.setX(0);
-        step1.setMinRatingOverLastXGames(BigDecimal.valueOf(0));
-        step1.setMinRefereedGames((short)0);
+        step1.setMinRatingOverLastXMatches(BigDecimal.valueOf(0));
+        step1.setMinRefereedMatches((short)0);
         accountService.saveGrowthStep(step1);
 
         GrowthStep step2 = new GrowthStep();
@@ -422,8 +422,8 @@ public class MockDbPopulate {
         step2.setTitle("Pro Referee");
         step2.setLevel((short) 2);
         step2.setX(10);
-        step2.setMinRatingOverLastXGames(BigDecimal.valueOf(4.0));
-        step2.setMinRefereedGames((short)30);
+        step2.setMinRatingOverLastXMatches(BigDecimal.valueOf(4.0));
+        step2.setMinRefereedMatches((short)30);
         accountService.saveGrowthStep(step2);
 
         GrowthStep step3 = new GrowthStep();
@@ -431,8 +431,8 @@ public class MockDbPopulate {
         step3.setTitle("Elite Referee");
         step3.setLevel((short) 3);
         step3.setX(20);
-        step3.setMinRatingOverLastXGames(BigDecimal.valueOf(4.5));
-        step3.setMinRefereedGames((short)60);
+        step3.setMinRatingOverLastXMatches(BigDecimal.valueOf(4.5));
+        step3.setMinRefereedMatches((short)60);
         accountService.saveGrowthStep(step3);
 
         GrowthStep step4 = new GrowthStep();
@@ -440,8 +440,8 @@ public class MockDbPopulate {
         step4.setTitle("ATL Referee");
         step4.setLevel((short) 4);
         step4.setX(30);
-        step4.setMinRatingOverLastXGames(BigDecimal.valueOf(4.8));
-        step4.setMinRefereedGames((short)100);
+        step4.setMinRatingOverLastXMatches(BigDecimal.valueOf(4.8));
+        step4.setMinRefereedMatches((short)100);
         accountService.saveGrowthStep(step4);
 
         GrowthStep step5 = new GrowthStep();
@@ -451,7 +451,7 @@ public class MockDbPopulate {
         step5.setX(0);
         step5.setMinRatingOverLastXTournaments(BigDecimal.valueOf(0));
         step5.setMinCoordinatedTournaments((short)0);
-        step5.setCoordinatorPayPerGame(BigDecimal.valueOf(12.5));
+        step5.setCoordinatorPayPerMatch(BigDecimal.valueOf(12.5));
         accountService.saveGrowthStep(step5);
 
         GrowthStep step6 = new GrowthStep();
@@ -461,7 +461,7 @@ public class MockDbPopulate {
         step6.setX(3);
         step6.setMinRatingOverLastXTournaments(BigDecimal.valueOf(3.5));
         step6.setMinCoordinatedTournaments((short)3);
-        step6.setCoordinatorPayPerGame(BigDecimal.valueOf(15));
+        step6.setCoordinatorPayPerMatch(BigDecimal.valueOf(15));
         accountService.saveGrowthStep(step6);
 
         GrowthStep step7 = new GrowthStep();
@@ -471,7 +471,7 @@ public class MockDbPopulate {
         step7.setX(5);
         step7.setMinRatingOverLastXTournaments(BigDecimal.valueOf(4.0));
         step7.setMinCoordinatedTournaments((short)10);
-        step7.setCoordinatorPayPerGame(BigDecimal.valueOf(17.5));
+        step7.setCoordinatorPayPerMatch(BigDecimal.valueOf(17.5));
         accountService.saveGrowthStep(step7);
 
         GrowthStep step8 = new GrowthStep();
@@ -481,7 +481,7 @@ public class MockDbPopulate {
         step8.setX(10);
         step8.setMinRatingOverLastXTournaments(BigDecimal.valueOf(4.5));
         step8.setMinCoordinatedTournaments((short)20);
-        step8.setCoordinatorPayPerGame(BigDecimal.valueOf(20));
+        step8.setCoordinatorPayPerMatch(BigDecimal.valueOf(20));
         accountService.saveGrowthStep(step8);
     }
 
