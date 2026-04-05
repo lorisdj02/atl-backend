@@ -184,6 +184,7 @@ public class TeamService {
         return teamRepository.findBySportCategoryAndVisibleTrue(sportCategory);
     }
 
+
     public List<Palmares> getPalmaresByTeamId(Integer teamId) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isEmpty()) {
@@ -303,5 +304,9 @@ public class TeamService {
         }
         return footballTeamStat;
 
+    }
+
+    public Boolean checkTeamNameInCategoryExists(String teamName, SportCategory sportCategory) {
+        return teamRepository.existsByTeamNameAndSportCategory(teamName, sportCategory);
     }
 }

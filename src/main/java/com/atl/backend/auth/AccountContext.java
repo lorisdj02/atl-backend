@@ -67,6 +67,21 @@ public class AccountContext {
             return get().getOrganizationId();
     }
 
+    public static Integer getRoleId() {
+        switch (getAccountRole()) {
+            case PLAYER:
+                return getPlayerId();
+            case COORDINATOR:
+                return getCoordinatorId();
+            case REFEREE:
+                return getRefereeId();
+            case ORGANIZATION:
+                return getOrganizationId();
+            default:
+                throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
+        }
+    }
+
     public static Account getActiveAccount() {
         return get().getActiveAccount();
     }

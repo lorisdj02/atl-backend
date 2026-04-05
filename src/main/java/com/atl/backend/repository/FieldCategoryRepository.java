@@ -5,6 +5,7 @@ import com.atl.backend.model.FieldCategoryId;
 import com.atl.backend.model.enums.SportCategory;
 
 import java.time.LocalTime;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FieldCategoryRepository extends JpaRepository<FieldCategory, FieldCategoryId> {
 
-
         FieldCategory findBySportCategory(SportCategory sportCategory);
 
         @Query("SELECT MAX(fc.field.closingTime) FROM FieldCategory fc WHERE fc.field.city.id = :id AND fc.sportCategory = :sportCategory")
@@ -21,4 +21,7 @@ public interface FieldCategoryRepository extends JpaRepository<FieldCategory, Fi
 
         @Query("SELECT MIN(fc.field.openingTime) FROM FieldCategory fc WHERE fc.field.city.id = :id AND fc.sportCategory = :sportCategory")
         public LocalTime findMinOpeningTimeByCity_IdAndSportCategory(Integer id, SportCategory sportCategory);
+
+        public List<FieldCategory> findByMaxPlayersAndField_City_IdAndSportCategory(Integer maxPlayers, Integer cityId,
+                        SportCategory sportCategory);
 }

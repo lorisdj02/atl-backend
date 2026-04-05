@@ -1,5 +1,6 @@
 package com.atl.backend.service;
 
+import com.atl.backend.dto.FieldDTO;
 import com.atl.backend.model.City;
 import com.atl.backend.model.Field;
 import com.atl.backend.model.FieldCategory;
@@ -7,6 +8,7 @@ import com.atl.backend.model.enums.SportCategory;
 
 import java.util.Optional;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import com.atl.backend.repository.CityRepository;
 import com.atl.backend.repository.FieldCategoryRepository;
 import com.atl.backend.repository.FieldRepository;
+import com.atl.backend.response.FieldsAndMaxPlayersPerFieldResponse;
 
 @Service
 public class FieldService {
@@ -83,4 +86,17 @@ public class FieldService {
         return fieldCategoryRepository.findMaxClosingTimeByCity_IdAndSportCategory(cityId, sportCategory);
     }
 
+    public FieldsAndMaxPlayersPerFieldResponse getFieldsByMaxPlayersAndCityAndSportCategory(Integer maxPlayers,
+            Integer cityId, SportCategory sportCategory) {
+                List<FieldCategory> fieldCategories = fieldCategoryRepository.findByMaxPlayersAndField_City_IdAndSportCategory(maxPlayers, cityId, sportCategory);
+                Map<Integer, Short> maxPlayersPerField = new HashMap<>();
+                List<Field> fields = fieldCategories.stream().map(FieldCategory::getField).toList();
+                for (FieldCategory field : fieldCategories) {
+                    maxPlayersPerField.put(field.getField().getId(), field.getMaxPlayers());
+                }
+                return FieldsAndMaxPlayersPerFieldResponse.builder()
+                        .fields(fields.stream().map(FieldDTO::fromField).toList())
+                        .maxPlayersPerField(maxPlayersPerField)
+                        .build();
+    }
 }

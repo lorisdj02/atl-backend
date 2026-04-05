@@ -177,6 +177,9 @@ public class ApiJsonKeys {
     public static final String account = "account"; // Account?
     // LoginScreen
     public static final String roleId = "roleId"; // int?
+    // LoginScreen
+    public static final String token = "token"; // String
+
 
     // ProfileScreen
     public static final String level = "level"; // String

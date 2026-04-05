@@ -79,4 +79,15 @@ public class TeamController {
         TeamDetailsResponse response = teamScreenService.getTeamDetailsScreen(teamId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{sportCategory}/create/check-name/{teamName}")
+    public ResponseEntity<Boolean> checkTeamNameInCategoryExists(@PathVariable String sportCategory,
+            @PathVariable String teamName) {
+        if (!sportService.isSupportedSportCategory(sportCategory)) {
+            throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+        Boolean response = teamService.checkTeamNameInCategoryExists(teamName,
+                SportCategory.valueOf(sportCategory.toUpperCase()));
+        return ResponseEntity.ok(response);
+    }
 }

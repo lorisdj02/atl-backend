@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atl.backend.dto.CityDTO;
+import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.response.FieldsAndMaxPlayersPerFieldResponse;
 import com.atl.backend.service.FieldService;
 
 @RestController
@@ -24,5 +26,14 @@ public class FieldController {
                 .map(city -> CityDTO.fromCity(city))
                 .toList();
         return ResponseEntity.ok(cities);
+    }
+
+    @GetMapping("/{sportCategory}/city/{cityId}/max-players/{maxPlayers}")
+    public ResponseEntity<FieldsAndMaxPlayersPerFieldResponse> getFieldsByMaxPlayersAndCityAndSportCategory(
+            @PathVariable SportCategory sportCategory,
+            @PathVariable Integer cityId,
+            @PathVariable Integer maxPlayers) {
+        FieldsAndMaxPlayersPerFieldResponse response = fieldService.getFieldsByMaxPlayersAndCityAndSportCategory(maxPlayers, cityId, sportCategory);
+        return ResponseEntity.ok(response);
     }
 }

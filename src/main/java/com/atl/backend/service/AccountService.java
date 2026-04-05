@@ -2,6 +2,7 @@ package com.atl.backend.service;
 
 import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.AccountDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
@@ -12,6 +13,7 @@ import com.atl.backend.model.Organization;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Referee;
 import com.atl.backend.model.Review;
+import com.atl.backend.model.Team;
 import com.atl.backend.model.enums.AccountStatus;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.ReviewStatus;
@@ -23,6 +25,7 @@ import com.atl.backend.repository.OrganizationRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.RefereeRepository;
 import com.atl.backend.repository.ReviewRepository;
+import com.atl.backend.response.LoginResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,6 +53,8 @@ public class AccountService {
     private ReviewRepository reviewRepository;
     @Autowired
     private FriendInviteRepository friendInviteRepository;
+    @Autowired
+    private TeamService teamService;
 
 
     public Account registerAccount(Account account, Optional<String> OrgName) {
@@ -143,7 +148,6 @@ public class AccountService {
     public boolean existsByCoordinatorId(Integer coordinatorId) {
         return coordinatorRepository.existsByCoordinatorId(coordinatorId);
     }
-
 
     @Transactional(readOnly = true)
     public Short getAccountLevel() {
@@ -248,7 +252,6 @@ public class AccountService {
         return growthStepRepository.findByType(type);
     }
 
-
     public List<Player> getAllPlayers() {
         return playerRepository.findAll();
     }
@@ -307,7 +310,8 @@ public class AccountService {
             throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
         }
         Account account = accountOptional.get();
-        // TODO: implement referral code generation logic, for now we return the username as referral code
+        // TODO: implement referral code generation logic, for now we return the
+        // username as referral code
         return account.getUsername();
     }
 
@@ -317,5 +321,24 @@ public class AccountService {
 
     public Integer getTotalInvitesByAccountId(Integer accountId) {
         return friendInviteRepository.countByInviterAccount_Id(accountId);
+    }
+
+    public LoginResponse handleLogin(){
+        // AuthFilter fa già tutto il lavoro di autenticazione
+        Account account = AccountContext.getActiveAccount();
+        switch(account.getRole()){
+            case PLAYER:
+                Optional<Team> teamOpt = teamService.getTeamByPlayerIdAndSportCategory(AccountContext.getPlayerId(), account.getFavoriteSportCategory());
+                return LoginResponse.builder()
+                    .account(AccountDTO.fromAccount(account))
+                    .roleId(AccountContext.getPlayerId())
+                    .teamId(teamOpt.isPresent() ? teamOpt.get().getId() : null)
+                    .build();
+            default:
+                return LoginResponse.builder()
+                    .account(AccountDTO.fromAccount(account))
+                    .roleId(AccountContext.getRoleId())
+                    .build();
+        }
     }
 }

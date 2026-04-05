@@ -35,6 +35,14 @@ public class AccountDTO {
     @JsonProperty("phone")
     private String phone;
 
+    @NotNull
+    @JsonProperty("imageUrl")
+    private String imageUrl;
+
+    @NotNull
+    @JsonProperty("role")
+    private String role;
+
     public static AccountDTO fromAccount(com.atl.backend.model.Account account) {
         if (account == null) {
             return null;
@@ -46,6 +54,8 @@ public class AccountDTO {
         dto.setSurname(account.getSurname());
         dto.setEmail(account.getEmail());
         dto.setPhone(account.getPhone());
+        dto.setImageUrl(account.getImageUrl());
+        dto.setRole(account.getRole().toString());
         return dto;
     }
 }
