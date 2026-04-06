@@ -39,6 +39,7 @@ import com.atl.backend.response.AllTournamentsResponse;
 import com.atl.backend.response.CallupsResponse;
 import com.atl.backend.response.FootballTournamentResponse;
 import com.atl.backend.response.TournamentDetailsResponse;
+import com.atl.backend.response.TournamentSummaryResponse;
 import com.atl.backend.service.AccountService;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.MatchService;
@@ -53,7 +54,8 @@ import com.atl.backend.model.Team;
 
 @Service
 public class TournamentScreenService {
-    private final TeamService teamService;
+    @Autowired
+    private TeamService teamService;
     @Autowired
     private TournamentService tournamentService;
     @Autowired
@@ -62,10 +64,6 @@ public class TournamentScreenService {
     private FieldService fieldService;
     @Autowired
     private MatchService matchService;
-
-    TournamentScreenService(TeamService teamService) {
-        this.teamService = teamService;
-    }
 
     @Transactional(readOnly = true)
     public AllTournamentsResponse getAllTournamentsScreen(SportCategory sportCategory) {
@@ -371,5 +369,21 @@ public class TournamentScreenService {
                 .finalStageBrackets(
                         finalStageBrackets.stream().map(FinalStageBracketDTO::fromFinalStageBracket).toList())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public TournamentSummaryResponse getTournamentSummary(Integer tournamentId) {
+        Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
+        if (optionalTournament.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+        Tournament tournament = optionalTournament.get();
+
+        return TournamentSummaryResponse.builder()
+        .tournament(TournamentDTO.fromTournament(tournament))
+        .field(FieldDTO.fromField(tournament.getField()))
+        .sport(SportDTO.fromSport(tournament.getSport()))
+        .cityName(tournament.getField().getCity().getName())
+        .build();
     }
 }

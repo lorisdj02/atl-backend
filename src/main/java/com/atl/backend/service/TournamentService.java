@@ -18,6 +18,7 @@ import org.springframework.web.client.HttpClientErrorException.Forbidden;
 
 import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.BookingDTO;
 import com.atl.backend.dto.CoordinatorDTO;
 import com.atl.backend.dto.FieldDTO;
 import com.atl.backend.dto.TournamentDTO;
@@ -25,6 +26,7 @@ import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
+import com.atl.backend.model.Booking;
 import com.atl.backend.model.Callup;
 import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.FavoriteTournament;
@@ -49,6 +51,7 @@ import com.atl.backend.repository.SportRepository;
 import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.response.ApplyTournamentFiltersResponse;
+import com.atl.backend.response.ScheduleMatchResponse;
 import com.atl.backend.response.TournamentParametersResponse;
 import com.atl.backend.util.StandingsComparators;
 
@@ -68,6 +71,8 @@ public class TournamentService {
     @Lazy
     private AccountService accountService;
 
+    @Autowired
+    private BookingService bookingService;
     @Autowired
     private TournamentRepository tournamentRepository;
     @Autowired
@@ -703,6 +708,35 @@ public class TournamentService {
                 .prize1(prize1)
                 .prize2(prize2)
                 .fee(totalFee)
+                .build();
+    }
+
+    public List<TournamentParticipation> getTeamParticipations(Integer teamId) {
+        teamService.checkTeamExists(teamId);
+        List<TournamentParticipation> participations = tournamentParticipationRepository.findByTeam_Id(teamId);
+        return participations;
+    }
+
+    @Transactional(readOnly = true)
+    public ScheduleMatchResponse getScheduleData(Integer tournamentId) {
+        Optional<Tournament> tournamentOpt = tournamentRepository.findById(tournamentId);
+        if (tournamentOpt.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+        Tournament tournament = tournamentOpt.get();
+
+        if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
+            throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
+        }
+
+        Short minutesPerRound = tournament.getSport().getMinutesPerRound();
+        Short minutesPerPause = tournament.getSport().getMinutesPerPause();
+        List<Booking> existingBookings = bookingService.getBookingsByFieldIdFromNow(tournament.getField().getId());
+
+        return ScheduleMatchResponse.builder()
+                .minutesPerRound(minutesPerRound)
+                .minutesPerPause(minutesPerPause)
+                .bookings(existingBookings.stream().map(BookingDTO::fromBooking).toList())
                 .build();
     }
 }

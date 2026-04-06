@@ -27,4 +27,9 @@ public class AccountController {
     public ResponseEntity<LoginResponse> handleLogin() {
         return ResponseEntity.ok(accountService.handleLogin());
     }
+
+    @GetMapping("/has-notifications")
+    public ResponseEntity<Boolean> hasNotifications() {
+        return ResponseEntity.ok(accountService.hasNotifications());
+    }
 }

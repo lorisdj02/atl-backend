@@ -1,5 +1,6 @@
 package com.atl.backend.controller;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.TeamDTO;
+import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.exception.*;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.Team;
@@ -50,31 +53,31 @@ public class TeamController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{teamId}/players")
+    @GetMapping("/team/{teamId}/players")
     public ResponseEntity<PlayersInTeamResponse> getPlayersInTeam(@PathVariable Integer teamId) {
         PlayersInTeamResponse response = teamService.getPlayersInTeamResponse(teamId);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{teamId}/abstract")
+    @GetMapping("/team/{teamId}/abstract")
     public ResponseEntity<AbstractTeamResponse> getAbstractTeamScreen(@PathVariable Integer teamId) {
         AbstractTeamResponse response = teamScreenService.getAbstractTeamScreen(teamId);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{teamId}/pay-participation")
+    @GetMapping("/team/{teamId}/pay-participation")
     public ResponseEntity<PayParticipationResponse> getPayParticipationScreen(@PathVariable Integer teamId) {
         PayParticipationResponse response = teamScreenService.getPayParticipationScreen(teamId);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{teamId}/player-requests")
+    @GetMapping("/team/{teamId}/player-requests")
     public ResponseEntity<PlayerRequestsResponse> getPlayerRequestsScreen(@PathVariable Integer teamId) {
         PlayerRequestsResponse response = teamScreenService.getPlayerRequestsScreen(teamId);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{teamId}/details")
+    @GetMapping("/team/{teamId}/details")
     public ResponseEntity<TeamDetailsResponse> getTeamDetailScreen(@PathVariable Integer teamId) {
         TeamDetailsResponse response = teamScreenService.getTeamDetailsScreen(teamId);
         return ResponseEntity.ok(response);
@@ -89,5 +92,20 @@ public class TeamController {
         Boolean response = teamService.checkTeamNameInCategoryExists(teamName,
                 SportCategory.valueOf(sportCategory.toUpperCase()));
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/team/{teamId}/not-paid-participations")
+    public ResponseEntity<List<TournamentParticipationDTO>> getNotPaidTeamParticipations(@PathVariable Integer teamId) {
+        List<TournamentParticipationDTO> response = teamService.getNotPaidTeamParticipations(teamId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/search/{teamId}")
+    public ResponseEntity<TeamDTO> getTeamById(@PathVariable Integer teamId) {
+        Optional<Team> response = teamService.getTeamById(teamId);
+        if (response.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+        }
+        return ResponseEntity.ok(TeamDTO.fromTeam(response.get()));
     }
 }

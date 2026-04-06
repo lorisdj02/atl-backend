@@ -2,12 +2,15 @@ package com.atl.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.atl.backend.repository.BookingRepository;
 import com.atl.backend.repository.LobbyBookingRepository;
 import com.atl.backend.repository.MatchBookingRepository;
 import com.atl.backend.repository.PrivateBookingRepository;
+import com.atl.backend.response.FieldsAndMaxPlayersPerFieldResponse;
 import com.atl.backend.response.LobbyInfoResponse;
+import com.atl.backend.response.ScheduleMatchResponse;
 import com.atl.backend.repository.LobbyBookingParticipateRepository;
 
 import com.atl.backend.model.PrivateBooking;
@@ -25,7 +28,9 @@ import com.atl.backend.model.MatchBooking;
 import com.atl.backend.model.Field;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -40,6 +45,8 @@ public class BookingService {
     private PrivateBookingRepository privateBookingRepository;
     @Autowired
     private LobbyBookingParticipateRepository lobbyBookingParticipateRepository;
+    @Autowired
+    private FieldService fieldService;
 
 
 
@@ -218,5 +225,27 @@ public class BookingService {
         List<LobbyBookingParticipate> filteredParticipations = participations.stream()
                 .filter(p -> p.getLobbyBooking().getBooking().getSportCategory() == sportCategory).toList();
         return filteredParticipations.size();
+    }
+
+    @Transactional(readOnly = true)
+    public FieldsAndMaxPlayersPerFieldResponse getFreeFieldsByMaxPlayersAndCityAndDateAndSportCategory(Integer maxPlayers, Integer cityId, LocalDateTime startTime, LocalDateTime finishTime, SportCategory sportCategory) {
+        List<Booking> bookings = bookingRepository.findByField_City_IdAndStartTimeGreaterThanEqualAndFinishTimeLessThanEqual(cityId, startTime, finishTime);
+        List<Field> cityFields = fieldService.getFieldsByCityId(cityId);
+        List<Integer> bookedFieldIds = bookings.stream().map(b -> b.getField().getId()).toList();
+
+        Map<Integer, Short> maxPlayersPerField = new HashMap<>();
+        List<Field> freeFields = cityFields.stream().filter(f -> !bookedFieldIds.contains(f.getId())).toList();
+        for (Field field : freeFields) {
+            maxPlayersPerField.put(field.getId(), fieldService.getMaxPlayersByFieldIdAndSportCategory(field.getId(), sportCategory));
+        }
+        
+        return FieldsAndMaxPlayersPerFieldResponse.builder()
+                .fields(freeFields.stream().map(FieldDTO::fromField).toList())
+                .maxPlayersPerField(maxPlayersPerField)
+                .build();
+    }
+
+    public List<Booking> getBookingsByFieldIdFromNow(Integer fieldId) {
+        return bookingRepository.findByField_IdAndStartTimeGreaterThanEqual(fieldId, LocalDateTime.now());
     }
 }

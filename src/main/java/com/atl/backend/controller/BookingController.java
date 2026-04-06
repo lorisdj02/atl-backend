@@ -7,7 +7,9 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.BookFieldResponse;
+import com.atl.backend.response.FieldsAndMaxPlayersPerFieldResponse;
 import com.atl.backend.response.JoinLobbyResponse;
+import com.atl.backend.service.BookingService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.screen.BookingScreenService;
 
@@ -26,6 +28,8 @@ public class BookingController {
     private BookingScreenService bookingScreenService;
     @Autowired
     private SportService sportService;
+    @Autowired
+    private BookingService bookingService;
 
     @GetMapping("/{sportCategory}/book-a-field")
     public ResponseEntity<BookFieldResponse> getBookFieldResponse(@PathVariable String sportCategory) {
@@ -67,5 +71,34 @@ public class BookingController {
         SportCategory sportCat = SportCategory.valueOf(sportCategory.toUpperCase());
         return ResponseEntity.ok(bookingScreenService.getJoinLobbyScreen(sportCat, totalPlayers,
                 selectedCityId, start, end));
+    }
+
+    @GetMapping("/{sportCategory}/free-fields/max-players/{maxPlayers}/city/{cityId}/startDate/{startTime}/finishDate/{finishTime}")
+    public ResponseEntity<FieldsAndMaxPlayersPerFieldResponse> getFreeFieldsByPlayerAndCityAndDate(
+            @PathVariable String sportCategory,
+            @PathVariable Integer maxPlayers, @PathVariable Integer cityId, @PathVariable String startTime,
+            @PathVariable String finishTime) {
+        if (!sportService.isSupportedSportCategory(sportCategory)) {
+            throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        try {
+            start = LocalDateTime.parse(startTime);
+            end = LocalDateTime.parse(finishTime);
+        } catch (Exception e) {
+            throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
+        }
+
+        if (start.isAfter(end)) {
+            throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
+        }
+
+        SportCategory sportCat = SportCategory.valueOf(sportCategory.toUpperCase());
+        return ResponseEntity
+                .ok(bookingService.getFreeFieldsByMaxPlayersAndCityAndDateAndSportCategory(maxPlayers, cityId, start,
+                        end, sportCat));
     }
 }

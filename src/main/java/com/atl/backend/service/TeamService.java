@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.PlayerDTO;
+import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.model.FootballTeamStat;
 import com.atl.backend.model.Palmares;
 import com.atl.backend.model.Player;
@@ -27,6 +28,7 @@ import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.exception.*;
 
 import java.util.Optional;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +53,6 @@ public class TeamService {
     private TournamentService tournamentService;
     @Autowired
     private PalmaresRepository palmaresRepository;
-
 
     public List<TeamRequest> getAllTeamRequests() {
         return teamRequestRepository.findAll();
@@ -189,7 +190,6 @@ public class TeamService {
         return teamRepository.findBySportCategoryAndVisibleTrue(sportCategory);
     }
 
-
     public List<Palmares> getPalmaresByTeamId(Integer teamId) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isEmpty()) {
@@ -313,5 +313,12 @@ public class TeamService {
 
     public Boolean checkTeamNameInCategoryExists(String teamName, SportCategory sportCategory) {
         return teamRepository.existsByTeamNameAndSportCategory(teamName, sportCategory);
+    }
+
+    public List<TournamentParticipationDTO> getNotPaidTeamParticipations(Integer teamId) {
+        checkTeamExists(teamId);
+        return tournamentService.getTeamParticipations(teamId).stream()
+                .filter(participation -> participation.getToPay().compareTo(BigDecimal.ZERO) > 0)
+                .map(TournamentParticipationDTO::fromTournamentParticipation).toList();
     }
 }

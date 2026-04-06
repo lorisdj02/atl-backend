@@ -24,4 +24,6 @@ public interface FieldCategoryRepository extends JpaRepository<FieldCategory, Fi
 
         public List<FieldCategory> findByMaxPlayersAndField_City_IdAndSportCategory(Integer maxPlayers, Integer cityId,
                         SportCategory sportCategory);
+
+        public FieldCategory findByField_IdAndSportCategory(Integer fieldId, SportCategory sportCategory);
 }

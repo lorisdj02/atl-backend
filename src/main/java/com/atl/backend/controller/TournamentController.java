@@ -18,12 +18,15 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.PlayerDTO;
 import com.atl.backend.dto.TournamentDTO;
 import com.atl.backend.exception.BadRequestException;
+import com.atl.backend.model.Tournament;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AllTournamentsResponse;
 import com.atl.backend.response.ApplyTournamentFiltersResponse;
 import com.atl.backend.response.CallupsResponse;
+import com.atl.backend.response.ScheduleMatchResponse;
 import com.atl.backend.response.TournamentDetailsResponse;
 import com.atl.backend.response.TournamentParametersResponse;
+import com.atl.backend.response.TournamentSummaryResponse;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TournamentService;
 import com.atl.backend.service.screen.TournamentScreenService;
@@ -101,6 +104,27 @@ public class TournamentController {
     public ResponseEntity<TournamentParametersResponse> calculateTournamentParameters(
             @RequestBody TournamentDTO tournamentDTO) {
         TournamentParametersResponse response = tournamentService.getTournamentParameters(tournamentDTO);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/search/{tournamentId}")
+    public ResponseEntity<TournamentDTO> getTournamentById(@PathVariable Integer tournamentId) {
+        Optional<Tournament> response = tournamentService.getTournamentById(tournamentId);
+        if (response.isEmpty()) {
+            throw new BadRequestException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+        return ResponseEntity.ok(TournamentDTO.fromTournament(response.get()));
+    }
+
+    @GetMapping("/tournament/{tournamentId}/schedule-data")
+    public ResponseEntity<ScheduleMatchResponse> getScheduleData(@PathVariable Integer tournamentId) {
+        ScheduleMatchResponse response = tournamentService.getScheduleData(tournamentId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/tournament/{tournamentId}/summary")
+    public ResponseEntity<TournamentSummaryResponse> getTournamentSummary(@PathVariable Integer tournamentId) {
+        TournamentSummaryResponse response = tournamentScreenService.getTournamentSummary(tournamentId);
         return ResponseEntity.ok(response);
     }
 }

@@ -370,4 +370,12 @@ public class AccountService {
                         .build();
         }
     }
+
+    @Transactional(readOnly = true)
+    public boolean hasNotifications() {
+        Integer accountId = AccountContext.getAccountId();
+        List<Review> reviews = getReviewsByReviewerAccountId(accountId);
+        List<Review> pendingReviews = getPendingReviewsByReviewerAccountId(accountId);
+        return !reviews.isEmpty() || !pendingReviews.isEmpty();
+    }
 }

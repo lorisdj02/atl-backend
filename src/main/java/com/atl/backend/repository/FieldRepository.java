@@ -15,4 +15,6 @@ public interface FieldRepository extends JpaRepository<Field, Integer> {
         void deleteAll();
 
         List<Field> findByOrganization_OrganizationId(Integer organizationId);
+
+        List<Field> findByCity_Id(Integer cityId);
 }

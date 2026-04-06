@@ -99,4 +99,16 @@ public class FieldService {
                         .maxPlayersPerField(maxPlayersPerField)
                         .build();
     }
+
+    public List<Field> getFieldsByCityId(Integer cityId) {
+        return fieldRepository.findByCity_Id(cityId);
+    }
+
+    public Short getMaxPlayersByFieldIdAndSportCategory(Integer fieldId, SportCategory sportCategory) {
+        FieldCategory fieldCategory = fieldCategoryRepository.findByField_IdAndSportCategory(fieldId, sportCategory);
+        if (fieldCategory == null) {
+            return 0;
+        }
+        return fieldCategory.getMaxPlayers();
+    }
 }

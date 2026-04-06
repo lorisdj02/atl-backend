@@ -113,4 +113,8 @@ public class SportService {
         return pay;
 
     }
+
+    public List<Sport> getSportsByCategory(SportCategory sportCategory) {
+        return sportRepository.findBySportCategory(sportCategory);
+    }
 }
