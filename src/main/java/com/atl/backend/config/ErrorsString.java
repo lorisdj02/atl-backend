@@ -33,6 +33,14 @@ public class ErrorsString {
 
     static final public String CITY_NOT_FOUND = "CITY_NOT_FOUND";
 
+    static final public String TRANSACTION_GROUP_NOT_FOUND = "TRANSACTION_GROUP_NOT_FOUND";
+
+    static final public String TRANSACTION_NOT_FOUND = "TRANSACTION_NOT_FOUND";
+
+    static final public String PURCHASE_NOT_FOUND = "PURCHASE_NOT_FOUND";
+
+    static final public String TOURNAMENT_PARTICIPATION_NOT_FOUND = "TOURNAMENT_PARTICIPATION_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -49,7 +57,7 @@ public class ErrorsString {
 
     static final public String INVALID_BIRTHDATE_FORMAT = "INVALID_BIRTHDATE_FORMAT";
 
-    static final public String PLAYER_NOT_IN_TEAM = "PLAYER_NOT_IN_TEAM";
+    static final public String TOURNAMENT_ID_MISMATCH = "TOURNAMENT_ID_MISMATCH";
 
     // Conflict errors
 
@@ -83,6 +91,16 @@ public class ErrorsString {
 
     static final public String PLAYER_IS_CAPTAIN = "PLAYER_IS_CAPTAIN";
 
+    static final public String TOURNAMENT_ALREADY_FULL = "TOURNAMENT_ALREADY_FULL";
+
+    static final public String TOURNAMENT_ALREADY_STARTED = "TOURNAMENT_ALREADY_STARTED";
+
+    static final public String TEAM_SPORT_CATEGORY_MUST_MATCH_TOURNAMENT_SPORT_CATEGORY = "TEAM_SPORT_CATEGORY_MUST_MATCH_TOURNAMENT_SPORT_CATEGORY";
+
+    static final public String PLAYER_NOT_IN_TEAM = "PLAYER_NOT_IN_TEAM";
+
+    static final public String TOURNAMENT_PARTICIPATION_ALREADY_PAID = "TOURNAMENT_PARTICIPATION_ALREADY_PAID";
+
     // Authentication errors
 
     static final public String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
@@ -112,4 +130,15 @@ public class ErrorsString {
     static final public String YOU_MUST_BE_VICE_CAPTAIN = "YOU_MUST_BE_VICE_CAPTAIN";
 
     static final public String YOU_MUST_OWN_THE_BOOKING = "YOU_MUST_OWN_THE_BOOKING";
+
+    // PAYMENT ERRORS
+    static final public String PAYMENT_METHOD_NOT_SUPPORTED = "PAYMENT_METHOD_NOT_SUPPORTED";
+
+    static final public String PAYMENT_AMOUNT_MUST_BE_POSITIVE = "PAYMENT_AMOUNT_MUST_BE_POSITIVE";
+
+    static final public String PAYMENT_FAILED = "PAYMENT_FAILED";
+
+    static final public String PAYMENT_REQUIRED = "PAYMENT_REQUIRED";
+
+    static final public String PURCHASE_NOT_REFUNDABLE = "PURCHASE_NOT_REFUNDABLE";
 }

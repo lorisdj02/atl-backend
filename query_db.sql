@@ -184,7 +184,9 @@ CREATE TABLE "booking" (
 CREATE TABLE "private_booking" (
   "id" int PRIMARY KEY,
   "player_id" int NOT NULL,
-  "cost" numeric(10,2) NOT NULL
+  "cost" numeric(10,2) NOT NULL,
+  "transaction_group_id" int NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE "lobby_booking" (

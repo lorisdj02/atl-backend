@@ -6,7 +6,9 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,9 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.PlayerDTO;
 import com.atl.backend.dto.TournamentDTO;
+import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.model.Tournament;
+import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.request.ConfirmCallupsRequest;
 import com.atl.backend.response.AllTournamentsResponse;
 import com.atl.backend.response.ApplyTournamentFiltersResponse;
 import com.atl.backend.response.CallupsResponse;
@@ -133,5 +138,19 @@ public class TournamentController {
     public ResponseEntity<TournamentDTO> createTournament(@RequestBody TournamentDTO tournamentDTO) {
         TournamentDTO tournament = tournamentService.createTournament(tournamentDTO);
         return ResponseEntity.ok(tournament);
+    }
+
+    // Endpoint per partecipare a un torneo, che include la logica di conferma dei callup
+    @PostMapping("/tournament/{tournamentId}/confirm-callups")
+    public ResponseEntity<TournamentParticipationDTO> confirmCallups(@PathVariable Integer tournamentId, @RequestBody ConfirmCallupsRequest request) {
+        TournamentParticipation response = tournamentService.confirmCallups(tournamentId, request);
+        return ResponseEntity.ok(TournamentParticipationDTO.fromTournamentParticipation(response));
+    }
+
+    // Endpoint per eliminare la partecipazione di una squadra a un torneo, che include la logica di eliminazione dei callup
+    @DeleteMapping("/tournament/{tournamentId}/team/{teamId}/delete-callups")
+    public ResponseEntity<Void> deleteCallups(@PathVariable Integer tournamentId, @PathVariable Integer teamId) {
+        tournamentService.deleteCallups(tournamentId, teamId);
+        return ResponseEntity.noContent().build();
     }
 }

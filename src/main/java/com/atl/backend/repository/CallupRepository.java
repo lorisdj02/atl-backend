@@ -21,4 +21,6 @@ public interface CallupRepository extends JpaRepository<Callup, CallupId> {
     public List<Callup> findByPlayer_PlayerId(Integer playerId);
 
     public List<Callup> findByTournament_IdAndTeam_Id(Integer tournamentId, Integer teamId);
+
+    public void deleteByTeam_IdAndTournament_Id(Integer teamId, Integer tournamentId);
 }

@@ -49,11 +49,12 @@ public class CheckoutResponse {
     @JsonProperty(ApiJsonKeys.finishTime)
     private String finishTime;
 
-    @JsonProperty(ApiJsonKeys.maxPlayers)
-    private Integer maxPlayers;
+    @JsonProperty(ApiJsonKeys.totalPlayers)
+    private Short totalPlayers;
 
     @JsonProperty(ApiJsonKeys.playersToPay)
-    private Integer playersToPay;
+    private Short playersToPay;
+
 
     /*
      * final CheckoutSession checkoutSession;

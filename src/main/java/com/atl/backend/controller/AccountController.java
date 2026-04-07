@@ -1,6 +1,7 @@
 package com.atl.backend.controller;
 
 import com.atl.backend.dto.AccountDTO;
+import com.atl.backend.model.Account;
 import com.atl.backend.request.UpdateAccountInfosRequest;
 import com.atl.backend.response.LoginResponse;
 import com.atl.backend.service.AccountService;
@@ -39,6 +40,7 @@ public class AccountController {
 
     @PatchMapping("/account/update-infos")
     public ResponseEntity<AccountDTO> updateAccountInfos(@RequestBody UpdateAccountInfosRequest updateAccountInfos) {
-        return ResponseEntity.ok(accountService.updateAccountInfos(updateAccountInfos));
+        Account response = accountService.updateAccountInfos(updateAccountInfos);
+        return ResponseEntity.ok(AccountDTO.fromAccount(response));
     }
 }

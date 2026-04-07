@@ -52,6 +52,7 @@ import com.atl.backend.repository.FootballTournamentStatsRepository;
 import com.atl.backend.repository.SportRepository;
 import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.repository.TournamentRepository;
+import com.atl.backend.request.ConfirmCallupsRequest;
 import com.atl.backend.response.ApplyTournamentFiltersResponse;
 import com.atl.backend.response.ScheduleMatchResponse;
 import com.atl.backend.response.TournamentParametersResponse;
@@ -93,6 +94,8 @@ public class TournamentService {
     private FieldService fieldService;
     @Autowired
     private SportService sportService;
+    @Autowired
+    private PaymentService paymentService;
 
     public void deleteAllTournaments() {
         tournamentRepository.deleteAll();
@@ -199,17 +202,45 @@ public class TournamentService {
         return 0;
     }
 
-    public Boolean participateToTournament(Integer tournamentId, Integer teamId, List<Integer> playerIds) {
-        checkTournamentExists(tournamentId);
+    public void checkValidCallups(Integer teamId, List<Integer> playerIds) {
         teamService.checkTeamExists(teamId);
+
+        teamService.needToBeCaptainOrViceCaptain(teamId, AccountContext.getActivePlayer().getPlayerId());
+        Boolean areCallupsValid = false;
+        for (Integer playerId : playerIds) {
+            if (!teamService.isPlayerInTeam(teamId, playerId)) {
+                throw new ConflictException(ErrorsString.PLAYER_NOT_IN_TEAM);
+            }
+            areCallupsValid = teamService.isPlayerCaptainOrViceCaptain(playerId, teamId);
+        }
+
+        if (!areCallupsValid) {
+            throw new ConflictException(ErrorsString.CAPTAIN_OR_ONE_VICE_CAPTAIN_MUST_BE_CALLED_UP);
+        }
+
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public TournamentParticipation participateToTournament(Integer tournamentId, Integer teamId,
+            List<Integer> playerIds) {
+        checkTournamentExists(tournamentId);
         Tournament tournament = tournamentRepository.findById(tournamentId).get();
+        if (tournament.getStatus() != TournamentStatus.CREATED) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_ALREADY_STARTED);
+        }
+
+        if (tournament.getNumTeams() == tournament.getPaidTeams()) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_ALREADY_FULL);
+        }
+
+        teamService.checkTeamExists(teamId);
         Team team = teamService.getTeamById(teamId).get();
 
-        if (!playerIds.contains(team.getCaptainPlayer().getPlayerId()) &&
-                (team.getVice1Player() != null && !playerIds.contains(team.getVice1Player().getPlayerId())) &&
-                (team.getVice2Player() != null && !playerIds.contains(team.getVice2Player().getPlayerId()))) {
-            throw new IllegalArgumentException(ErrorsString.CAPTAIN_OR_ONE_VICE_CAPTAIN_MUST_BE_CALLED_UP);
+        if (!team.getSportCategory().equals(tournament.getSport().getSportCategory())) {
+            throw new ConflictException(ErrorsString.TEAM_SPORT_CATEGORY_MUST_MATCH_TOURNAMENT_SPORT_CATEGORY);
         }
+
+        checkValidCallups(teamId, playerIds);
 
         System.out.println("[DEBUG - TournamentService] - Participating team " + teamId + " to tournament "
                 + tournamentId + " with players " + playerIds);
@@ -217,14 +248,14 @@ public class TournamentService {
         Optional<TournamentParticipation> tournamentParticipationOptional = tournamentParticipationRepository
                 .findByTeam_IdAndTournament_Id(teamId, tournamentId);
 
+        TournamentParticipation tournamentParticipation = null;
         if (tournamentParticipationOptional.isPresent()) {
-            for (Integer playerId : playerIds) {
-                callupRepository.deleteByPlayer_PlayerIdAndTournament_Id(playerId, tournamentId);
-            }
+            callupRepository.deleteByTeam_IdAndTournament_Id(teamId, tournamentId);
+            tournamentParticipation = tournamentParticipationOptional.get();
         } else {
             System.out.println("[DEBUG - TournamentService] - Creating new tournament participation for team " + teamId
                     + " and tournament " + tournamentId);
-            TournamentParticipation tournamentParticipation = new TournamentParticipation();
+            tournamentParticipation = new TournamentParticipation();
             tournamentParticipation.setTeam(team);
             tournamentParticipation.setTournament(tournament);
             tournamentParticipation.setToPay(tournament.getFee());
@@ -232,20 +263,17 @@ public class TournamentService {
             System.out.println("[DEBUG - TournamentService] - New tournament participation created for team " + teamId
                     + " and tournament " + tournamentId);
         }
-
+        List<Callup> newCallups = new ArrayList<>();
         for (Integer playerId : playerIds) {
-            System.out.println("[DEBUG - TournamentService] - Creating callup for player " + playerId
-                    + " and tournament " + tournamentId);
+            Player player = accountService.getPlayerByPlayerId(playerId).get();
             Callup callup = new Callup();
-            callup.setPlayer(accountService.getPlayerByPlayerId(playerId)
-                    .orElseThrow(() -> new IllegalArgumentException(ErrorsString.PLAYER_NOT_FOUND)));
+            callup.setPlayer(player);
             callup.setTournament(tournament);
             callup.setTeam(team);
             callupRepository.save(callup);
-            System.out.println("[DEBUG - TournamentService] - Callup created for player " + playerId
-                    + " and tournament " + tournamentId);
+            newCallups.add(callup);
         }
-        return true;
+        return tournamentParticipation;
     }
 
     public TournamentParticipation saveTournamentParticipation(TournamentParticipation tournamentParticipation) {
@@ -685,7 +713,8 @@ public class TournamentService {
         }
 
         Field fieldEntity = field.get();
-        BigDecimal fieldCost = fieldEntity.calculateTournamentCost(hoursPerMatch.multiply(BigDecimal.valueOf(numMatches)))  
+        BigDecimal fieldCost = fieldEntity
+                .calculateTournamentCost(hoursPerMatch.multiply(BigDecimal.valueOf(numMatches)))
                 .setScale(2, RoundingMode.HALF_UP);
 
         Short medianRefereeLevel = accountService.getMedianRefereeLevel();
@@ -744,7 +773,7 @@ public class TournamentService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public TournamentDTO createTournament(TournamentDTO tournamentDTO){
+    public TournamentDTO createTournament(TournamentDTO tournamentDTO) {
         if (!AccountContext.getCoordinatorId().equals(tournamentDTO.getCoordinatorId())) {
             throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
         }
@@ -754,7 +783,7 @@ public class TournamentService {
         Field field = fieldService.getFieldById(tournamentDTO.getFieldId()).get();
         City city = field.getCity();
 
-        if(!city.getId().equals(tournamentDTO.getCityId())){
+        if (!city.getId().equals(tournamentDTO.getCityId())) {
             throw new ConflictException(ErrorsString.FIELD_NOT_IN_CITY);
         }
 
@@ -764,14 +793,46 @@ public class TournamentService {
         tournament.setFee(parametersResponse.getFee());
         tournament.setPrize1(parametersResponse.getPrize1());
         tournament.setPrize2(parametersResponse.getPrize2());
-        if(parametersResponse.getFee().compareTo(BigDecimal.ZERO) == 0){
+        if (parametersResponse.getFee().compareTo(BigDecimal.ZERO) == 0) {
             tournament.setProfit(false);
         } else {
             tournament.setProfit(true);
         }
 
-
         Tournament savedTournament = tournamentRepository.save(tournament);
         return TournamentDTO.fromTournament(savedTournament);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public TournamentParticipation confirmCallups(Integer tournamentId, ConfirmCallupsRequest request) {
+        if (!tournamentId.equals(request.getTournamentId())) {
+            throw new BadRequestException(ErrorsString.TOURNAMENT_ID_MISMATCH);
+        }
+        return participateToTournament(request.getTournamentId(), request.getTeamId(), request.getSelectedPlayerIds());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteCallups(Integer tournamentId, Integer teamId) {
+        // TODO: Non sono sicuro che funzioni... tanto è tutto da testare, fare
+        // attenzione
+        teamService.checkTeamExists(teamId);
+        teamService.needToBeCaptainOrViceCaptain(teamId, AccountContext.getPlayerId());
+
+        checkTournamentExists(tournamentId);
+        Optional<TournamentParticipation> tournamentParticipationOptional = tournamentParticipationRepository
+                .findByTeam_IdAndTournament_Id(teamId, tournamentId);
+        if (!tournamentParticipationOptional.isPresent()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_PARTICIPATION_NOT_FOUND);
+        }
+        if (tournamentParticipationOptional.get().getToPay().compareTo(BigDecimal.ZERO) == 0) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_PARTICIPATION_ALREADY_PAID);
+        }
+
+        List<Callup> callups = callupRepository.findByTournament_IdAndTeam_Id(tournamentId, teamId);
+        List<Integer> calluppedAccountIds = callups.stream().map(callup -> callup.getPlayer().getAccount().getId())
+                .toList();
+        paymentService.refundPurchaseForCallups(tournamentId, calluppedAccountIds);
+        callupRepository.deleteByTeam_IdAndTournament_Id(teamId, tournamentId);
+        tournamentParticipationRepository.delete(tournamentParticipationOptional.get());
     }
 }

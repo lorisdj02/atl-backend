@@ -24,10 +24,11 @@ public class ApiJsonKeys {
     // PlayerHomeScreen, CoordinatorHomeScreen, RefereeHomeScreen
     public static final String minutesPausePerTournament = "minutesPausePerTournament"; // Map<int, int>
     // PlayerHomeScreen, CoordinatorHomeScreen
-    public static final String footballMatchesPerTournament = "footballMatchesPerTournament"; // Map<int, List<FootballMatch>>
+    public static final String footballMatchesPerTournament = "footballMatchesPerTournament"; // Map<int,
+                                                                                              // List<FootballMatch>>
     // PlayerHomeScreen,
     public static final String footballStandingsPerTournament = "footballStandingsPerTournament"; // Map<int,
-                                                                                           // List<FootballStanding>>
+    // List<FootballStanding>>
 
     // PlayerHomeScreen, CoordinatorHomeScreen, RefereeHomeScreen,
     // OrganizationHomeScreen, TeamScreen
@@ -90,7 +91,6 @@ public class ApiJsonKeys {
     // PlayerHomeScreen
     public static final String privateBookings = "privateBookings"; // List<PrivateBooking>
 
-
     // AllTournamentsScreen
     public static final String myTournaments = "myTournaments"; // List<Tournament>
     // AllTournamentsScreen
@@ -151,9 +151,9 @@ public class ApiJsonKeys {
     public static final String playersPerTeam = "playersPerTeam"; // Map<int, List<Player>>
     // FootballMatchScreen
     public static final String assignmentPerRefereeNameSurname = "assignmentPerRefereeNameSurname"; // Map<int,
-                                                                                             // List<RefereeAssignment>>
-                                                                                             // // key: Name+Surname,
-                                                                                             // value: Role
+    // List<RefereeAssignment>>
+    // // key: Name+Surname,
+    // value: Role
     // FootballMatchScreen
     public static final String coordinatorId = "coordinatorId"; // int
     // FootballMatchScreen
@@ -166,7 +166,6 @@ public class ApiJsonKeys {
     public static final String payPerRole = "payPerRole"; // Map<String, double>
     // FootballMatchScreen
     public static final String finalStageBracket = "finalStageBracket"; // FinalStageBracket?
-
 
     // PayParticipationScreen
     public static final String tournamentsCache = "tournamentsCache"; // Map<int, Tournament>
@@ -181,7 +180,6 @@ public class ApiJsonKeys {
     public static final String roleId = "roleId"; // int?
     // LoginScreen
     public static final String token = "token"; // String
-
 
     // ProfileScreen
     public static final String level = "level"; // String
@@ -209,7 +207,6 @@ public class ApiJsonKeys {
     public static final String wallet = "wallet"; // Wallet
     // WalletScreen
     public static final String transactionsHistory = "transactionsHistory"; // List<Transaction>
-
 
     // TeamDetailScreen
     public static final String isPlayerInTeam = "isPlayerInTeam"; // bool
@@ -275,7 +272,7 @@ public class ApiJsonKeys {
     // CheckoutScreen
     public static final String finishTime = "finishTime"; // DateTime
     // CheckoutScreen
-    public static final String maxPlayers = "maxPlayers"; // int
+    public static final String totalPlayers = "totalPlayers"; // int
 
     // BookFieldScreen
     public static final String minOpeningTimePerCity = "minOpeningTimePerCity"; // Map<int, TimeOfDay>
@@ -286,12 +283,12 @@ public class ApiJsonKeys {
     public static final String growthSteps = "growthSteps"; // List<GrowthStep>
     // GrowthScreen
     public static final String minRefereePayPerCategoryPerLevel = "minRefereePayPerCategoryPerLevel"; // Map<int,
-                                                                                               // Map<SportCategory,
-                                                                                               // double>>
+    // Map<SportCategory,
+    // double>>
     // Growth Screen
     public static final String maxRefereePayPerCategoryPerLevel = "maxRefereePayPerCategoryPerLevel"; // Map<int,
-                                                                                               // Map<SportCategory,
-                                                                                               // double>>
+    // Map<SportCategory,
+    // double>>
 
     // Login Screen
     public static final String teamId = "teamId"; // int?
@@ -305,7 +302,6 @@ public class ApiJsonKeys {
     // StatsScreen
     public static final String footballStats = "footballStats"; // List<FootballTeamStats>
 
-
     // REQUESTS
 
     // UpdateAccountInfos
@@ -318,5 +314,10 @@ public class ApiJsonKeys {
     public static final String imageUrl = "imageUrl"; // String?
     // UpdateAccountInfos
     public static final String preferredCityId = "preferredCityId"; // int?
+
+    // ConfirmCallupsRequest
+    public static final String selectedPlayerIds = "selectedPlayerIds"; // List<int>
+    // ConfirmCallupsRequest
+    public static final String tournamentId = "tournamentId"; // int
 
 }

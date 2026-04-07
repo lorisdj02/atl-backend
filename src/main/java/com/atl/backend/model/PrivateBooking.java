@@ -1,6 +1,7 @@
 package com.atl.backend.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -28,4 +29,16 @@ public class PrivateBooking {
 
     @Column(nullable = false)
     private BigDecimal cost;
+
+    /*
+     * @Column(name = "transaction_group_id", nullable = false)
+     * private Integer transactionGroupId;
+     */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_group_id", nullable = false)
+    private TransactionGroup transactionGroup;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

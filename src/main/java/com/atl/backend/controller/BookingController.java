@@ -108,6 +108,8 @@ public class BookingController {
                         end, sportCat));
     }
 
+    /*
+    TODO: Gli endpoint non sono effettivi, dato che passa tutto tramite CheckountSession
     @PostMapping("/private-booking/create")
     public ResponseEntity<PrivateBookingDTO> createPrivateBooking(@RequestBody PrivateBookingDTO privateBookingDTO) {
         PrivateBooking createdBooking = bookingService.createPrivateBooking(privateBookingDTO);
@@ -119,4 +121,5 @@ public class BookingController {
         LobbyBooking createdBooking = bookingService.createLobbyBooking(lobbyBookingDTO);
         return ResponseEntity.ok(LobbyBookingDTO.fromLobbyBooking(createdBooking));
     }
+         */
 }

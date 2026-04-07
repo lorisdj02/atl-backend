@@ -2,7 +2,9 @@ package com.atl.backend.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,18 +18,31 @@ import com.atl.backend.dto.WalletDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
+import com.atl.backend.exception.PaymentRequiredException;
 import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.CheckoutSession;
 import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.model.Player;
+import com.atl.backend.model.Purchase;
 import com.atl.backend.model.Transaction;
+import com.atl.backend.model.TransactionGroup;
 import com.atl.backend.model.Wallet;
 import com.atl.backend.model.enums.CheckoutStatus;
+import com.atl.backend.model.enums.PurchaseStatus;
+import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.model.enums.TransactionSource;
+import com.atl.backend.model.enums.TransactionStatus;
+import com.atl.backend.model.enums.TransactionType;
 import com.atl.backend.repository.CheckoutSessionRepository;
+import com.atl.backend.repository.PurchaseRepository;
+import com.atl.backend.repository.TransactionGroupRepository;
 import com.atl.backend.repository.TransactionRepository;
 import com.atl.backend.repository.WalletRepository;
 import com.atl.backend.response.CheckoutResponse;
+
+import org.springframework.transaction.annotation.Transactional;
+
 import com.atl.backend.model.Field;
 
 import tools.jackson.databind.ObjectMapper;
@@ -46,6 +61,10 @@ public class PaymentService {
     private CheckoutSessionRepository checkoutSessionRepository;
     @Autowired
     private BookingService bookingService;
+    @Autowired
+    private TransactionGroupRepository transactionGroupRepository;
+    @Autowired
+    private PurchaseRepository purchaseRepository;
 
     PaymentService(TournamentService tournamentService, FieldService fieldService) {
         this.tournamentService = tournamentService;
@@ -60,6 +79,18 @@ public class PaymentService {
         return walletRepository.findByAccount_Id(accountId);
     }
 
+    public Optional<CheckoutSession> getCheckoutSessionById(Integer sessionId) {
+        return checkoutSessionRepository.findById(sessionId);
+    }
+
+    public Optional<TransactionGroup> getTransactionGroupById(Integer transactionGroupId) {
+        return transactionGroupRepository.findById(transactionGroupId);
+    }
+
+    public void saveCheckoutSession(CheckoutSession session) {
+        checkoutSessionRepository.save(session);
+    }
+
     public BigDecimal getInviteBalanceByAccountId(Integer accountId) {
         Optional<Wallet> walletOpt = walletRepository.findByAccount_Id(accountId);
         if (walletOpt.isPresent()) {
@@ -71,9 +102,11 @@ public class PaymentService {
         }
     }
 
+    @Transactional(readOnly = true)
     public CheckoutResponse getCheckoutScreen(Integer sessionId) {
+        // TODO: Verifica
         Account account = AccountContext.getActiveAccount();
-        Optional<CheckoutSession> optSession = checkoutSessionRepository.findById(sessionId);
+        Optional<CheckoutSession> optSession = getCheckoutSessionById(sessionId);
         if (optSession.isEmpty()) {
             throw new NotFoundException(ErrorsString.CHECKOUT_SESSION_NOT_FOUND);
         }
@@ -84,7 +117,7 @@ public class PaymentService {
 
         if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
             session.setStatus(CheckoutStatus.EXPIRED);
-            checkoutSessionRepository.save(session);
+            saveCheckoutSession(session);
             throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
         }
 
@@ -112,9 +145,9 @@ public class PaymentService {
         String fieldAddress = null;
         String startTime = null;
         String finishTime = null;
-        Integer maxPlayers = null;
-        Integer playersToPay = null;
-        Integer playersToFind = null;
+        Short totalPlayers = null;
+        Short playersToPay = null;
+        Short playersToFind = null;
 
         switch (session.getType()) {
             case TOURNAMENT_FEE:
@@ -134,7 +167,7 @@ public class PaymentService {
                 bookingUsername = booking.getOwnerPlayer().getAccount().getUsername();
                 startTime = booking.getBooking().getStartTime().toString();
                 finishTime = booking.getBooking().getFinishTime().toString();
-                maxPlayers = Integer.valueOf(booking.getTotalPlayers());
+                totalPlayers = booking.getTotalPlayers();
                 playersToPay = payload.getPlayersPaid();
                 if (playersToPay == null) {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
@@ -162,12 +195,10 @@ public class PaymentService {
                 bookingUsername = owner.getAccount().getUsername();
                 startTime = payload.getStartTime();
                 finishTime = payload.getFinishTime();
-                maxPlayers = payload.getMaxPlayers();
+                totalPlayers = payload.getTotalPlayers();
                 playersToFind = payload.getPlayersToFind();
-                playersToPay = (maxPlayers != null && playersToFind != null) ? maxPlayers - playersToFind : null;
-                if (maxPlayers == null && playersToPay == null) {
-                    throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
-                }
+                playersToPay = (totalPlayers != null && playersToFind != null) ? (short) (totalPlayers - playersToFind)
+                        : 1;
                 break;
             case PRIVATE_BOOKING:
                 Integer privateFieldId = payload.getFieldId();
@@ -196,8 +227,251 @@ public class PaymentService {
                 .fieldAddress(fieldAddress)
                 .startTime(startTime)
                 .finishTime(finishTime)
-                .maxPlayers(maxPlayers)
+                .totalPlayers(totalPlayers)
                 .playersToPay(playersToPay)
                 .build();
+    }
+
+    public void checkTransactionGroup(Integer transactionGroupId) {
+        Optional<TransactionGroup> optTransactionGroup = transactionGroupRepository.findById(transactionGroupId);
+        if (optTransactionGroup.isEmpty()) {
+            throw new PaymentRequiredException(ErrorsString.PAYMENT_REQUIRED);
+        }
+    }
+
+    public List<Transaction> getTransactionsByTransactionGroupId(Integer transactionGroupId) {
+        return transactionRepository.findByTransactionGroup_Id(transactionGroupId);
+    }
+
+    public List<Purchase> getPurchasesByTournamentIdAndAccountId(Integer tournamentId, Integer accountId) {
+        return purchaseRepository.findByTournament_IdAndAccount_Id(tournamentId, accountId);
+    }
+
+    public TransactionGroup saveTransactionGroup(TransactionGroup transactionGroup) {
+        return transactionGroupRepository.save(transactionGroup);
+    }
+
+    public Purchase savePurchase(Purchase purchase) {
+        return purchaseRepository.save(purchase);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void refundPurchaseForCallups(Integer tournamentId, List<Integer> calluppedAccountIds) {
+        for (Integer accountId : calluppedAccountIds) {
+            List<Purchase> purchases = getPurchasesByTournamentIdAndAccountId(tournamentId, accountId);
+            for (Purchase purchase : purchases) {
+                if (purchase.getStatus() == PurchaseStatus.CONFIRMED) {
+                    refundPurchase(purchase.getId());
+                }
+            }
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Transaction createTransaction(Account account, BigDecimal amount, BigDecimal netAmount, BigDecimal tax,
+            BigDecimal fee, TransactionGroup transactionGroup,
+            TransactionType type, TransactionSource source, TransactionStatus status) {
+        Transaction transaction = new Transaction();
+        transaction.setAccount(account);
+        transaction.setAmount(amount);
+        transaction.setNetAmount(netAmount);
+        transaction.setTax(tax);
+        transaction.setFee(fee);
+        transaction.setTransactionGroup(transactionGroup);
+        transaction.setType(type);
+        transaction.setSource(source);
+        transaction.setStatus(status);
+        return transactionRepository.save(transaction);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Purchase payCheckout(Integer sessionId, Boolean useWallet) {
+        // TODO: verificare le fee e le tasse da applicare
+        Optional<CheckoutSession> optSession = getCheckoutSessionById(sessionId);
+        if (optSession.isEmpty()) {
+            throw new NotFoundException(ErrorsString.CHECKOUT_SESSION_NOT_FOUND);
+        }
+        CheckoutSession session = optSession.get();
+        if (session.getStatus() != CheckoutStatus.PENDING) {
+            throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
+        }
+
+        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+            session.setStatus(CheckoutStatus.EXPIRED);
+            saveCheckoutSession(session);
+            throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
+        }
+
+        Account account = session.getAccount();
+        if (!account.equals(AccountContext.getActiveAccount())) {
+            throw new UnauthorizedException(ErrorsString.ACCOUNT_NOT_FOUND);
+        }
+
+        Optional<Wallet> walletOpt = walletRepository.findByAccount_Id(account.getId());
+        if (walletOpt.isEmpty()) {
+            throw new NotFoundException(ErrorsString.WALLET_NOT_FOUND);
+        }
+        Wallet wallet = walletOpt.get();
+
+        BigDecimal amountToPay = session.getAmount();
+
+        if (amountToPay.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException(ErrorsString.PAYMENT_AMOUNT_MUST_BE_POSITIVE);
+        }
+
+        TransactionGroup transactionGroup = new TransactionGroup();
+        saveTransactionGroup(transactionGroup);
+
+        if (useWallet) {
+            // ORDINE DEI WALLET:
+            // 1. Invite balance
+            // 2. Prize balance
+            // 3. Personal balance
+            BigDecimal inviteBalance = wallet.getInviteBalance();
+            BigDecimal prizeBalance = wallet.getPrizeBalance();
+            BigDecimal personalBalance = wallet.getPersonalBalance();
+
+            if (inviteBalance.compareTo(amountToPay) >= 0) {
+                wallet.setInviteBalance(inviteBalance.subtract(amountToPay));
+                amountToPay = BigDecimal.ZERO;
+            } else if (inviteBalance.compareTo(BigDecimal.ZERO) > 0) {
+                wallet.setInviteBalance(BigDecimal.ZERO);
+                amountToPay = amountToPay.subtract(inviteBalance);
+                Transaction inviteTransaction = createTransaction(account, inviteBalance, inviteBalance,
+                        BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
+                        TransactionSource.INVITE_WALLET,
+                        TransactionStatus.CONFIRMED);
+            }
+
+            if (prizeBalance.compareTo(amountToPay) >= 0) {
+                wallet.setPrizeBalance(prizeBalance.subtract(amountToPay));
+                amountToPay = BigDecimal.ZERO;
+            } else {
+                wallet.setPrizeBalance(BigDecimal.ZERO);
+                amountToPay = amountToPay.subtract(prizeBalance);
+                Transaction prizeTransaction = createTransaction(account, prizeBalance, prizeBalance,
+                        BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
+                        TransactionSource.PRIZE_WALLET,
+                        TransactionStatus.CONFIRMED);
+            }
+
+            if (personalBalance.compareTo(amountToPay) >= 0) {
+                wallet.setPersonalBalance(personalBalance.subtract(amountToPay));
+                amountToPay = BigDecimal.ZERO;
+            } else {
+                wallet.setPersonalBalance(BigDecimal.ZERO);
+                amountToPay = amountToPay.subtract(personalBalance);
+                Transaction personalTransaction = createTransaction(account, personalBalance, personalBalance,
+                        BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
+                        TransactionSource.PERSONAL_WALLET,
+                        TransactionStatus.CONFIRMED);
+            }
+            walletRepository.save(wallet);
+        }
+
+        if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
+            // TODO: integrare STRIPE
+            amountToPay = BigDecimal.ZERO; // Rimuovere questa riga quando si integra Stripe
+        }
+
+        Purchase purchase = new Purchase();
+        purchase.setAccount(account);
+        String payloadJson = session.getPayload();
+        Map<String, Object> payloadMap = new HashMap<>();
+        CheckoutPayload payload;
+        // Parse the JSON payload into the map
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            payload = mapper.readValue(payloadJson, CheckoutPayload.class);
+        } catch (Exception e) {
+            throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
+        }
+        purchase.setDetail(payloadJson);
+        purchase.setTransactionGroup(transactionGroup);
+        purchase.setType(session.getType());
+        switch (session.getType()) {
+            case TOURNAMENT_FEE:
+                purchase.setObjectId(payload.getTournamentId());
+                break;
+            case LOBBY_BOOKING_PARTICIPATE:
+                purchase.setObjectId(payload.getLobbyId());
+                break;
+            case LOBBY_BOOKING_CREATE:
+                Integer lobbyId = bookingService
+                        .createLobbyBookingFromCheckoutPayload(payload, transactionGroup.getId());
+                purchase.setObjectId(lobbyId);
+                break;
+            case PRIVATE_BOOKING:
+                Integer privateBookingId = bookingService
+                        .createPrivateBookingFromCheckoutPayload(payload, transactionGroup.getId());
+                purchase.setObjectId(privateBookingId);
+                break;
+            default:
+                throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
+        }
+
+        return purchaseRepository.save(purchase);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void refundPurchase(Integer purchaseId) {
+        Optional<Purchase> optPurchase = purchaseRepository.findById(purchaseId);
+        if (optPurchase.isEmpty()) {
+            throw new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND);
+        }
+        Purchase purchase = optPurchase.get();
+
+        if (purchase.getStatus() != PurchaseStatus.CONFIRMED) {
+            throw new ConflictException(ErrorsString.PURCHASE_NOT_REFUNDABLE);
+        }
+        Wallet wallet = walletRepository.findByAccount_Id(purchase.getAccount().getId())
+                .orElseThrow(() -> new NotFoundException(ErrorsString.WALLET_NOT_FOUND));
+        TransactionGroup transactionGroup = purchase.getTransactionGroup();
+        List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroup.getId());
+        Integer numberOfRefundedTransactions = 0;
+        for (Transaction transaction : transactions) {
+            if (transaction.getStatus() == TransactionStatus.CONFIRMED && transaction.getRefundable()) {
+
+                switch (transaction.getSource()) {
+                    case INVITE_WALLET:
+                        wallet.setInviteBalance(wallet.getInviteBalance().add(transaction.getNetAmount()));
+                        break;
+                    case PRIZE_WALLET:
+                        wallet.setPrizeBalance(wallet.getPrizeBalance().add(transaction.getNetAmount()));
+                        break;
+                    default:
+                        wallet.setPersonalBalance(wallet.getPersonalBalance().add(transaction.getNetAmount()));
+                        break;
+                }
+                Transaction refundTransaction = new Transaction();
+                refundTransaction.setAccount(transaction.getAccount());
+                refundTransaction.setAmount(transaction.getNetAmount());
+                refundTransaction.setNetAmount(transaction.getNetAmount());
+                refundTransaction.setTax(BigDecimal.ZERO);
+                refundTransaction.setFee(BigDecimal.ZERO);
+                refundTransaction.setTransactionGroup(transactionGroup);
+                refundTransaction.setType(TransactionType.REFUND);
+                refundTransaction.setSource(transaction.getSource());
+                refundTransaction.setStatus(TransactionStatus.CONFIRMED);
+                refundTransaction.setRelatedTransaction(transaction);
+                transactionRepository.save(refundTransaction);
+
+                transaction.setStatus(TransactionStatus.REFUNDED);
+                transactionRepository.save(transaction);
+                numberOfRefundedTransactions++;
+            }
+        }
+        walletRepository.save(wallet);
+        if (numberOfRefundedTransactions == 0) {
+            throw new PaymentRequiredException(ErrorsString.PURCHASE_NOT_REFUNDABLE);
+        } else if (numberOfRefundedTransactions < transactions.size()) {
+            transactionGroup.setStatus(TransactionStatus.PARTIAL_REFUND);
+            purchase.setStatus(PurchaseStatus.PARTIAL_REFUND);
+        } else {
+            transactionGroup.setStatus(TransactionStatus.REFUNDED);
+            purchase.setStatus(PurchaseStatus.REFUNDED);
+        }
+        transactionGroupRepository.save(transactionGroup);
+        purchaseRepository.save(purchase);
     }
 }

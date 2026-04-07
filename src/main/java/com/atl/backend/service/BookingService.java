@@ -16,12 +16,14 @@ import com.atl.backend.response.ScheduleMatchResponse;
 import com.atl.backend.repository.LobbyBookingParticipateRepository;
 
 import com.atl.backend.model.PrivateBooking;
+import com.atl.backend.model.TransactionGroup;
 import com.atl.backend.model.enums.BookingStatus;
 import com.atl.backend.model.enums.BookingType;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.CheckoutPayload;
 import com.atl.backend.dto.FieldDTO;
 import com.atl.backend.dto.LobbyBookingDTO;
 import com.atl.backend.dto.PrivateBookingDTO;
@@ -33,6 +35,7 @@ import com.atl.backend.model.Booking;
 import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.model.LobbyBookingParticipate;
 import com.atl.backend.model.MatchBooking;
+import com.atl.backend.model.Player;
 import com.atl.backend.model.Field;
 
 import java.math.BigDecimal;
@@ -59,6 +62,8 @@ public class BookingService {
     private LobbyBookingParticipateRepository lobbyBookingParticipateRepository;
     @Autowired
     private FieldService fieldService;
+    @Autowired
+    private PaymentService paymentService;
 
     BookingService(SportService sportService) {
         this.sportService = sportService;
@@ -324,16 +329,39 @@ public class BookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public PrivateBooking createPrivateBooking(PrivateBookingDTO privateBookingDTO) {
+    public LobbyBookingParticipate createLobbyBookingParticipate(Integer lobbyBookingId, Short playersToPay,
+            Integer transactionGroupId) {
+
+        paymentService.checkTransactionGroup(transactionGroupId);
+        TransactionGroup transactionGroup = paymentService.getTransactionGroupById(transactionGroupId).get();
+
+        LobbyBooking lobbyBooking = lobbyBookingRepository.findById(lobbyBookingId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
+        LobbyBookingParticipate lobbyBookingParticipate = new LobbyBookingParticipate();
+        lobbyBookingParticipate.setLobbyBooking(lobbyBooking);
+        lobbyBookingParticipate.setPlayer(AccountContext.getActivePlayer());
+        lobbyBookingParticipate.setTransactionGroup(transactionGroup);
+        Short playersPaid = (short) (lobbyBooking.getTotalPlayers() - lobbyBooking.getPlayersToFind());
+        lobbyBookingParticipate.setPlayersPaid(playersPaid);
+        lobbyBookingParticipateRepository.save(lobbyBookingParticipate);
+        return lobbyBookingParticipate;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public PrivateBooking createPrivateBooking(PrivateBookingDTO privateBookingDTO, Integer transactionGroupId) {
         if (!AccountContext.getPlayerId().equals(privateBookingDTO.getPlayerId())) {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
+
+        paymentService.checkTransactionGroup(transactionGroupId);
+        TransactionGroup transactionGroup = paymentService.getTransactionGroupById(transactionGroupId).get();
 
         Booking booking = createBooking(privateBookingDTO.getFieldId(), privateBookingDTO.getStartTime(),
                 privateBookingDTO.getFinishTime(), privateBookingDTO.getSportCategory(), BookingType.PRIVATE);
         PrivateBooking privateBooking = new PrivateBooking();
         privateBooking.setBooking(booking);
         privateBooking.setPlayer(AccountContext.getActivePlayer());
+        privateBooking.setTransactionGroup(transactionGroup);
 
         BigDecimal cost = booking.getField().calculatePrivateCost(booking.getStartTime(), booking.getFinishTime());
         privateBooking.setCost(cost);
@@ -342,10 +370,12 @@ public class BookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public LobbyBooking createLobbyBooking(LobbyBookingDTO lobbyBookingDTO) {
+    public LobbyBooking createLobbyBooking(LobbyBookingDTO lobbyBookingDTO, Integer transactionGroupId) {
         if (!AccountContext.getPlayerId().equals(lobbyBookingDTO.getOwnerPlayerId())) {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
+
+        paymentService.checkTransactionGroup(transactionGroupId);
 
         Booking booking = createBooking(lobbyBookingDTO.getFieldId(), lobbyBookingDTO.getStartTime(),
                 lobbyBookingDTO.getFinishTime(), lobbyBookingDTO.getSportCategory(), BookingType.LOBBY);
@@ -361,6 +391,43 @@ public class BookingService {
 
         lobbyBooking.setFeePerPlayer(feePerPlayer);
         LobbyBooking savedLobbyBooking = lobbyBookingRepository.save(lobbyBooking);
+
+        Short playersToPay = (short) (lobbyBookingDTO.getTotalPlayers() - lobbyBookingDTO.getPlayersToFind());
+
+        LobbyBookingParticipate lobbyBookingParticipate = createLobbyBookingParticipate(lobbyBooking.getId(),
+                playersToPay, transactionGroupId);
         return savedLobbyBooking;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Integer createLobbyBookingFromCheckoutPayload(CheckoutPayload checkoutPayload, Integer transactionGroupId) {
+        paymentService.checkTransactionGroup(transactionGroupId);
+
+        LobbyBookingDTO lobbyBookingDTO = new LobbyBookingDTO();
+        lobbyBookingDTO.setFieldId(checkoutPayload.getFieldId());
+        lobbyBookingDTO.setStartTime(checkoutPayload.getStartTime());
+        lobbyBookingDTO.setFinishTime(checkoutPayload.getFinishTime());
+        lobbyBookingDTO.setSportCategory(checkoutPayload.getSportCategory());
+        lobbyBookingDTO.setOwnerPlayerId(AccountContext.getPlayerId());
+        lobbyBookingDTO.setPlayersToFind(checkoutPayload.getPlayersToFind());
+        lobbyBookingDTO.setTotalPlayers(checkoutPayload.getTotalPlayers());
+
+        LobbyBooking newLobby = createLobbyBooking(lobbyBookingDTO, transactionGroupId);
+        return newLobby.getId();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Integer createPrivateBookingFromCheckoutPayload(CheckoutPayload checkoutPayload, Integer transactionGroupId) {
+        paymentService.checkTransactionGroup(transactionGroupId);
+
+        PrivateBookingDTO privateBookingDTO = new PrivateBookingDTO();
+        privateBookingDTO.setFieldId(checkoutPayload.getFieldId());
+        privateBookingDTO.setStartTime(checkoutPayload.getStartTime());
+        privateBookingDTO.setFinishTime(checkoutPayload.getFinishTime());
+        privateBookingDTO.setSportCategory(checkoutPayload.getSportCategory());
+        privateBookingDTO.setPlayerId(AccountContext.getPlayerId());
+
+        PrivateBooking newPrivateBooking = createPrivateBooking(privateBookingDTO, transactionGroupId);
+        return newPrivateBooking.getId();
     }
 }

@@ -2,6 +2,8 @@ package com.atl.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -34,7 +36,7 @@ public class LobbyBookingParticipate {
     private Short playersPaid = 1;
 
     @Column(nullable = false)
-    private java.math.BigDecimal cost;
+    private BigDecimal cost;
 
     /*
      * @Column(name = "transaction_group", nullable = false)

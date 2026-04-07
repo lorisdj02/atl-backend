@@ -2,6 +2,7 @@ package com.atl.backend.dto;
 
 import java.time.LocalDateTime;
 
+import com.atl.backend.model.Account;
 import com.atl.backend.model.Booking;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
@@ -43,7 +44,11 @@ public class AccountDTO {
     @JsonProperty("role")
     private String role;
 
-    public static AccountDTO fromAccount(com.atl.backend.model.Account account) {
+    @NotNull
+    @JsonProperty("birthdate")
+    private String birthdate;
+
+    public static AccountDTO fromAccount(Account account) {
         if (account == null) {
             return null;
         }
@@ -56,6 +61,7 @@ public class AccountDTO {
         dto.setPhone(account.getPhone());
         dto.setImageUrl(account.getImageUrl());
         dto.setRole(account.getRole().toString());
+        dto.setBirthdate(account.getBirthdate() != null ? account.getBirthdate().toString() : null);
         return dto;
     }
 }

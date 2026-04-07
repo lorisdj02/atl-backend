@@ -20,7 +20,7 @@ public class CheckoutPayload {
     private Integer lobbyId;
 
     @JsonProperty("playersPaid")
-    private Integer playersPaid;
+    private Short playersPaid;
 
     @JsonProperty("ownerPlayerId")
     private Integer ownerPlayerId;
@@ -31,14 +31,17 @@ public class CheckoutPayload {
     @JsonProperty("finishTime")
     private String finishTime;
 
-    @JsonProperty("maxPlayers")
-    private Integer maxPlayers;
+    @JsonProperty("totalPlayers")
+    private Short totalPlayers;
 
     @JsonProperty("playersToFind")
-    private Integer playersToFind;
+    private Short playersToFind;
 
     @JsonProperty("fieldId")
     private Integer fieldId;
+
+    @JsonProperty("sportCategory")
+    private String sportCategory;
 
 
     /*

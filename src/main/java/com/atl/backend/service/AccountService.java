@@ -30,6 +30,7 @@ import com.atl.backend.repository.ReviewRepository;
 import com.atl.backend.request.UpdateAccountInfosRequest;
 import com.atl.backend.response.LoginResponse;
 
+import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -382,7 +383,7 @@ public class AccountService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public AccountDTO updateAccountInfos(UpdateAccountInfosRequest updateAccountInfosRequest) {
+    public Account updateAccountInfos(UpdateAccountInfosRequest updateAccountInfosRequest) {
         Account account = AccountContext.getActiveAccount();
         if (updateAccountInfosRequest.getUsername() != null) {
             account.setUsername(updateAccountInfosRequest.getUsername());
@@ -404,6 +405,6 @@ public class AccountService {
         }
         accountRepository.save(account);
 
-        return AccountDTO.fromAccount(account);
+        return account;
     }
 }
