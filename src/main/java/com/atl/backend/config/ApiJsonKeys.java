@@ -304,4 +304,19 @@ public class ApiJsonKeys {
 
     // StatsScreen
     public static final String footballStats = "footballStats"; // List<FootballTeamStats>
+
+
+    // REQUESTS
+
+    // UpdateAccountInfos
+    public static final String username = "username"; // String?
+    // UpdateAccountInfos
+    public static final String phone = "phone"; // String?
+    // UpdateAccountInfos
+    public static final String birthdate = "birthdate"; // DateTime?
+    // UpdateAccountInfos
+    public static final String imageUrl = "imageUrl"; // String?
+    // UpdateAccountInfos
+    public static final String preferredCityId = "preferredCityId"; // int?
+
 }

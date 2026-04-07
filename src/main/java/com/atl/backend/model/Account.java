@@ -72,9 +72,11 @@ public class Account {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
-        @Column(name = "image_url", length = 511)
+    @Column(name = "image_url", length = 511)
     private String imageUrl;
 
+    @Column(name = "birthdate")
+    private LocalDate birthdate;
 
     @Column(name = "favorite_sport_category", length = 15)
     @Enumerated(EnumType.STRING)

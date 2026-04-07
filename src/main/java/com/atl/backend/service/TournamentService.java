@@ -23,11 +23,13 @@ import com.atl.backend.dto.CoordinatorDTO;
 import com.atl.backend.dto.FieldDTO;
 import com.atl.backend.dto.TournamentDTO;
 import com.atl.backend.exception.BadRequestException;
+import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.Booking;
 import com.atl.backend.model.Callup;
+import com.atl.backend.model.City;
 import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.FavoriteTournament;
 import com.atl.backend.model.FinalStageBracket;
@@ -682,8 +684,9 @@ public class TournamentService {
             throw new NotFoundException(ErrorsString.FIELD_NOT_FOUND);
         }
 
-        BigDecimal fieldCostPerHour = field.get().getHourCostTournament().multiply(hoursPerMatch)
-                .multiply(BigDecimal.valueOf(numMatches)).setScale(2, RoundingMode.HALF_UP);
+        Field fieldEntity = field.get();
+        BigDecimal fieldCost = fieldEntity.calculateTournamentCost(hoursPerMatch.multiply(BigDecimal.valueOf(numMatches)))  
+                .setScale(2, RoundingMode.HALF_UP);
 
         Short medianRefereeLevel = accountService.getMedianRefereeLevel();
         Map<String, BigDecimal> refereeRolesPayPerMatch = sportService.getRefereePayPerMatchBySportIdAndLevel(
@@ -738,5 +741,37 @@ public class TournamentService {
                 .minutesPerPause(minutesPerPause)
                 .bookings(existingBookings.stream().map(BookingDTO::fromBooking).toList())
                 .build();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public TournamentDTO createTournament(TournamentDTO tournamentDTO){
+        if (!AccountContext.getCoordinatorId().equals(tournamentDTO.getCoordinatorId())) {
+            throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
+        }
+        sportService.checkSportExists(tournamentDTO.getSportId());
+        fieldService.checkFieldExists(tournamentDTO.getFieldId());
+        fieldService.checkCityExists(tournamentDTO.getCityId());
+        Field field = fieldService.getFieldById(tournamentDTO.getFieldId()).get();
+        City city = field.getCity();
+
+        if(!city.getId().equals(tournamentDTO.getCityId())){
+            throw new ConflictException(ErrorsString.FIELD_NOT_IN_CITY);
+        }
+
+        Tournament tournament = TournamentDTO.toTournament(tournamentDTO);
+
+        TournamentParametersResponse parametersResponse = getTournamentParameters(tournamentDTO);
+        tournament.setFee(parametersResponse.getFee());
+        tournament.setPrize1(parametersResponse.getPrize1());
+        tournament.setPrize2(parametersResponse.getPrize2());
+        if(parametersResponse.getFee().compareTo(BigDecimal.ZERO) == 0){
+            tournament.setProfit(false);
+        } else {
+            tournament.setProfit(true);
+        }
+
+
+        Tournament savedTournament = tournamentRepository.save(tournament);
+        return TournamentDTO.fromTournament(savedTournament);
     }
 }

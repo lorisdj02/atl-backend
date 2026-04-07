@@ -15,13 +15,13 @@ public class BookingDTO {
     @JsonProperty("id")
     private Integer id;
 
-        @NotNull
+    @NotNull
     @JsonProperty("startTime")
-    private LocalDateTime startTime;
+    private String startTime;
 
     @NotNull
     @JsonProperty("finishTime")
-    private LocalDateTime finishTime;
+    private String finishTime;
 
     @NotNull
     @JsonProperty("status")
@@ -45,8 +45,8 @@ public class BookingDTO {
         }
         BookingDTO bookingDTO = new BookingDTO();
         bookingDTO.setId(booking.getId());
-        bookingDTO.setStartTime(booking.getStartTime());
-        bookingDTO.setFinishTime(booking.getFinishTime());
+        bookingDTO.setStartTime(booking.getStartTime().toString());
+        bookingDTO.setFinishTime(booking.getFinishTime().toString());
         bookingDTO.setStatus(booking.getStatus().toString());
         bookingDTO.setSportCategory(booking.getSportCategory().toString());
         bookingDTO.setFieldId(booking.getField().getId());

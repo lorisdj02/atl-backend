@@ -36,8 +36,8 @@ public class LobbyBookingDTO extends BookingDTO {
         LobbyBookingDTO dto = new LobbyBookingDTO();
         dto.setId(lobbyBooking.getId());
         dto.setFieldId(lobbyBooking.getBooking().getField().getId());
-        dto.setStartTime(lobbyBooking.getBooking().getStartTime());
-        dto.setFinishTime(lobbyBooking.getBooking().getFinishTime());
+        dto.setStartTime(lobbyBooking.getBooking().getStartTime().toString());
+        dto.setFinishTime(lobbyBooking.getBooking().getFinishTime().toString());
         dto.setStatus(lobbyBooking.getBooking().getStatus().toString());
         dto.setSportCategory(lobbyBooking.getBooking().getSportCategory().toString());
         dto.setBookingType(lobbyBooking.getBooking().getBookingType().toString());

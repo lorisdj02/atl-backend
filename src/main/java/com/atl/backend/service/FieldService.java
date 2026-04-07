@@ -1,6 +1,8 @@
 package com.atl.backend.service;
 
+import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.FieldDTO;
+import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.City;
 import com.atl.backend.model.Field;
 import com.atl.backend.model.FieldCategory;
@@ -110,5 +112,17 @@ public class FieldService {
             return 0;
         }
         return fieldCategory.getMaxPlayers();
+    }
+
+    public void checkFieldExists(Integer fieldId) {
+        if (!fieldRepository.existsById(fieldId)) {
+            throw new NotFoundException(ErrorsString.FIELD_NOT_FOUND);
+        }
+    }
+
+    public void checkCityExists(Integer cityId) {
+        if (!cityRepository.existsById(cityId)) {
+            throw new NotFoundException(ErrorsString.CITY_NOT_FOUND);
+        }
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -107,7 +108,7 @@ public class TournamentController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/search/{tournamentId}")
+    @GetMapping("/search-by-id/{tournamentId}")
     public ResponseEntity<TournamentDTO> getTournamentById(@PathVariable Integer tournamentId) {
         Optional<Tournament> response = tournamentService.getTournamentById(tournamentId);
         if (response.isEmpty()) {
@@ -126,5 +127,11 @@ public class TournamentController {
     public ResponseEntity<TournamentSummaryResponse> getTournamentSummary(@PathVariable Integer tournamentId) {
         TournamentSummaryResponse response = tournamentScreenService.getTournamentSummary(tournamentId);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<TournamentDTO> createTournament(@RequestBody TournamentDTO tournamentDTO) {
+        TournamentDTO tournament = tournamentService.createTournament(tournamentDTO);
+        return ResponseEntity.ok(tournament);
     }
 }

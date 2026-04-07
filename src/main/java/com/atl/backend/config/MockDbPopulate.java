@@ -7,6 +7,7 @@ import com.atl.backend.service.TeamService;
 import com.atl.backend.service.TournamentService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,6 +73,7 @@ public class MockDbPopulate {
             account.setName("name" + i.toString());
             account.setSurname("surname" + i.toString());
             account.setPhone("phone" + i.toString());
+            account.setBirthdate(LocalDate.parse("2002-01-08"));
             if (i <= 200) {
                 account.setUsername("player" + i.toString());
                 account.setRole(AccountRole.PLAYER);

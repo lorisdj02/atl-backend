@@ -4,7 +4,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.LobbyBookingDTO;
+import com.atl.backend.dto.PrivateBookingDTO;
 import com.atl.backend.exception.BadRequestException;
+import com.atl.backend.model.LobbyBooking;
+import com.atl.backend.model.PrivateBooking;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.BookFieldResponse;
 import com.atl.backend.response.FieldsAndMaxPlayersPerFieldResponse;
@@ -19,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
@@ -100,5 +106,17 @@ public class BookingController {
         return ResponseEntity
                 .ok(bookingService.getFreeFieldsByMaxPlayersAndCityAndDateAndSportCategory(maxPlayers, cityId, start,
                         end, sportCat));
+    }
+
+    @PostMapping("/private-booking/create")
+    public ResponseEntity<PrivateBookingDTO> createPrivateBooking(@RequestBody PrivateBookingDTO privateBookingDTO) {
+        PrivateBooking createdBooking = bookingService.createPrivateBooking(privateBookingDTO);
+        return ResponseEntity.ok(PrivateBookingDTO.fromPrivateBooking(createdBooking));
+    }
+
+    @PostMapping("/lobby-booking/create")
+    public ResponseEntity<LobbyBookingDTO> createLobbyBooking(@RequestBody LobbyBookingDTO lobbyBookingDTO) {
+        LobbyBooking createdBooking = bookingService.createLobbyBooking(lobbyBookingDTO);
+        return ResponseEntity.ok(LobbyBookingDTO.fromLobbyBooking(createdBooking));
     }
 }

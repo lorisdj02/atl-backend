@@ -2,8 +2,12 @@ package com.atl.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Data
 @Entity
@@ -60,5 +64,15 @@ public class Field {
 
     public String getCompleteAddress(){
         return address + ", " + city.getName();
+    }
+
+    public BigDecimal calculateTournamentCost(BigDecimal durationInHours) {
+        return hourCostTournament.multiply(durationInHours);
+    }
+
+    public BigDecimal calculatePrivateCost(LocalDateTime startTime, LocalDateTime finishTime) {
+        BigDecimal durationInHours = BigDecimal.valueOf(Duration.between(startTime, finishTime).toMinutes())
+                .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
+        return hourCostPrivate.multiply(durationInHours);
     }
 }

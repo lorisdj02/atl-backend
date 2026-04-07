@@ -31,6 +31,8 @@ public class ErrorsString {
 
     static final public String REFEREE_ROLE_NOT_FOUND = "REFEREE_ROLE_NOT_FOUND";
 
+    static final public String CITY_NOT_FOUND = "CITY_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -44,6 +46,10 @@ public class ErrorsString {
     static final public String INVALID_CHECKOUT_SESSION = "INVALID_CHECKOUT_SESSION";
 
     static final public String INVALID_REFEREE_ROLE = "INVALID_REFEREE_ROLE";
+
+    static final public String INVALID_BIRTHDATE_FORMAT = "INVALID_BIRTHDATE_FORMAT";
+
+    static final public String PLAYER_NOT_IN_TEAM = "PLAYER_NOT_IN_TEAM";
 
     // Conflict errors
 
@@ -71,6 +77,12 @@ public class ErrorsString {
 
     static final public String CHECKOUT_SESSION_IS_NOT_PENDING = "CHECKOUT_SESSION_IS_NOT_PENDING";
 
+    static final public String FIELD_NOT_IN_CITY = "FIELD_NOT_IN_CITY";
+
+    static final public String FIELD_NOT_AVAILABLE = "FIELD_NOT_AVAILABLE";
+
+    static final public String PLAYER_IS_CAPTAIN = "PLAYER_IS_CAPTAIN";
+
     // Authentication errors
 
     static final public String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
@@ -94,4 +106,10 @@ public class ErrorsString {
     static final public String AUTHENTICATION_REQUIRED = "AUTHENTICATION_REQUIRED";
 
     static final public String YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN = "YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN";
+
+    static final public String YOU_MUST_BE_CAPTAIN = "YOU_MUST_BE_CAPTAIN";
+
+    static final public String YOU_MUST_BE_VICE_CAPTAIN = "YOU_MUST_BE_VICE_CAPTAIN";
+
+    static final public String YOU_MUST_OWN_THE_BOOKING = "YOU_MUST_OWN_THE_BOOKING";
 }

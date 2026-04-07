@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.PlayerDTO;
+import com.atl.backend.dto.TeamDTO;
 import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.model.FootballTeamStat;
 import com.atl.backend.model.Palmares;
@@ -53,6 +55,10 @@ public class TeamService {
     private TournamentService tournamentService;
     @Autowired
     private PalmaresRepository palmaresRepository;
+    @Autowired
+    private SportService sportService;
+    @Autowired
+    private FieldService fieldService;
 
     public List<TeamRequest> getAllTeamRequests() {
         return teamRequestRepository.findAll();
@@ -93,28 +99,6 @@ public class TeamService {
         return Optional.empty();
     }
 
-    public Team promoteToViceCaptain(Integer teamId, Integer playerId) {
-        Optional<Team> teamOptional = teamRepository.findById(teamId);
-        if (teamOptional.isEmpty()) {
-            throw new IllegalArgumentException(ErrorsString.TEAM_NOT_FOUND);
-        }
-        Optional<Player> playerOptional = playerRepository.findById(playerId);
-        if (playerOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
-        }
-
-        Team team = teamOptional.get();
-        Player player = playerOptional.get();
-        if (team.getVice1Player() == null) {
-            team.setVice1Player(player);
-        } else if (team.getVice2Player() == null) {
-            team.setVice2Player(player);
-        } else {
-            throw new ConflictException(ErrorsString.TEAM_ALREADY_HAS_VICE_CAPTAINS);
-        }
-        return teamRepository.save(team);
-    }
-
     public void leftTeam(Integer teamId, Integer playerId) {
         final Optional<PlaysAt> playsAtOptional = playsAtRepository.findByPlayer_PlayerIdAndTeam_Id(playerId, teamId);
         final Optional<Team> teamOptional = teamRepository.findById(teamId);
@@ -146,9 +130,7 @@ public class TeamService {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isPresent()) {
             Team team = teamOptional.get();
-            Optional<PlaysAt> existingPlaysAt = playsAtRepository.findByPlayer_PlayerIdAndSportCategory(playerId,
-                    team.getSportCategory());
-            if (existingPlaysAt.isPresent()) {
+            if (isPlayerInATeamBySportCategory(playerId, team.getSportCategory())) {
                 throw new ConflictException(ErrorsString.PLAYER_ALREADY_IN_TEAM);
             }
             Optional<Player> playerOptional = playerRepository.findById(playerId);
@@ -264,6 +246,12 @@ public class TeamService {
         return playsAts.stream().anyMatch(playsAt -> playsAt.getPlayer().getPlayerId().equals(playerId));
     }
 
+    public boolean isPlayerInATeamBySportCategory(Integer playerId, SportCategory sportCategory) {
+        Optional<PlaysAt> playsAtOptional = playsAtRepository.findByPlayer_PlayerIdAndSportCategory(playerId,
+                sportCategory);
+        return playsAtOptional.isPresent();
+    }
+
     public void checkTeamExists(Integer teamId) {
         if (teamRepository.existsById(teamId) == false) {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
@@ -320,5 +308,98 @@ public class TeamService {
         return tournamentService.getTeamParticipations(teamId).stream()
                 .filter(participation -> participation.getToPay().compareTo(BigDecimal.ZERO) > 0)
                 .map(TournamentParticipationDTO::fromTournamentParticipation).toList();
+    }
+
+    public void needToBeCaptainOrViceCaptain(Integer teamId, Integer playerId) {
+        if (!isPlayerCaptainOrViceCaptain(teamId, playerId)) {
+            throw new ForbiddenException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
+        }
+    }
+
+    public void needToBeCaptain(Integer teamId, Integer playerId) {
+        Optional<Team> teamOptional = teamRepository.findById(teamId);
+        if (teamOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+        }
+        Team team = teamOptional.get();
+        if (!team.getCaptainPlayer().getPlayerId().equals(playerId)) {
+            throw new ForbiddenException(ErrorsString.YOU_MUST_BE_CAPTAIN);
+        }
+    }
+
+    public void needToBeInTeam(Integer teamId, Integer playerId) {
+        if (!isPlayerInTeam(teamId, playerId)) {
+            throw new ConflictException(ErrorsString.PLAYER_NOT_IN_TEAM);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Team promoteOrDemotePlayerInTeam(Integer teamId, Integer playerId) {
+        Optional<Team> teamOptional = teamRepository.findById(teamId);
+        if (teamOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+        }
+        Team team = teamOptional.get();
+
+        Optional<Player> playerOptional = playerRepository.findById(playerId);
+        if (playerOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+        }
+        Player player = playerOptional.get();
+
+        needToBeInTeam(teamId, playerId);
+
+        Integer requestingPlayerId = AccountContext.getPlayerId();
+
+        if (team.getCaptainPlayer().equals(player)) {
+            throw new ConflictException(ErrorsString.PLAYER_IS_CAPTAIN);
+        } else if (team.getVice1Player().equals(player)) {
+            needToBeCaptain(teamId, requestingPlayerId);
+            team.setVice1Player(team.getVice2Player());
+            team.setVice2Player(null);
+        } else if (team.getVice2Player().equals(player)) {
+            needToBeCaptain(teamId, requestingPlayerId);
+            team.setVice2Player(null);
+        } else {
+            needToBeCaptainOrViceCaptain(teamId, requestingPlayerId);
+            if (team.getVice1Player() == null) {
+                team.setVice1Player(player);
+            } else if (team.getVice2Player() == null) {
+                team.setVice2Player(player);
+            } else {
+                throw new ConflictException(ErrorsString.TEAM_ALREADY_HAS_VICE_CAPTAINS);
+            }
+        }
+        Team savedTeam = teamRepository.save(team);
+        return savedTeam;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Team createTeam(TeamDTO teamDTO){
+        Player player = AccountContext.getActivePlayer();
+
+        if(!sportService.isSupportedSportCategory(teamDTO.getSportCategory())){
+            throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+
+        SportCategory sportCategory = SportCategory.valueOf(teamDTO.getSportCategory().toUpperCase());
+
+        if (isPlayerInATeamBySportCategory(player.getPlayerId(), sportCategory)) {
+            throw new ConflictException(ErrorsString.PLAYER_ALREADY_IN_TEAM);
+        }
+        if(teamDTO.getCityId() != null){
+        fieldService.checkCityExists(teamDTO.getCityId());
+        }
+        Team team = new Team();
+        team.setName(teamDTO.getName());
+        team.setSportCategory(sportCategory);
+        team.setCaptainPlayer(player);
+        team.setLogoUrl(teamDTO.getLogoUrl());
+        team.setCity(teamDTO.getCityId() != null ? fieldService.getCityById(teamDTO.getCityId()).get() : null);
+        team.setDescription(teamDTO.getDescription());
+        team.setAlias(teamDTO.getAlias());
+        team.setVisible(teamDTO.getVisible());
+
+        return teamRepository.save(team);
     }
 }

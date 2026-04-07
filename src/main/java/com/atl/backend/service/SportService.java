@@ -117,4 +117,10 @@ public class SportService {
     public List<Sport> getSportsByCategory(SportCategory sportCategory) {
         return sportRepository.findBySportCategory(sportCategory);
     }
+
+    public void checkSportExists(Integer sportId) {
+        if (!sportRepository.existsById(sportId)) {
+            throw new NotFoundException(ErrorsString.SPORT_NOT_FOUND);
+        }
+    }
 }

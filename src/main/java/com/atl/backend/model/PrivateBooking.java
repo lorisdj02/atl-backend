@@ -1,5 +1,7 @@
 package com.atl.backend.model;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -25,5 +27,5 @@ public class PrivateBooking {
     private Player player;
 
     @Column(nullable = false)
-    private java.math.BigDecimal cost;
+    private BigDecimal cost;
 }

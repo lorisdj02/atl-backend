@@ -61,6 +61,10 @@ public class TeamDTO {
     @JsonProperty("sportCategory")
     private String sportCategory;
 
+    @NotNull
+    @JsonProperty("visible")
+    private Boolean visible = true;
+
     public static TeamDTO fromTeam(com.atl.backend.model.Team team) {
         if (team == null) {
             return null;
@@ -75,14 +79,15 @@ public class TeamDTO {
 
         dto.setLogoUrl(team.getLogoUrl());
 
-        dto.setRankPts(team.getRankPts() != null ? team.getRankPts() : 0);
+        dto.setRankPts(team.getRankPts());
         dto.setName(team.getName());
         dto.setAlias(team.getAlias());
         dto.setDescription(team.getDescription());
-        dto.setVip(team.getVip() != null ? team.getVip() : false);
-        dto.setMaxPlayers(team.getMaxPlayers() != null ? team.getMaxPlayers() : 24);
-        dto.setNumPlayers(team.getNumPlayers() != null ? team.getNumPlayers() : 1);
+        dto.setVip(team.getVip());
+        dto.setMaxPlayers(team.getMaxPlayers());
+        dto.setNumPlayers(team.getNumPlayers());
         dto.setSportCategory(team.getSportCategory() != null ? team.getSportCategory().toString() : null);
+        dto.setVisible(team.getVisible());
 
         return dto;
     }

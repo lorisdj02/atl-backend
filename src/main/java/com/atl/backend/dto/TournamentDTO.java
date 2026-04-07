@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 
 import com.atl.backend.model.Tournament;
+import com.atl.backend.model.enums.TournamentStatus;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -101,6 +102,11 @@ public class TournamentDTO {
     @NotNull
     private Short numTeamsQualified;
 
+    @JsonProperty("public")
+    @NotNull
+    private Boolean isPublic = false;
+
+
     public static TournamentDTO fromTournament(Tournament tournament) {
         TournamentDTO dto = new TournamentDTO();
         dto.setId(tournament.getId());
@@ -124,6 +130,28 @@ public class TournamentDTO {
         dto.setNumTeamsQualified(tournament.getNumTeamsQualified());
 
         dto.setPhotoUrl(tournament.getPhotoUrl() != null ? tournament.getPhotoUrl() : null);
+        dto.setIsPublic(tournament.getIsPublic());
         return dto;
+    }
+
+    public static Tournament toTournament(TournamentDTO dto) {
+        Tournament tournament = new Tournament();
+        tournament.setId(dto.getId());
+        tournament.setName(dto.getName());
+        tournament.setDescription(dto.getDescription());
+        tournament.setNumGroups(dto.getNumGroups());
+        tournament.setNumTeams(dto.getNumTeams());
+        tournament.setPaidTeams(dto.getPaidTeams());
+        tournament.setStatus(TournamentStatus.valueOf(dto.getStatus()));
+        tournament.setAtlEvent(dto.getAtlEvent());
+        tournament.setPrize1(dto.getPrize1());
+        tournament.setPrize2(dto.getPrize2());
+        tournament.setStartDate(dto.getStartDate());
+        tournament.setFee(dto.getFee());
+        tournament.setRound2GroupStage(dto.getRound2GroupStage());
+        tournament.setRound2FinalStage(dto.getRound2FinalStage());
+        tournament.setNumTeamsQualified(dto.getNumTeamsQualified());
+        tournament.setIsPublic(dto.getIsPublic());
+        return tournament;
     }
 }

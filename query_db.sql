@@ -32,6 +32,7 @@ CREATE TABLE "account" (
   "preferred_city_id" int,
   "image_url" varchar(511),
   "favorite_sport_category" varchar(15) NOT NULL DEFAULT 'FOOTBALL',
+  "birthdate" date NOT NULL,
   "created_at" timestamp DEFAULT now(),
   "last_login" timestamp DEFAULT now()
 );

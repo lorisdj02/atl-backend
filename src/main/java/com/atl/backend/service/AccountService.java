@@ -27,6 +27,7 @@ import com.atl.backend.repository.OrganizationRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.RefereeRepository;
 import com.atl.backend.repository.ReviewRepository;
+import com.atl.backend.request.UpdateAccountInfosRequest;
 import com.atl.backend.response.LoginResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -377,5 +379,31 @@ public class AccountService {
         List<Review> reviews = getReviewsByReviewerAccountId(accountId);
         List<Review> pendingReviews = getPendingReviewsByReviewerAccountId(accountId);
         return !reviews.isEmpty() || !pendingReviews.isEmpty();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public AccountDTO updateAccountInfos(UpdateAccountInfosRequest updateAccountInfosRequest) {
+        Account account = AccountContext.getActiveAccount();
+        if (updateAccountInfosRequest.getUsername() != null) {
+            account.setUsername(updateAccountInfosRequest.getUsername());
+        }
+        if (updateAccountInfosRequest.getPhone() != null) {
+            account.setPhone(updateAccountInfosRequest.getPhone());
+        }
+        if (updateAccountInfosRequest.getBirthdate() != null) {
+            LocalDate birthdate;
+            try {
+                birthdate = LocalDate.parse(updateAccountInfosRequest.getBirthdate());
+            } catch (Exception e) {
+                throw new BadRequestException(ErrorsString.INVALID_BIRTHDATE_FORMAT);
+            }
+            account.setBirthdate(birthdate);
+        }
+        if (updateAccountInfosRequest.getImageUrl() != null) {
+            account.setImageUrl(updateAccountInfosRequest.getImageUrl());
+        }
+        accountRepository.save(account);
+
+        return AccountDTO.fromAccount(account);
     }
 }

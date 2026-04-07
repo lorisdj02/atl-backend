@@ -28,8 +28,8 @@ public class PrivateBookingDTO extends BookingDTO {
         PrivateBookingDTO dto = new PrivateBookingDTO();
         dto.setId(privateBooking.getId());
         dto.setFieldId(privateBooking.getBooking().getField().getId());
-        dto.setStartTime(privateBooking.getBooking().getStartTime());
-        dto.setFinishTime(privateBooking.getBooking().getFinishTime());
+        dto.setStartTime(privateBooking.getBooking().getStartTime().toString());
+        dto.setFinishTime(privateBooking.getBooking().getFinishTime().toString());
         dto.setStatus(privateBooking.getBooking().getStatus().toString());
         dto.setSportCategory(privateBooking.getBooking().getSportCategory().toString());
         dto.setBookingType(privateBooking.getBooking().getBookingType().toString());
