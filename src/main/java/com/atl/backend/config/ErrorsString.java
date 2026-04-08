@@ -41,6 +41,8 @@ public class ErrorsString {
 
     static final public String TOURNAMENT_PARTICIPATION_NOT_FOUND = "TOURNAMENT_PARTICIPATION_NOT_FOUND";
 
+    static final public String TEAM_REQUEST_NOT_FOUND = "TEAM_REQUEST_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -58,6 +60,8 @@ public class ErrorsString {
     static final public String INVALID_BIRTHDATE_FORMAT = "INVALID_BIRTHDATE_FORMAT";
 
     static final public String TOURNAMENT_ID_MISMATCH = "TOURNAMENT_ID_MISMATCH";
+
+    static final public String INVALID_TEAM_REQUEST_PARAMETERS = "INVALID_TEAM_REQUEST_PARAMETERS";
 
     // Conflict errors
 
@@ -100,6 +104,10 @@ public class ErrorsString {
     static final public String PLAYER_NOT_IN_TEAM = "PLAYER_NOT_IN_TEAM";
 
     static final public String TOURNAMENT_PARTICIPATION_ALREADY_PAID = "TOURNAMENT_PARTICIPATION_ALREADY_PAID";
+
+    static final public String PURCHASE_NOT_REDEEMABLE = "PURCHASE_NOT_REDEEMABLE";
+
+    static final public String TEAM_REQUEST_ALREADY_SENT = "TEAM_REQUEST_ALREADY_SENT";
 
     // Authentication errors
 

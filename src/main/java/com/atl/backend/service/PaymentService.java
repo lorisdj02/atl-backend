@@ -370,7 +370,13 @@ public class PaymentService {
         }
 
         if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
-            // TODO: integrare STRIPE
+            // TODO: integrare STRIPE, gestire qui l'errore senza lanciare un'eccezione, in
+            // modo da permettere comunque la creazione dell'acquisto e dei transaction
+            // group, che saranno poi confermati o rimborsati a seconda dell'esito del
+            // pagamento. Tutto all'interno di un try catch, in modo da poter gestire
+            // eventuali errori di comunicazione con Stripe o di pagamento fallito, e in
+            // modo da poter comunque creare l'acquisto e i transaction group, che saranno
+            // poi confermati o rimborsati a seconda dell'esito del pagamento.
             amountToPay = BigDecimal.ZERO; // Rimuovere questa riga quando si integra Stripe
         }
 
@@ -388,6 +394,7 @@ public class PaymentService {
         }
         purchase.setDetail(payloadJson);
         purchase.setTransactionGroup(transactionGroup);
+        purchase.setDetail(payloadJson);
         purchase.setType(session.getType());
         switch (session.getType()) {
             case TOURNAMENT_FEE:
@@ -474,4 +481,30 @@ public class PaymentService {
         transactionGroupRepository.save(transactionGroup);
         purchaseRepository.save(purchase);
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void redeemPurchase(Integer purchaseId) {
+        Optional<Purchase> optPurchase = purchaseRepository.findById(purchaseId);
+        if (optPurchase.isEmpty()) {
+            throw new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND);
+        }
+        Purchase purchase = optPurchase.get();
+        if (purchase.getStatus() != PurchaseStatus.CONFIRMED) {
+            throw new ConflictException(ErrorsString.PURCHASE_NOT_REDEEMABLE);
+        }
+        purchase.setStatus(PurchaseStatus.REDEEMED);
+        setTransactionsNotRefundableByTransactionGroupId(purchase.getTransactionGroup().getId());
+        purchaseRepository.save(purchase);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void setTransactionsNotRefundableByTransactionGroupId(Integer transactionGroupId) {
+        checkTransactionGroup(transactionGroupId);
+        List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroupId);
+        for (Transaction transaction : transactions) {
+            transaction.setRefundable(false);
+            transactionRepository.save(transaction);
+        }
+    }
+
 }

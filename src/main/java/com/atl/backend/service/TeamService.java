@@ -125,38 +125,39 @@ public class TeamService {
 
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public Optional<PlaysAt> joinTeam(Integer playerId, Integer teamId) {
+        checkTeamExists(teamId);
 
-        Optional<Team> teamOptional = teamRepository.findById(teamId);
-        if (teamOptional.isPresent()) {
-            Team team = teamOptional.get();
-            if (isPlayerInATeamBySportCategory(playerId, team.getSportCategory())) {
-                throw new ConflictException(ErrorsString.PLAYER_ALREADY_IN_TEAM);
-            }
-            Optional<Player> playerOptional = playerRepository.findById(playerId);
-            if (playerOptional.isEmpty()) {
-                throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
-            }
+        Team team = teamRepository.findById(teamId).get();
 
-            Player player = playerOptional.get();
-            teamRequestRepository.deleteByPlayer_PlayerId(playerId);
-            PlaysAt playsAt = new PlaysAt();
+        accountService.checkPlayerExists(playerId);
+        if (isPlayerInATeamBySportCategory(playerId, team.getSportCategory())) {
+            throw new ConflictException(ErrorsString.PLAYER_ALREADY_IN_TEAM);
+        }
+        Player player = accountService.getPlayerByPlayerId(playerId).get();
 
-            playsAt.setTeam(team);
-            playsAt.setPlayer(player);
-            playsAt.setSportCategory(team.getSportCategory());
-            if (team.getSportCategory() == SportCategory.FOOTBALL) {
+        teamRequestRepository.deleteByPlayer_PlayerId(playerId);
+        PlaysAt playsAt = new PlaysAt();
+
+        playsAt.setTeam(team);
+        playsAt.setPlayer(player);
+        playsAt.setSportCategory(team.getSportCategory());
+        if (team.getSportCategory() == SportCategory.FOOTBALL) {
+            Optional<FootballTeamStat> footballTeamStatOptional = footballTeamStatRepository
+                    .findByTeam_IdAndPlayer_PlayerId(teamId, playerId);
+            if (!footballTeamStatOptional.isPresent()) {
                 FootballTeamStat footballTeamStat = new FootballTeamStat();
                 footballTeamStat.setTeam(team);
                 footballTeamStat.setPlayer(player);
+                footballTeamStatRepository.save(footballTeamStat);
             }
-            if (!team.getCaptainPlayer().getPlayerId().equals(playerId)) {
-                team.setNumPlayers((short) (team.getNumPlayers() + 1));
-            }
-            teamRepository.save(team);
-            return Optional.of(playsAtRepository.save(playsAt));
         }
-        return Optional.empty();
+        if (!team.getCaptainPlayer().equals(player)) {
+            team.setNumPlayers((short) (team.getNumPlayers() + 1));
+        }
+        teamRepository.save(team);
+        return Optional.of(playsAtRepository.save(playsAt));
     }
 
     public List<Player> getPlayersByTeamId(Integer teamId) {
@@ -312,7 +313,7 @@ public class TeamService {
 
     public void needToBeCaptainOrViceCaptain(Integer teamId, Integer playerId) {
         if (!isPlayerCaptainOrViceCaptain(teamId, playerId)) {
-            throw new ForbiddenException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
         }
     }
 
@@ -323,7 +324,7 @@ public class TeamService {
         }
         Team team = teamOptional.get();
         if (!team.getCaptainPlayer().getPlayerId().equals(playerId)) {
-            throw new ForbiddenException(ErrorsString.YOU_MUST_BE_CAPTAIN);
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN);
         }
     }
 
@@ -375,10 +376,10 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Team createTeam(TeamDTO teamDTO){
+    public Team createTeam(TeamDTO teamDTO) {
         Player player = AccountContext.getActivePlayer();
 
-        if(!sportService.isSupportedSportCategory(teamDTO.getSportCategory())){
+        if (!sportService.isSupportedSportCategory(teamDTO.getSportCategory())) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
@@ -387,8 +388,8 @@ public class TeamService {
         if (isPlayerInATeamBySportCategory(player.getPlayerId(), sportCategory)) {
             throw new ConflictException(ErrorsString.PLAYER_ALREADY_IN_TEAM);
         }
-        if(teamDTO.getCityId() != null){
-        fieldService.checkCityExists(teamDTO.getCityId());
+        if (teamDTO.getCityId() != null) {
+            fieldService.checkCityExists(teamDTO.getCityId());
         }
         Team team = new Team();
         team.setName(teamDTO.getName());
@@ -399,7 +400,96 @@ public class TeamService {
         team.setDescription(teamDTO.getDescription());
         team.setAlias(teamDTO.getAlias());
         team.setVisible(teamDTO.getVisible());
-
-        return teamRepository.save(team);
+        Team createdTeam = teamRepository.save(team);
+        joinTeam(AccountContext.getPlayerId(), createdTeam.getId());
+        return createdTeam;
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void acceptTeamRequest(Integer teamId, Integer playerId, Boolean acceptAll) {
+        checkTeamExists(teamId);
+        needToBeCaptainOrViceCaptain(teamId, playerId);
+
+        List<TeamRequest> teamRequests = new ArrayList<>();
+        if (playerId == null && acceptAll) {
+            teamRequests = teamRequestRepository.findByTeam_Id(teamId);
+        } else if (playerId != null && !acceptAll) {
+            Optional<TeamRequest> teamRequestOptional = teamRequestRepository.findByTeam_IdAndPlayer_PlayerId(teamId,
+                    playerId);
+            if (teamRequestOptional.isEmpty()) {
+                throw new NotFoundException(ErrorsString.TEAM_REQUEST_NOT_FOUND);
+            }
+            TeamRequest teamRequest = teamRequestOptional.get();
+            teamRequests.add(teamRequest);
+        } else {
+            throw new BadRequestException(ErrorsString.INVALID_TEAM_REQUEST_PARAMETERS);
+        }
+
+        for (TeamRequest teamRequest : teamRequests) {
+            joinTeam(teamRequest.getPlayer().getPlayerId(), teamId);
+        }
+        return;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void rejectTeamRequest(Integer teamId, Integer playerId, Boolean rejectAll) {
+        checkTeamExists(teamId);
+        needToBeCaptainOrViceCaptain(teamId, playerId);
+
+        List<TeamRequest> teamRequests = new ArrayList<>();
+        if (playerId == null && rejectAll) {
+            teamRequests = teamRequestRepository.findByTeam_Id(teamId);
+        } else if (playerId != null && !rejectAll) {
+            Optional<TeamRequest> teamRequestOptional = teamRequestRepository.findByTeam_IdAndPlayer_PlayerId(teamId,
+                    playerId);
+            if (teamRequestOptional.isEmpty()) {
+                throw new NotFoundException(ErrorsString.TEAM_REQUEST_NOT_FOUND);
+            }
+            TeamRequest teamRequest = teamRequestOptional.get();
+            teamRequests.add(teamRequest);
+        } else {
+            throw new BadRequestException(ErrorsString.INVALID_TEAM_REQUEST_PARAMETERS);
+        }
+
+        for (TeamRequest teamRequest : teamRequests) {
+            teamRequestRepository.delete(teamRequest);
+        }
+        return;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void cancelTeamRequest(Integer teamId) {
+        checkTeamExists(teamId);
+        Integer playerId = AccountContext.getPlayerId();
+        Optional<TeamRequest> teamRequestOptional = teamRequestRepository.findByTeam_IdAndPlayer_PlayerId(teamId,
+                playerId);
+        if (teamRequestOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TEAM_REQUEST_NOT_FOUND);
+        }
+        TeamRequest teamRequest = teamRequestOptional.get();
+        teamRequestRepository.delete(teamRequest);
+        return;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public TeamRequest sendTeamRequest(Integer teamId) {
+        checkTeamExists(teamId);
+        Team team = teamRepository.findById(teamId).get();
+
+        Player player = AccountContext.getActivePlayer();
+        Integer playerId = player.getPlayerId();
+        if (isPlayerInATeamBySportCategory(playerId, team.getSportCategory())) {
+            throw new ConflictException(ErrorsString.PLAYER_ALREADY_IN_TEAM);
+        }
+        Optional<TeamRequest> teamRequestOptional = teamRequestRepository.findByTeam_IdAndPlayer_PlayerId(teamId,
+                playerId);
+        if (teamRequestOptional.isPresent()) {
+            throw new ConflictException(ErrorsString.TEAM_REQUEST_ALREADY_SENT);
+        }
+        TeamRequest teamRequest = new TeamRequest();
+        teamRequest.setTeam(team);
+        teamRequest.setPlayer(player);
+        return teamRequestRepository.save(teamRequest);
+    }
+
 }

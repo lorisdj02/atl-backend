@@ -6,20 +6,24 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.TeamDTO;
+import com.atl.backend.dto.TeamRequestDTO;
 import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.exception.*;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.Team;
+import com.atl.backend.model.TeamRequest;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AbstractTeamResponse;
 import com.atl.backend.response.MyGrowthResponse;
@@ -43,8 +47,6 @@ public class TeamController {
     private SportService sportService;
     @Autowired
     private TeamService teamService;
-
-
 
     @GetMapping("/{sportCategory}")
     public ResponseEntity<TeamsResponse> getTeamsScreen(@PathVariable String sportCategory) {
@@ -74,7 +76,7 @@ public class TeamController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/team/{teamId}/player-requests")
+    @GetMapping("/team/{teamId}/manage/view-player-requests")
     public ResponseEntity<PlayerRequestsResponse> getPlayerRequestsScreen(@PathVariable Integer teamId) {
         PlayerRequestsResponse response = teamScreenService.getPlayerRequestsScreen(teamId);
         return ResponseEntity.ok(response);
@@ -123,4 +125,37 @@ public class TeamController {
         Team createdTeam = teamService.createTeam(team);
         return ResponseEntity.status(HttpStatus.CREATED).body(TeamDTO.fromTeam(createdTeam));
     }
+
+    // Si usa così: /team/1/requests/accept?playerId=2&acceptAll=false
+    @PostMapping("/team/{teamId}/manage/requests/accept")
+    public ResponseEntity<Void> acceptTeamRequest(@PathVariable Integer teamId,
+            @RequestParam(required = false) Integer playerId,
+            @RequestParam(required = false) Boolean acceptAll) {
+        Boolean acceptAllValue = (acceptAll != null) ? acceptAll : false;
+        teamService.acceptTeamRequest(teamId, playerId, acceptAllValue);
+        return ResponseEntity.ok().build();
+    }
+
+    // Si usa così: /team/1/requests/reject?playerId=2&rejectAll=false
+    @PostMapping("/team/{teamId}/manage/requests/reject")
+    public ResponseEntity<Void> rejectTeamRequest(@PathVariable Integer teamId,
+            @RequestParam(required = false) Integer playerId,
+            @RequestParam(required = false) Boolean rejectAll) {
+        Boolean rejectAllValue = (rejectAll != null) ? rejectAll : false;
+        teamService.rejectTeamRequest(teamId, playerId, rejectAllValue);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/team/{teamId}/requests/send")
+    public ResponseEntity<TeamRequestDTO> sendTeamRequest(@PathVariable Integer teamId) {
+        TeamRequest teamRequest = teamService.sendTeamRequest(teamId);
+        return ResponseEntity.ok(TeamRequestDTO.fromTeamRequest(teamRequest));
+    }
+
+    @DeleteMapping("/team/{teamId}/requests/cancel")
+    public ResponseEntity<Void> cancelTeamRequest(@PathVariable Integer teamId) {
+        teamService.cancelTeamRequest(teamId);
+        return ResponseEntity.ok().build();
+    }
+
 }
