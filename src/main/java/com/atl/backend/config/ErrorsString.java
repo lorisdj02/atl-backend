@@ -43,6 +43,8 @@ public class ErrorsString {
 
     static final public String TEAM_REQUEST_NOT_FOUND = "TEAM_REQUEST_NOT_FOUND";
 
+    static final public String STANDING_NOT_FOUND = "STANDING_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -129,6 +131,8 @@ public class ErrorsString {
 
     static final public String REFEREE_HAS_ACTIVE_MATCHES = "REFEREE_HAS_ACTIVE_MATCHES";
 
+    static final public String TEAM_NOT_IN_MATCH = "TEAM_NOT_IN_MATCH";
+
     // Authentication errors
 
     static final public String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
@@ -159,6 +163,10 @@ public class ErrorsString {
 
     static final public String YOU_MUST_OWN_THE_BOOKING = "YOU_MUST_OWN_THE_BOOKING";
 
+    static final public String PLAYER_NOT_CALLED_UP_IN_TOURNAMENT = "PLAYER_NOT_CALLED_UP_IN_TOURNAMENT";
+
+    static final public String NOT_ALL_MATCHES_FINISHED = "NOT_ALL_MATCHES_FINISHED";
+
     // PAYMENT ERRORS
     static final public String PAYMENT_METHOD_NOT_SUPPORTED = "PAYMENT_METHOD_NOT_SUPPORTED";
 
@@ -169,4 +177,15 @@ public class ErrorsString {
     static final public String PAYMENT_REQUIRED = "PAYMENT_REQUIRED";
 
     static final public String PURCHASE_NOT_REFUNDABLE = "PURCHASE_NOT_REFUNDABLE";
+
+    // Other errors
+    static final public String INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR";
+
+    static final public String SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE";
+
+    static final public String GATEWAY_TIMEOUT = "GATEWAY_TIMEOUT";
+
+    static final public String UNKNOWN_ERROR = "UNKNOWN_ERROR";
+
+    static final public String INVALID_NUMBER_OF_QUALIFIED_TEAMS = "INVALID_NUMBER_OF_QUALIFIED_TEAMS";
 }

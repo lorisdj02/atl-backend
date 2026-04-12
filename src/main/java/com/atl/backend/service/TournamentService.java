@@ -33,15 +33,19 @@ import com.atl.backend.model.City;
 import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.FavoriteTournament;
 import com.atl.backend.model.FinalStageBracket;
+import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.FootballTournamentStats;
+import com.atl.backend.model.Match;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.RefereeRole;
 import com.atl.backend.model.Sport;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.TournamentParticipation;
+import com.atl.backend.model.enums.FootballMatchStatus;
 import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.model.enums.TournamentPhase;
 import com.atl.backend.model.enums.TournamentStatus;
 import com.atl.backend.model.Field;
 import com.atl.backend.repository.CallupRepository;
@@ -177,7 +181,9 @@ public class TournamentService {
                             participation.getTournament().getId(), participation.getTournament().getPhase())) {
                 result.add(participation.getTournament());
             }
-            if(participation.getTournament().getStatus() == TournamentStatus.PENDING_PAYMENTS && matchService.hasTeamPrizesByTeamIdAndTournamentId(participation.getTeam().getId(), participation.getTournament().getId())) {
+            if (participation.getTournament().getStatus() == TournamentStatus.PENDING_PAYMENTS
+                    && matchService.hasTeamPrizesByTeamIdAndTournamentId(participation.getTeam().getId(),
+                            participation.getTournament().getId())) {
                 result.add(participation.getTournament());
             }
         }
@@ -885,10 +891,226 @@ public class TournamentService {
         List<Tournament> activeTournaments = tournamentRepository
                 .findByCoordinator_CoordinatorId(coordinatorId);
         for (Tournament tournament : activeTournaments) {
-            if(tournament.isTournamentActive()) {
+            if (tournament.isTournamentActive()) {
                 return true;
             }
         }
         return false;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public FootballStanding updateFootballStanding(Integer tournamentId, Integer teamId, Short ptsDelta,
+            Short goalsConcededDelta, Short goalsScoredDelta, Short wonDelta, Short drawnDelta, Short lostDelta) {
+
+        Optional<FootballStanding> footballStandingOptional = footballStandingRepository
+                .findByTournament_IdAndTeam_Id(tournamentId, teamId);
+
+        if (footballStandingOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.STANDING_NOT_FOUND);
+        }
+
+        ptsDelta = ptsDelta != null ? ptsDelta : 0;
+        goalsConcededDelta = goalsConcededDelta != null ? goalsConcededDelta : 0;
+        goalsScoredDelta = goalsScoredDelta != null ? goalsScoredDelta : 0;
+        wonDelta = wonDelta != null ? wonDelta : 0;
+        drawnDelta = drawnDelta != null ? drawnDelta : 0;
+        lostDelta = lostDelta != null ? lostDelta : 0;
+
+        FootballStanding footballStanding = footballStandingOptional.get();
+
+        footballStanding.setPts((short) (footballStanding.getPts() + ptsDelta));
+        footballStanding.setGoalsConceded((short) (footballStanding.getGoalsConceded() + goalsConcededDelta));
+        footballStanding.setGoalsScored((short) (footballStanding.getGoalsScored() + goalsScoredDelta));
+        footballStanding.setWon((short) (footballStanding.getWon() + wonDelta));
+        footballStanding.setDrawn((short) (footballStanding.getDrawn() + drawnDelta));
+        footballStanding.setLost((short) (footballStanding.getLost() + lostDelta));
+
+        return footballStandingRepository.save(footballStanding);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void finishTournament(Integer tournamentId) {
+        // TODO: Devi continuare la logica
+        checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
+        tournament.setStatus(TournamentStatus.PENDING_PAYMENTS);
+        tournamentRepository.save(tournament);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void goToNextPhase(Integer tournamentId) {
+        checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
+        switch (tournament.getPhase()) {
+            case GROUP:
+                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, null)) {
+                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
+                }
+                updateTeamsQualifiedInTournament(tournamentId, true);
+                tournament.setPhase(handlePostGroupStage(tournamentId));
+                break;
+            case RO32:
+                // Non esiste ancora RO32, ma se dovesse essere aggiunta in futuro questa è la
+                // logica da seguire
+                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "32")) {
+                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
+                }
+                tournament.setPhase(TournamentPhase.RO16);
+                break;
+            case RO16:
+                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "OF")) {
+                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
+                }
+                tournament.setPhase(TournamentPhase.QUARTER);
+                break;
+            case QUARTER:
+                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "QF")) {
+                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
+                }
+                tournament.setPhase(TournamentPhase.SEMI);
+                break;
+            case SEMI:
+                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "SF")) {
+                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
+                }
+                tournament.setPhase(TournamentPhase.FINAL);
+                break;
+            case FINAL:
+                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "FI")) {
+                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
+                }
+                finishTournament(tournamentId);
+                break;
+        }
+        tournamentRepository.save(tournament);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    private TournamentPhase handlePostGroupStage(Integer tournamentId) {
+        checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
+        matchService.drawKnockoutStageMatches(tournamentId);
+        switch (tournament.getNumTeamsQualified()) {
+            case 16:
+                return TournamentPhase.RO16;
+            case 8:
+                return TournamentPhase.QUARTER;
+            case 4:
+                return TournamentPhase.SEMI;
+            case 2:
+                return TournamentPhase.FINAL;
+            default:
+                throw new IllegalArgumentException(ErrorsString.INVALID_NUMBER_OF_QUALIFIED_TEAMS);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Integer, List<Team>> getQualifiedTeamsPerRankByTournamentId(Integer tournamentId) {
+        checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
+        Map<Integer, List<Team>> qualifiedTeamsPerRank = new HashMap<>();
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL:
+                List<FootballStanding> footballStandings = footballStandingRepository.findByTournament_Id(tournamentId);
+                Map<Integer, List<FootballStanding>> footballStandingsPerRank = new HashMap<>();
+                for (FootballStanding footballStanding : footballStandings) {
+                    if (!footballStanding.getQualified()) {
+                        continue;
+                    }
+                    if (!footballStandingsPerRank.containsKey(footballStanding.getRankPos())) {
+                        footballStandingsPerRank.put((int) footballStanding.getRankPos(), new ArrayList<>());
+                    }
+                    footballStandingsPerRank.get((int) footballStanding.getRankPos()).add(footballStanding);
+                }
+
+                for (Integer rank : footballStandingsPerRank.keySet()) {
+                    List<FootballStanding> standingsForRank = footballStandingsPerRank.get(rank);
+                    standingsForRank.sort(StandingsComparators.FOOTBALL_STANDING);
+                    qualifiedTeamsPerRank.put(rank, standingsForRank.stream().map(FootballStanding::getTeam).toList());
+                }
+
+                break;
+            default:
+                throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+        return qualifiedTeamsPerRank;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void handleTeamRetireInMatch(Integer matchId, Integer teamId) {
+        Optional<Match> matchOptional = matchService.getMatchById(matchId);
+        if (matchOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        Match match = matchOptional.get();
+
+        Tournament tournament = match.getTournament();
+
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL:
+                Optional<FootballMatch> footballMatchOptional = matchService.getFootballMatchById(matchId);
+                if (footballMatchOptional.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+                }
+
+                FootballMatch footballMatch = footballMatchOptional.get();
+
+                if (footballMatch.getHomeTeam().getId().equals(teamId)) {
+                    footballMatch.setStatus(FootballMatchStatus.HOME_RETIRED);
+                } else if (footballMatch.getAwayTeam().getId().equals(teamId)) {
+                    footballMatch.setStatus(FootballMatchStatus.AWAY_RETIRED);
+                } else {
+                    throw new ConflictException(ErrorsString.TEAM_NOT_IN_MATCH);
+                }
+
+                if (tournament.getPhase() == TournamentPhase.GROUP) {
+                    Team homeTeam = footballMatch.getHomeTeam();
+                    Team awayTeam = footballMatch.getAwayTeam();
+
+                    FootballStanding winnerStanding = updateFootballStanding(tournament.getId(),
+                            footballMatch.getStatus() == FootballMatchStatus.HOME_RETIRED ? homeTeam.getId()
+                                    : awayTeam.getId(),
+                            (short) 0, (short) 3, (short) 0,
+                            (short) 0, (short) 0, (short) 1);
+
+                    FootballStanding loserStanding = updateFootballStanding(tournament.getId(),
+                            footballMatch.getStatus() == FootballMatchStatus.HOME_RETIRED ? awayTeam.getId()
+                                    : homeTeam.getId(),
+                            (short) 3, (short) 0, (short) 0,
+                            (short) 1, (short) 0, (short) 0);
+
+                    if (winnerStanding.getGroupName().equals(loserStanding.getGroupName())) {
+                        orderStandingsForTournament(tournament.getId());
+                    } else {
+                        throw new ConflictException(ErrorsString.TEAM_NOT_IN_MATCH);
+                    }
+                } else {
+                    // TODO: Gestire il ritiro con il knockout
+                }
+                break;
+            default:
+                throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Boolean areTeamInSameGroup(Integer tournamentId, Integer teamId1, Integer teamId2) {
+        checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL:
+                Optional<FootballStanding> footballStandingOptional1 = footballStandingRepository
+                        .findByTournament_IdAndTeam_Id(tournamentId, teamId1);
+                Optional<FootballStanding> footballStandingOptional2 = footballStandingRepository
+                        .findByTournament_IdAndTeam_Id(tournamentId, teamId2);
+                if (footballStandingOptional1.isEmpty() || footballStandingOptional2.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.STANDING_NOT_FOUND);
+                }
+                FootballStanding footballStanding1 = footballStandingOptional1.get();
+                FootballStanding footballStanding2 = footballStandingOptional2.get();
+                return footballStanding1.getGroupName().equals(footballStanding2.getGroupName());
+            default:
+                throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
     }
 }

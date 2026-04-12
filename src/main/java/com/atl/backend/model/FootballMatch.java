@@ -5,6 +5,7 @@ import com.atl.backend.model.enums.*;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -63,4 +64,8 @@ public class FootballMatch {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
     private FootballMatchStatus status = FootballMatchStatus.NOT_SCHEDULED;
+
+    public List<Team> getTeams() {
+        return List.of(homeTeam, awayTeam);
+    }
 }

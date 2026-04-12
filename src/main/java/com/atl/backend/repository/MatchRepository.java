@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MatchRepository extends JpaRepository<Match, Integer> {
     List<Match> findByTournament_IdAndGroupName(Integer tournamentId, String groupName);
+
+    List<Match> findByTournament_Id(Integer tournamentId);
 }
