@@ -26,6 +26,7 @@ import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
+import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.Booking;
 import com.atl.backend.model.Callup;
@@ -929,57 +930,85 @@ public class TournamentService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void finishTournament(Integer tournamentId) {
-        // TODO: Devi continuare la logica
+    public void giveTournamentPrizes(Integer tournamentId) {
+
         checkTournamentExists(tournamentId);
         Tournament tournament = tournamentRepository.findById(tournamentId).get();
+
+        if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
+        }
+
         tournament.setStatus(TournamentStatus.PENDING_PAYMENTS);
         tournamentRepository.save(tournament);
+
+        // TODO: Devi continuare la logica di assegnazione premi
+    }
+
+    @Transactional(readOnly = true)
+    public Boolean canGoToNextPhase(Integer tournamentId) {
+        checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
+        switch (tournament.getPhase()) {
+            case GROUP:
+                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, null);
+            case RO32:
+                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "32");
+            case RO16:
+                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "OF");
+            case QUARTER:
+                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "QF");
+            case SEMI:
+                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "SF");
+            case FINAL:
+                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "FI");
+            default:
+                throw new IllegalArgumentException(ErrorsString.INVALID_TOURNAMENT_PHASE);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void goToCoordinatorNextPhase(Integer tournamentId) {
+        checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
+        if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
+        }
+
+        goToNextPhase(tournamentId);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void goToNextPhase(Integer tournamentId) {
         checkTournamentExists(tournamentId);
         Tournament tournament = tournamentRepository.findById(tournamentId).get();
+        if (!canGoToNextPhase(tournamentId)) {
+            throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
+        }
         switch (tournament.getPhase()) {
             case GROUP:
-                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, null)) {
-                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
-                }
                 updateTeamsQualifiedInTournament(tournamentId, true);
                 tournament.setPhase(handlePostGroupStage(tournamentId));
                 break;
             case RO32:
                 // Non esiste ancora RO32, ma se dovesse essere aggiunta in futuro questa è la
                 // logica da seguire
-                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "32")) {
-                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
-                }
                 tournament.setPhase(TournamentPhase.RO16);
                 break;
             case RO16:
-                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "OF")) {
+                if (!canGoToNextPhase(tournamentId)) {
                     throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
                 }
                 tournament.setPhase(TournamentPhase.QUARTER);
                 break;
             case QUARTER:
-                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "QF")) {
-                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
-                }
                 tournament.setPhase(TournamentPhase.SEMI);
                 break;
             case SEMI:
-                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "SF")) {
-                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
-                }
                 tournament.setPhase(TournamentPhase.FINAL);
                 break;
             case FINAL:
-                if (!matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "FI")) {
-                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
-                }
-                finishTournament(tournamentId);
+                giveTournamentPrizes(tournamentId);
                 break;
         }
         tournamentRepository.save(tournament);
@@ -1055,10 +1084,15 @@ public class TournamentService {
 
                 FootballMatch footballMatch = footballMatchOptional.get();
 
+                FootballMatchStatus nextStatus = null;
+                Boolean isHomeTeam = null;
+
                 if (footballMatch.getHomeTeam().getId().equals(teamId)) {
-                    footballMatch.setStatus(FootballMatchStatus.HOME_RETIRED);
+                    nextStatus = FootballMatchStatus.HOME_RETIRED;
+                    isHomeTeam = true;
                 } else if (footballMatch.getAwayTeam().getId().equals(teamId)) {
-                    footballMatch.setStatus(FootballMatchStatus.AWAY_RETIRED);
+                    nextStatus = FootballMatchStatus.AWAY_RETIRED;
+                    isHomeTeam = false;
                 } else {
                     throw new ConflictException(ErrorsString.TEAM_NOT_IN_MATCH);
                 }
@@ -1068,13 +1102,13 @@ public class TournamentService {
                     Team awayTeam = footballMatch.getAwayTeam();
 
                     FootballStanding winnerStanding = updateFootballStanding(tournament.getId(),
-                            footballMatch.getStatus() == FootballMatchStatus.HOME_RETIRED ? homeTeam.getId()
+                            isHomeTeam ? homeTeam.getId()
                                     : awayTeam.getId(),
                             (short) 0, (short) 3, (short) 0,
                             (short) 0, (short) 0, (short) 1);
 
                     FootballStanding loserStanding = updateFootballStanding(tournament.getId(),
-                            footballMatch.getStatus() == FootballMatchStatus.HOME_RETIRED ? awayTeam.getId()
+                            isHomeTeam ? awayTeam.getId()
                                     : homeTeam.getId(),
                             (short) 3, (short) 0, (short) 0,
                             (short) 1, (short) 0, (short) 0);
@@ -1084,8 +1118,13 @@ public class TournamentService {
                     } else {
                         throw new ConflictException(ErrorsString.TEAM_NOT_IN_MATCH);
                     }
+                    matchService.updateFootballMatch(matchId,
+                            isHomeTeam ? (short) 0 : (short) 3,
+                            isHomeTeam ? (short) 3 : (short) 0,
+                            null, null, null, null,
+                            nextStatus);
                 } else {
-                    // TODO: Gestire il ritiro con il knockout
+                    matchService.handleTeamRetireInKnockoutPhaseMatch(match.getId(), teamId);
                 }
                 break;
             default:

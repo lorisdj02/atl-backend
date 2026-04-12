@@ -670,9 +670,9 @@ public class MatchService {
                             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
                         }
                         FootballMatch footballMatch = footballMatchOptional.get();
-                        // Se le squadre non sono state ancora assegnate, ci troviamo nel group stage
+
                         if (match.getFinishMatch() == null && footballMatch.getHomeTeam() != null
-                                && footballMatch.getAwayTeam() != null) {
+                                && footballMatch.getAwayTeam() != null && match.getMotmPlayer() == null) {
                             return false;
                         }
                     }
@@ -686,7 +686,7 @@ public class MatchService {
                     .toList();
 
             for (Match match : matches) {
-                if (match.getFinishMatch() == null) {
+                if (match.getFinishMatch() == null && match.getMotmPlayer() == null) {
                     return false;
                 }
             }
@@ -700,6 +700,7 @@ public class MatchService {
         Tournament tournament = tournamentService.getTournamentById(tournamentId).get();
         String groupNamePrefix;
         switch (tournament.getNumTeamsQualified()) {
+            case 32 -> groupNamePrefix = "32";
             case 16 -> groupNamePrefix = "OF";
             case 8 -> groupNamePrefix = "QF";
             case 4 -> groupNamePrefix = "SF";
@@ -713,23 +714,26 @@ public class MatchService {
                 .filter(match -> match.getGroupName() != null && match.getGroupName().startsWith(groupNamePrefix))
                 .toList();
 
-        switch(tournament.getSport().getSportCategory()) {
+        switch (tournament.getSport().getSportCategory()) {
             case FOOTBALL -> {
                 List<FootballMatch> footballMatches = footballMatchRepository.findByMatch_Tournament_Id(tournamentId);
 
-                // ===== STEP 1: Creare una lista unica di team ordinati dal migliore al peggiore =====
+                // ===== STEP 1: Creare una lista unica di team ordinati dal migliore al
+                // peggiore =====
                 // Ordina i rank (già ordinati nel map, ma per sicurezza)
                 List<Integer> sortedRanks = teamsPerRank.keySet().stream()
                         .sorted(Integer::compareTo)
                         .toList();
 
-                // Colleziona tutti i team in ordine: i team del rank 1 (migliori), poi rank 2, etc
+                // Colleziona tutti i team in ordine: i team del rank 1 (migliori), poi rank 2,
+                // etc
                 List<Team> allTeamsSorted = new ArrayList<>();
                 for (Integer rank : sortedRanks) {
                     allTeamsSorted.addAll(teamsPerRank.get(rank));
                 }
 
-                // ===== STEP 2: Creare due liste: migliori (dal basso) e peggiori (dall'alto) =====
+                // ===== STEP 2: Creare due liste: migliori (dal basso) e peggiori (dall'alto)
+                // =====
                 List<Team> bestTeams = new ArrayList<>(allTeamsSorted);
                 List<Team> worstTeams = new ArrayList<>(allTeamsSorted);
                 Collections.reverse(worstTeams); // Reverse per andare dal peggiore al migliore
@@ -771,7 +775,7 @@ public class MatchService {
                     Team awayTeam = null;
                     for (Team team : worstTeams) {
                         if (!usedTeams.contains(team.getId()) &&
-                            !tournamentService.areTeamInSameGroup(tournamentId, homeTeam.getId(), team.getId())) {
+                                !tournamentService.areTeamInSameGroup(tournamentId, homeTeam.getId(), team.getId())) {
                             awayTeam = team;
                             usedTeams.add(team.getId());
                             break;
@@ -794,5 +798,178 @@ public class MatchService {
             default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void updateKnockoutStageMatches(int tournamentId) {
+        tournamentService.checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentService.getTournamentById(tournamentId).get();
+        String groupNamePrefix;
+
+        switch (tournament.getPhase()) {
+            case RO32 -> groupNamePrefix = "32";
+            case RO16 -> groupNamePrefix = "OF";
+            case QUARTER -> groupNamePrefix = "QF";
+            case SEMI -> groupNamePrefix = "SF";
+            case FINAL -> groupNamePrefix = "FI";
+            default -> throw new BadRequestException(ErrorsString.INVALID_TOURNAMENT_PHASE);
+        }
+
+        if (groupNamePrefix.equals("FI")) {
+            // Se siamo in finale, non esiste una fase successiva da controllare, possiamo
+            // semplicemente ritornare
+            return;
+        }
+
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL -> {
+                List<FootballMatch> footballMatches = footballMatchRepository
+                        .findByMatch_Tournament_IdAndGroupPrefixAndLegOrder(tournamentId, groupNamePrefix,
+                                LegOrderType.FIRST_LEG);
+                if (footballMatches.size() < 2 || footballMatches.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+                }
+                for (FootballMatch footballMatch : footballMatches) {
+                    Match match = footballMatch.getMatch();
+                    FinalStageBracket finalStageBracket = match.getFinalStageBracket();
+                    if (finalStageBracket == null) {
+                        throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+                    }
+                    FinalStageBracket nextFinalStageBracket = finalStageBracket.getNextFinalStageBracket();
+                    if (nextFinalStageBracket == null) {
+                        throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+                    }
+                    Team homeTeam = footballMatch.getHomeTeam();
+                    Team awayTeam = footballMatch.getAwayTeam();
+
+                    List<FootballMatch> nextFootballMatches = footballMatchRepository
+                            .findByMatch_FinalStageBracket_Id(nextFinalStageBracket.getId());
+                    for (FootballMatch nextFootballMatch : nextFootballMatches) {
+                        if (finalStageBracket.getNextFinalStageBracketSlot() == MatchSlotType.HOME) {
+                            nextFootballMatch.setHomeTeam(finalStageBracket.isHomeWinner() ? homeTeam
+                                    : finalStageBracket.isAwayWinner() ? awayTeam : null);
+                            saveFootballMatch(nextFootballMatch);
+                            break;
+                        } else if (finalStageBracket.getNextFinalStageBracketSlot() == MatchSlotType.AWAY) {
+                            nextFootballMatch.setAwayTeam(finalStageBracket.isHomeWinner() ? homeTeam
+                                    : finalStageBracket.isAwayWinner() ? awayTeam : null);
+                            saveFootballMatch(nextFootballMatch);
+                            break;
+                        }
+                    }
+                }
+            }
+            default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public FinalStageBracket updateFinalStageBracket(Integer finalStageBracketId, Short aggregateScoreHomeDelta,
+            Short aggregateScoreAwayDelta) {
+        Optional<FinalStageBracket> finalStageBracketOptional = finalStageBracketRepository
+                .findById(finalStageBracketId);
+        if (finalStageBracketOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.FINAL_STAGE_BRACKET_NOT_FOUND);
+        }
+        FinalStageBracket finalStageBracket = finalStageBracketOptional.get();
+        if (aggregateScoreHomeDelta != null) {
+            Short currentAggregateScoreHome = finalStageBracket.getAggregateScoreHome() != null
+                    ? finalStageBracket.getAggregateScoreHome()
+                    : 0;
+            finalStageBracket.setAggregateScoreHome((short) (currentAggregateScoreHome + aggregateScoreHomeDelta));
+        }
+        if (aggregateScoreAwayDelta != null) {
+            Short currentAggregateScoreAway = finalStageBracket.getAggregateScoreAway() != null
+                    ? finalStageBracket.getAggregateScoreAway()
+                    : 0;
+            finalStageBracket.setAggregateScoreAway((short) (currentAggregateScoreAway + aggregateScoreAwayDelta));
+        }
+        return saveFinalStageBracket(finalStageBracket);
+    }
+
+    public FootballMatch updateFootballMatch(Integer matchId, Short scoreHomeDelta, Short scoreAwayDelta,
+            Short penaltyScoreHomeDelta, Short penaltyScoreAwayDelta, Short missedPenaltyHomeDelta,
+            Short missedPenaltyAwayDelta, FootballMatchStatus newStatus) {
+        Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(matchId);
+        if (footballMatchOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        FootballMatch footballMatch = footballMatchOptional.get();
+        if (scoreHomeDelta != null) {
+            Short currentScoreHome = footballMatch.getScoreHome() != null ? footballMatch.getScoreHome()
+                    : 0;
+            footballMatch.setScoreHome((short) (currentScoreHome + scoreHomeDelta));
+        }
+        if (scoreAwayDelta != null) {
+            Short currentScoreAway = footballMatch.getScoreAway() != null ? footballMatch.getScoreAway()
+                    : 0;
+            footballMatch.setScoreAway((short) (currentScoreAway + scoreAwayDelta));
+        }
+        if (penaltyScoreHomeDelta != null) {
+            Short currentPenaltyScoreHome = footballMatch.getPenaltyScoreHome() != null
+                    ? footballMatch.getPenaltyScoreHome()
+                    : 0;
+            footballMatch.setPenaltyScoreHome((short) (currentPenaltyScoreHome + penaltyScoreHomeDelta));
+        }
+        if (penaltyScoreAwayDelta != null) {
+            Short currentPenaltyScoreAway = footballMatch.getPenaltyScoreAway() != null
+                    ? footballMatch.getPenaltyScoreAway()
+                    : 0;
+            footballMatch.setPenaltyScoreAway((short) (currentPenaltyScoreAway + penaltyScoreAwayDelta));
+        }
+        if (missedPenaltyHomeDelta != null) {
+            Short currentMissedPenaltyHome = footballMatch.getMissedPenaltyHome() != null
+                    ? footballMatch.getMissedPenaltyHome()
+                    : 0;
+            footballMatch.setMissedPenaltyHome((short) (currentMissedPenaltyHome + missedPenaltyHomeDelta));
+        }
+        if (missedPenaltyAwayDelta != null) {
+            Short currentMissedPenaltyAway = footballMatch.getMissedPenaltyAway() != null
+                    ? footballMatch.getMissedPenaltyAway()
+                    : 0;
+            footballMatch.setMissedPenaltyAway((short) (currentMissedPenaltyAway + missedPenaltyAwayDelta));
+        }
+
+        if (newStatus != null) {
+            footballMatch.setStatus(newStatus);
+        }
+        return saveFootballMatch(footballMatch);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void handleTeamRetireInKnockoutPhaseMatch(Integer matchId, Integer teamId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        if (match.getFinalStageBracket() == null) {
+            throw new ConflictException(ErrorsString.MATCH_NOT_IN_KNOCKOUT_PHASE);
+        }
+
+        Tournament tournament = match.getTournament();
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL -> {
+                FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+                Boolean isHomeTeam = footballMatch.getHomeTeam() != null
+                        && footballMatch.getHomeTeam().getId().equals(teamId);
+
+                if (match.getLegOrder() == LegOrderType.FIRST_LEG) {
+                    updateFinalStageBracket(match.getFinalStageBracket().getId(), isHomeTeam ? (short) 0 : (short) 3,
+                            isHomeTeam ? (short) 3 : (short) 0);
+                } else {
+                    // Se siamo nella seconda partita, ritirarsi vuol dire perdere a prescindere,
+                    // quindi settiamo il punteggio in modo che l'altra squadra vinca
+                    // Con il +3
+                    int winnerDelta = Math.abs((int) match.getFinalStageBracket().getAggregateScoreHome()
+                            - (int) match.getFinalStageBracket().getAggregateScoreAway()) + 3;
+                    updateFinalStageBracket(match.getFinalStageBracket().getId(),
+                            isHomeTeam ? (short) winnerDelta : (short) 0,
+                            isHomeTeam ? (short) 0 : (short) winnerDelta);
+                    updateFootballMatch(matchId, isHomeTeam ? (short) 0 : null, isHomeTeam ? null : (short) winnerDelta,
+                            null, null, null, null,
+                            isHomeTeam ? FootballMatchStatus.HOME_RETIRED : FootballMatchStatus.AWAY_RETIRED);
+                }
+            }
+            default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
     }
 }

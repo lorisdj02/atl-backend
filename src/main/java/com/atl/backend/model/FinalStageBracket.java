@@ -46,4 +46,16 @@ public class FinalStageBracket {
     @Enumerated(EnumType.STRING)
     @Column(name = "next_final_stage_bracket_slot", length = 15)
     private MatchSlotType nextFinalStageBracketSlot;
+
+    public boolean isHomeWinner() {
+        return aggregateScoreHome > aggregateScoreAway;
+    }
+
+    public boolean isAwayWinner() {
+        return aggregateScoreAway > aggregateScoreHome;
+    }
+
+    public boolean isDraw() {
+        return aggregateScoreHome == aggregateScoreAway;
+    }
 }

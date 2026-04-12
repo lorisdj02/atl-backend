@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -151,6 +152,12 @@ public class TournamentController {
     @DeleteMapping("/tournament/{tournamentId}/team/{teamId}/delete-callups")
     public ResponseEntity<Void> deleteCallups(@PathVariable Integer tournamentId, @PathVariable Integer teamId) {
         tournamentService.deleteCallups(tournamentId, teamId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/tournament/{tournamentId}/go-next-phase")
+    public ResponseEntity<Void> goToCoordinatorNextPhase(@PathVariable Integer tournamentId) {
+        tournamentService.goToCoordinatorNextPhase(tournamentId);
         return ResponseEntity.noContent().build();
     }
 }
