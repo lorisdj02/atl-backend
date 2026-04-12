@@ -4,6 +4,7 @@ import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.AccountDTO;
 import com.atl.backend.exception.BadRequestException;
+import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
@@ -32,6 +33,7 @@ import com.atl.backend.response.LoginResponse;
 
 import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,25 @@ import java.util.Optional;
 
 @Service
 public class AccountService {
+    @Autowired
+    @Lazy
+    private PaymentService paymentService;
+
+    @Autowired
+    @Lazy
+    private TeamService teamService;
+
+    @Autowired
+    @Lazy
+    private BookingService bookingService;
+
+    @Autowired
+    @Lazy
+    private TournamentService tournamentService;
+
+    @Autowired
+    @Lazy
+    private MatchService matchService;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -59,8 +80,7 @@ public class AccountService {
     private ReviewRepository reviewRepository;
     @Autowired
     private FriendInviteRepository friendInviteRepository;
-    @Autowired
-    private TeamService teamService;
+    
 
     public Account registerAccount(Account account, Optional<String> OrgName) {
         saveAccount(account);
@@ -406,5 +426,36 @@ public class AccountService {
         accountRepository.save(account);
 
         return account;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteAccountAndRelatedData() {
+        Account account = AccountContext.getActiveAccount();
+        Integer accountId = account.getId();
+        paymentService.isWalletEmptyByAccountId(accountId);
+        List<Review> reviews = getReviewsByReviewerAccountId(accountId);
+        if (!reviews.isEmpty()) {
+            throw new ConflictException(ErrorsString.ACCOUNT_HAS_REVIEWS);
+        }
+        switch (account.getRole()) {
+            case PLAYER:
+                teamService.leaveAllTeams();
+                bookingService.leaveAllBookings();
+                break;
+            case COORDINATOR:
+                Coordinator coordinator = AccountContext.getActiveCoordinator();
+                if(tournamentService.hasCoordinatorActiveTournamentsByCoordinatorId(coordinator.getCoordinatorId())){
+                    throw new ConflictException(ErrorsString.COORDINATOR_HAS_ACTIVE_TOURNAMENTS);
+                }
+                break;
+            case REFEREE:
+                if(matchService.hasRefereeActiveMatchesByRefereeId(AccountContext.getRefereeId())){
+                    throw new ConflictException(ErrorsString.REFEREE_HAS_ACTIVE_MATCHES);
+                }
+            default:
+                break;
+        }
+
+        softDeleteAccount(accountId);
     }
 }

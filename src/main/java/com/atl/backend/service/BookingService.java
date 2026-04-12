@@ -2,6 +2,7 @@ package com.atl.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException.Conflict;
@@ -64,9 +65,15 @@ public class BookingService {
     private FieldService fieldService;
     @Autowired
     private PaymentService paymentService;
+    @Autowired
+    private AccountService accountService;
 
     BookingService(SportService sportService) {
         this.sportService = sportService;
+    }
+
+    public Optional<Booking> getBookingByBookingId(Integer bookingId) {
+        return bookingRepository.findById(bookingId);
     }
 
     public List<PrivateBooking> getPrivateBookingsByPlayerId(Integer playerId) {
@@ -116,8 +123,17 @@ public class BookingService {
         List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
                 .findByPlayer_PlayerId(playerId);
         List<LobbyBooking> lobbyBookings = List.of();
+
+        Optional<Player> playerOpt = accountService.getPlayerByPlayerId(playerId);
+        if (playerOpt.isEmpty()) {
+            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+        }
+        Player player = playerOpt.get();
+
         for (LobbyBookingParticipate participation : participations) {
-            if (participation.getTransactionGroup().getStatus() != TransactionStatus.REFUNDED) {
+            if (!paymentService.isLobbyParticipationRefundedByBookingIdAndAccountId(
+                    participation.getLobbyBooking().getId(),
+                    player.getAccount().getId())) {
                 lobbyBookings.add(participation.getLobbyBooking());
             }
         }
@@ -128,13 +144,17 @@ public class BookingService {
         List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
                 .findByLobbyBooking_IdAndPlayer_PlayerId(bookingId,
                         playerId)
-                .stream().filter(p -> p.getTransactionGroup().getStatus() != TransactionStatus.CONFIRMED)
+                .stream()
+                .filter(p -> !paymentService.isLobbyParticipationRefundedByBookingIdAndAccountId(
+                        p.getLobbyBooking().getId(),
+                        p.getPlayer().getAccount().getId()))
                 .toList();
 
-        if (participations.size() > 0) {
-            return 0;
+        Short playersPaid = 0;
+        for (LobbyBookingParticipate participation : participations) {
+            playersPaid = (short) (playersPaid + participation.getPlayersPaid().shortValue());
         }
-        return participations.get(0).getPlayersPaid();
+        return playersPaid;
     }
 
     public List<LobbyBooking> getLobbyBookingsByFieldId(Integer fieldId) {
@@ -329,18 +349,13 @@ public class BookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public LobbyBookingParticipate createLobbyBookingParticipate(Integer lobbyBookingId, Short playersToPay,
-            Integer transactionGroupId) {
-
-        paymentService.checkTransactionGroup(transactionGroupId);
-        TransactionGroup transactionGroup = paymentService.getTransactionGroupById(transactionGroupId).get();
+    public LobbyBookingParticipate createLobbyBookingParticipate(Integer lobbyBookingId, Short playersToPay) {
 
         LobbyBooking lobbyBooking = lobbyBookingRepository.findById(lobbyBookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
         LobbyBookingParticipate lobbyBookingParticipate = new LobbyBookingParticipate();
         lobbyBookingParticipate.setLobbyBooking(lobbyBooking);
         lobbyBookingParticipate.setPlayer(AccountContext.getActivePlayer());
-        lobbyBookingParticipate.setTransactionGroup(transactionGroup);
         Short playersPaid = (short) (lobbyBooking.getTotalPlayers() - lobbyBooking.getPlayersToFind());
         lobbyBookingParticipate.setPlayersPaid(playersPaid);
         lobbyBookingParticipateRepository.save(lobbyBookingParticipate);
@@ -348,20 +363,16 @@ public class BookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public PrivateBooking createPrivateBooking(PrivateBookingDTO privateBookingDTO, Integer transactionGroupId) {
+    public PrivateBooking createPrivateBooking(PrivateBookingDTO privateBookingDTO) {
         if (!AccountContext.getPlayerId().equals(privateBookingDTO.getPlayerId())) {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
-
-        paymentService.checkTransactionGroup(transactionGroupId);
-        TransactionGroup transactionGroup = paymentService.getTransactionGroupById(transactionGroupId).get();
 
         Booking booking = createBooking(privateBookingDTO.getFieldId(), privateBookingDTO.getStartTime(),
                 privateBookingDTO.getFinishTime(), privateBookingDTO.getSportCategory(), BookingType.PRIVATE);
         PrivateBooking privateBooking = new PrivateBooking();
         privateBooking.setBooking(booking);
         privateBooking.setPlayer(AccountContext.getActivePlayer());
-        privateBooking.setTransactionGroup(transactionGroup);
 
         BigDecimal cost = booking.getField().calculatePrivateCost(booking.getStartTime(), booking.getFinishTime());
         privateBooking.setCost(cost);
@@ -370,12 +381,10 @@ public class BookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public LobbyBooking createLobbyBooking(LobbyBookingDTO lobbyBookingDTO, Integer transactionGroupId) {
+    public LobbyBooking createLobbyBooking(LobbyBookingDTO lobbyBookingDTO) {
         if (!AccountContext.getPlayerId().equals(lobbyBookingDTO.getOwnerPlayerId())) {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
-
-        paymentService.checkTransactionGroup(transactionGroupId);
 
         Booking booking = createBooking(lobbyBookingDTO.getFieldId(), lobbyBookingDTO.getStartTime(),
                 lobbyBookingDTO.getFinishTime(), lobbyBookingDTO.getSportCategory(), BookingType.LOBBY);
@@ -395,13 +404,12 @@ public class BookingService {
         Short playersToPay = (short) (lobbyBookingDTO.getTotalPlayers() - lobbyBookingDTO.getPlayersToFind());
 
         LobbyBookingParticipate lobbyBookingParticipate = createLobbyBookingParticipate(lobbyBooking.getId(),
-                playersToPay, transactionGroupId);
+                playersToPay);
         return savedLobbyBooking;
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Integer createLobbyBookingFromCheckoutPayload(CheckoutPayload checkoutPayload, Integer transactionGroupId) {
-        paymentService.checkTransactionGroup(transactionGroupId);
+    public Integer createLobbyBookingFromCheckoutPayload(CheckoutPayload checkoutPayload) {
 
         LobbyBookingDTO lobbyBookingDTO = new LobbyBookingDTO();
         lobbyBookingDTO.setFieldId(checkoutPayload.getFieldId());
@@ -412,13 +420,12 @@ public class BookingService {
         lobbyBookingDTO.setPlayersToFind(checkoutPayload.getPlayersToFind());
         lobbyBookingDTO.setTotalPlayers(checkoutPayload.getTotalPlayers());
 
-        LobbyBooking newLobby = createLobbyBooking(lobbyBookingDTO, transactionGroupId);
+        LobbyBooking newLobby = createLobbyBooking(lobbyBookingDTO);
         return newLobby.getId();
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Integer createPrivateBookingFromCheckoutPayload(CheckoutPayload checkoutPayload, Integer transactionGroupId) {
-        paymentService.checkTransactionGroup(transactionGroupId);
+    public Integer createPrivateBookingFromCheckoutPayload(CheckoutPayload checkoutPayload) {
 
         PrivateBookingDTO privateBookingDTO = new PrivateBookingDTO();
         privateBookingDTO.setFieldId(checkoutPayload.getFieldId());
@@ -427,7 +434,115 @@ public class BookingService {
         privateBookingDTO.setSportCategory(checkoutPayload.getSportCategory());
         privateBookingDTO.setPlayerId(AccountContext.getPlayerId());
 
-        PrivateBooking newPrivateBooking = createPrivateBooking(privateBookingDTO, transactionGroupId);
+        PrivateBooking newPrivateBooking = createPrivateBooking(privateBookingDTO);
         return newPrivateBooking.getId();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void startBooking(Integer bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
+        booking.setStatus(BookingStatus.IN_PROGRESS);
+        bookingRepository.save(booking);
+        paymentService.redeemBookingPurchasesByBookingId(bookingId);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void finishBooking(Integer bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
+        booking.setStatus(BookingStatus.FINISHED);
+        bookingRepository.save(booking);
+        paymentService.redeemBookingPurchasesByBookingId(bookingId);
+    }
+
+    public Boolean isBookingRefundable(Integer bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
+        if (!booking.getStatus().equals(BookingStatus.BOOKED)) {
+            throw new ConflictException(ErrorsString.BOOKING_NOT_REFUNDABLE);
+        }
+
+        if (!booking.getStartTime().isAfter(LocalDateTime.now())) {
+            if (booking.getFinishTime().isAfter(LocalDateTime.now())) {
+                finishBooking(bookingId);
+                throw new ConflictException(ErrorsString.BOOKING_ALREADY_FINISHED);
+            } else {
+                startBooking(bookingId);
+                throw new ConflictException(ErrorsString.BOOKING_ALREADY_STARTED);
+            }
+        }
+
+        // Il booking è rimborsabile solo se manca più di un'ora all'inizio, per evitare
+        // abusi (es. prenotazione last minute e richiesta di rimborso subito dopo)
+        if (booking.getStartTime().isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new ConflictException(ErrorsString.BOOKING_NOT_REFUNDABLE);
+        }
+
+        return true;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void refundLobbyBooking(Integer bookingId) {
+        Player activePlayer = AccountContext.getActivePlayer();
+        LobbyBooking lobbyBooking = lobbyBookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
+        if (!lobbyBooking.getOwnerPlayer().equals(activePlayer)) {
+            throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
+        }
+
+        isBookingRefundable(bookingId);
+
+        paymentService.refundLobbyCreationByBookingId(bookingId);
+
+        lobbyBooking.getBooking().setStatus(BookingStatus.REFUND);
+        bookingRepository.save(lobbyBooking.getBooking());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void refundPrivateBooking(Integer bookingId) {
+        Player activePlayer = AccountContext.getActivePlayer();
+        PrivateBooking privateBooking = privateBookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
+        if (!privateBooking.getPlayer().equals(activePlayer)) {
+            throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
+        }
+
+        isBookingRefundable(bookingId);
+
+        paymentService.refundPrivateBookingByBookingId(bookingId);
+
+        privateBooking.getBooking().setStatus(BookingStatus.REFUND);
+        bookingRepository.save(privateBooking.getBooking());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void leaveLobbyBooking(Integer bookingId) {
+        Player activePlayer = AccountContext.getActivePlayer();
+        LobbyBookingParticipate lobbyBookingParticipate = lobbyBookingParticipateRepository
+                .findByPlayer_PlayerIdAndLobbyBooking_Booking_Id(activePlayer.getPlayerId(), bookingId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
+
+        isBookingRefundable(bookingId);
+
+        paymentService.refundLobbyParticipationByBookingIdAndAccountId(bookingId, activePlayer.getAccount().getId());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void leaveAllBookings() {
+        Integer playerId = AccountContext.getPlayerId();
+        List<LobbyBooking> lobbyBookings = getLobbyBookingsByPlayerId(playerId);
+        for (LobbyBooking lobbyBooking : lobbyBookings) {
+            if (lobbyBooking.getOwnerPlayer().getPlayerId() == playerId) {
+                refundLobbyBooking(lobbyBooking.getId());
+            } else {
+                leaveLobbyBooking(lobbyBooking.getId());
+            }
+        }
+
+        List<PrivateBooking> privateBookings = getPrivateBookingsByPlayerId(playerId);
+        for (PrivateBooking privateBooking : privateBookings) {
+            refundPrivateBooking(privateBooking.getId());
+        }
     }
 }

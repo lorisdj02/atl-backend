@@ -74,8 +74,14 @@ public class TournamentService {
     @Lazy
     private AccountService accountService;
 
+    @Lazy
+    @Autowired
+    private PaymentService paymentService;
+
+    @Lazy
     @Autowired
     private BookingService bookingService;
+
     @Autowired
     private TournamentRepository tournamentRepository;
     @Autowired
@@ -94,8 +100,6 @@ public class TournamentService {
     private FieldService fieldService;
     @Autowired
     private SportService sportService;
-    @Autowired
-    private PaymentService paymentService;
 
     public void deleteAllTournaments() {
         tournamentRepository.deleteAll();
@@ -162,21 +166,28 @@ public class TournamentService {
     }
 
     public List<Tournament> getActiveTournamentsByTeamId(Integer teamId) {
+        teamService.checkTeamExists(teamId);
         List<TournamentParticipation> participations = tournamentParticipationRepository.findByTeam_Id(teamId);
-        return participations.stream()
-                .filter(tp -> tp.getTournament().getStatus() != TournamentStatus.CANCELED
-                        && tp.getTournament().getStatus() != TournamentStatus.FINISHED
-                        && tp.getTournament().getStatus() != TournamentStatus.PENDING_PAYMENTS)
-                .map(TournamentParticipation::getTournament)
-                .toList();
+        List<Tournament> result = new ArrayList<>();
+
+        for (TournamentParticipation participation : participations) {
+            if (participation.getTournament().isTournamentActive() &&
+                    matchService.isTeamStillPlayingInTournamentByTeamIdAndTournamentIdAndPhase(
+                            participation.getTeam().getId(),
+                            participation.getTournament().getId(), participation.getTournament().getPhase())) {
+                result.add(participation.getTournament());
+            }
+            if(participation.getTournament().getStatus() == TournamentStatus.PENDING_PAYMENTS && matchService.hasTeamPrizesByTeamIdAndTournamentId(participation.getTeam().getId(), participation.getTournament().getId())) {
+                result.add(participation.getTournament());
+            }
+        }
+        return result;
     }
 
     public List<Tournament> getActiveTournamentsByTeamIdAndSportCategory(Integer teamId, SportCategory sportCategory) {
         List<TournamentParticipation> participations = tournamentParticipationRepository.findByTeam_Id(teamId);
         return participations.stream()
-                .filter(tp -> tp.getTournament().getStatus() != TournamentStatus.CANCELED
-                        && tp.getTournament().getStatus() != TournamentStatus.FINISHED
-                        && tp.getTournament().getStatus() != TournamentStatus.PENDING_PAYMENTS
+                .filter(tp -> tp.getTournament().isTournamentActive()
                         && tp.getTournament().getSport().getSportCategory() == sportCategory)
                 .map(TournamentParticipation::getTournament)
                 .toList();
@@ -192,14 +203,15 @@ public class TournamentService {
         teamService.checkTeamExists(teamId);
         List<Tournament> tournaments = getActiveTournamentsByTeamId(teamId);
 
+        Integer count = 0;
         for (Tournament tournament : tournaments) {
             Optional<Callup> callup = callupRepository.findByPlayer_PlayerIdAndTournament_Id(playerId,
                     tournament.getId());
             if (callup.isPresent()) {
-                return tournaments.size();
+                count++;
             }
         }
-        return 0;
+        return count;
     }
 
     public void checkValidCallups(Integer teamId, List<Integer> playerIds) {
@@ -834,5 +846,49 @@ public class TournamentService {
         paymentService.refundPurchaseForCallups(tournamentId, calluppedAccountIds);
         callupRepository.deleteByTeam_IdAndTournament_Id(teamId, tournamentId);
         tournamentParticipationRepository.delete(tournamentParticipationOptional.get());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void decreseTournamentParticipation_ToPay(Integer tournamentId, Integer accountId, BigDecimal amount) {
+        Optional<Tournament> tournamentOptional = tournamentRepository.findById(tournamentId);
+        if (tournamentOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+        Tournament tournament = tournamentOptional.get();
+        Optional<Player> playerOptional = accountService.getPlayerByAccountId(accountId);
+        if (playerOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+        }
+        Player player = playerOptional.get();
+
+        Optional<Team> teamOptional = teamService.getTeamByPlayerIdAndSportCategory(player.getPlayerId(),
+                tournament.getSport().getSportCategory());
+        if (teamOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+        }
+        Team team = teamOptional.get();
+
+        Optional<TournamentParticipation> tournamentParticipationOptional = tournamentParticipationRepository
+                .findByTeam_IdAndTournament_Id(team.getId(), tournamentId);
+        if (tournamentParticipationOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_PARTICIPATION_NOT_FOUND);
+        }
+        TournamentParticipation tournamentParticipation = tournamentParticipationOptional.get();
+        if (tournamentParticipation.getToPay().compareTo(amount) < 0) {
+            throw new BadRequestException(ErrorsString.PAYMENT_AMOUNT_EXCEEDS_TO_PAY);
+        }
+        tournamentParticipation.setToPay(tournamentParticipation.getToPay().subtract(amount));
+        tournamentParticipationRepository.save(tournamentParticipation);
+    }
+
+    public Boolean hasCoordinatorActiveTournamentsByCoordinatorId(Integer coordinatorId) {
+        List<Tournament> activeTournaments = tournamentRepository
+                .findByCoordinator_CoordinatorId(coordinatorId);
+        for (Tournament tournament : activeTournaments) {
+            if(tournament.isTournamentActive()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

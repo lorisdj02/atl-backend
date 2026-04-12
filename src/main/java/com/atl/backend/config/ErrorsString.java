@@ -63,6 +63,8 @@ public class ErrorsString {
 
     static final public String INVALID_TEAM_REQUEST_PARAMETERS = "INVALID_TEAM_REQUEST_PARAMETERS";
 
+    static final public String PAYMENT_AMOUNT_EXCEEDS_TO_PAY = "PAYMENT_AMOUNT_EXCEEDS_TO_PAY";
+
     // Conflict errors
 
     static final public String PLAYER_IS_IN_ACTIVE_TOURNAMENTS = "PLAYER_IS_IN_ACTIVE_TOURNAMENTS";
@@ -108,6 +110,24 @@ public class ErrorsString {
     static final public String PURCHASE_NOT_REDEEMABLE = "PURCHASE_NOT_REDEEMABLE";
 
     static final public String TEAM_REQUEST_ALREADY_SENT = "TEAM_REQUEST_ALREADY_SENT";
+
+    static final public String TEAM_REQUEST_ALREADY_ACCEPTED = "TEAM_REQUEST_ALREADY_ACCEPTED";
+
+    static final public String TEAM_REQUEST_ALREADY_REFUSED = "TEAM_REQUEST_ALREADY_REFUSED";
+
+    static final public String BOOKING_NOT_REFUNDABLE = "BOOKING_NOT_REFUNDABLE";
+
+    static final public String BOOKING_ALREADY_STARTED = "BOOKING_ALREADY_STARTED";
+
+    static final public String BOOKING_ALREADY_FINISHED = "BOOKING_ALREADY_FINISHED";
+
+    static final public String TEAM_WITHOUT_CAPTAIN_AND_VICE_CAPTAINS = "TEAM_WITHOUT_CAPTAIN_AND_VICE_CAPTAINS";
+
+    static final public String ACCOUNT_HAS_REVIEWS = "ACCOUNT_HAS_REVIEWS";
+
+    static final public String COORDINATOR_HAS_ACTIVE_TOURNAMENTS = "COORDINATOR_HAS_ACTIVE_TOURNAMENTS";
+
+    static final public String REFEREE_HAS_ACTIVE_MATCHES = "REFEREE_HAS_ACTIVE_MATCHES";
 
     // Authentication errors
 

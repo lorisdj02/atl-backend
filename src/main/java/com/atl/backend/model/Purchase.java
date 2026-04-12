@@ -4,6 +4,8 @@ import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -48,4 +50,10 @@ public class Purchase {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "refunded_at")
+    private LocalDateTime refundedAt;
+
+    @Column(name = "amount", nullable = false)
+    private BigDecimal amount;
 }

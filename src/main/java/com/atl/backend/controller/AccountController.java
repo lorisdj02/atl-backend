@@ -8,6 +8,7 @@ import com.atl.backend.service.AccountService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,5 +43,11 @@ public class AccountController {
     public ResponseEntity<AccountDTO> updateAccountInfos(@RequestBody UpdateAccountInfosRequest updateAccountInfos) {
         Account response = accountService.updateAccountInfos(updateAccountInfos);
         return ResponseEntity.ok(AccountDTO.fromAccount(response));
+    }
+
+    @DeleteMapping("/account/delete")
+    public ResponseEntity<Void> deleteAccount() {
+        accountService.deleteAccountAndRelatedData();
+        return ResponseEntity.noContent().build();
     }
 }

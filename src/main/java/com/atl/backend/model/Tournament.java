@@ -109,4 +109,10 @@ public class Tournament {
 
     @Column(name = "photo_url")
     private String photoUrl;
+
+    public Boolean isTournamentActive() {
+        return (this.getStatus() != TournamentStatus.CANCELED &&
+                    this.getStatus() != TournamentStatus.FINISHED &&
+                    this.getStatus() != TournamentStatus.PENDING_PAYMENTS);
+    }
 }

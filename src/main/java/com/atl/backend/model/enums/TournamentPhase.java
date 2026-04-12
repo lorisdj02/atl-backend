@@ -1,8 +1,8 @@
 package com.atl.backend.model.enums;
 public enum TournamentPhase {
     GROUP,
-    RO31,
-    RO15,
+    RO32,
+    RO16,
     RO8,
     QUARTER,
     SEMI,

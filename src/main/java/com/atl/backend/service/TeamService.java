@@ -22,6 +22,7 @@ import com.atl.backend.repository.TeamRequestRepository;
 import com.atl.backend.response.PlayersInTeamResponse;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException.Conflict;
 
 import com.atl.backend.repository.FootballTeamStatRepository;
 import com.atl.backend.repository.PalmaresRepository;
@@ -36,11 +37,8 @@ import java.util.List;
 
 @Service
 public class TeamService {
-
     @Autowired
-    @Lazy
     private AccountService accountService;
-
     @Autowired
     private TeamRepository teamRepository;
     @Autowired
@@ -99,28 +97,44 @@ public class TeamService {
         return Optional.empty();
     }
 
-    public void leftTeam(Integer teamId, Integer playerId) {
-        final Optional<PlaysAt> playsAtOptional = playsAtRepository.findByPlayer_PlayerIdAndTeam_Id(playerId, teamId);
-        final Optional<Team> teamOptional = teamRepository.findById(teamId);
-        final Optional<Player> playerOptional = playerRepository.findById(playerId);
-        if (playsAtOptional.isPresent() && teamOptional.isPresent() && playerOptional.isPresent()) {
-            final Team team = teamOptional.get();
-            final Player player = playerOptional.get();
-            final PlaysAt playsAt = playsAtOptional.get();
+    @Transactional(rollbackFor = Exception.class)
+    public void leaveTeam(Integer teamId) {
+        Player player = AccountContext.getActivePlayer();
+        Optional<PlaysAt> playsAtOptional = playsAtRepository.findByPlayer_PlayerIdAndTeam_Id(player.getPlayerId(),
+                teamId);
+        Optional<Team> teamOptional = teamRepository.findById(teamId);
+        if (playsAtOptional.isPresent() && teamOptional.isPresent()) {
+            Team team = teamOptional.get();
+            PlaysAt playsAt = playsAtOptional.get();
 
-            if (team.getCaptainPlayer().getPlayerId().equals(playerId) && team.getVice1Player() == null) {
-                throw new ConflictException(ErrorsString.CAPTAIN_CANNOT_LEAVE_TEAM_WITHOUT_VICE_CAPTAIN);
-            } else {
-
-            }
-
-            final Integer activeTournamentsCount = tournamentService.countActiveTournamentsByTeamIdAndPlayerId(teamId,
-                    playerId);
+            Integer activeTournamentsCount = tournamentService.countActiveTournamentsByTeamIdAndPlayerId(teamId,
+                    player.getPlayerId());
             if (activeTournamentsCount > 0) {
                 throw new ConflictException(ErrorsString.PLAYER_IS_IN_ACTIVE_TOURNAMENTS);
             }
 
+            if (team.getCaptainPlayer().equals(player) && team.getViceCaptainPlayers().isEmpty()) {
+                throw new ConflictException(ErrorsString.CAPTAIN_CANNOT_LEAVE_TEAM_WITHOUT_VICE_CAPTAIN);
+            } else {
+                team.setNumPlayers((short) (team.getNumPlayers() - 1));
+
+                if (team.getVice1Player() != null) {
+                    team.setCaptainPlayer(player);
+                    team.setVice1Player(team.getVice2Player());
+                    team.setVice2Player(null);
+                } else if (team.getVice2Player() != null) {
+                    team.setCaptainPlayer(team.getVice2Player());
+                    team.setVice2Player(null);
+                } else {
+                    throw new ConflictException(ErrorsString.TEAM_WITHOUT_CAPTAIN_AND_VICE_CAPTAINS);
+                }
+
+                teamRepository.save(team);
+            }
+
             playsAtRepository.delete(playsAt);
+        } else {
+            throw new NotFoundException(ErrorsString.PLAYER_NOT_IN_TEAM);
         }
 
     }
@@ -492,4 +506,12 @@ public class TeamService {
         return teamRequestRepository.save(teamRequest);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public void leaveAllTeams() {
+        Integer playerId = AccountContext.getPlayerId();
+        List<PlaysAt> playsAts = playsAtRepository.findByPlayer_PlayerId(playerId);
+        for (PlaysAt playsAt : playsAts) {
+            leaveTeam(playsAt.getTeam().getId());
+        }
+    }
 }

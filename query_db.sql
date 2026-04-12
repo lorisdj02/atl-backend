@@ -185,7 +185,6 @@ CREATE TABLE "private_booking" (
   "id" int PRIMARY KEY,
   "player_id" int NOT NULL,
   "cost" numeric(10,2) NOT NULL,
-  "transaction_group_id" int NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT NOW()
 );
 
@@ -203,7 +202,6 @@ CREATE TABLE "lobby_booking_participate" (
   "lobby_booking_id" int NOT NULL,
   "players_paid" smallint NOT NULL DEFAULT 1,
   "cost" numeric(10,2) NOT NULL,
-  "transaction_group_id" int NOT NULL,
   "joined_at" timestamp NOT NULL DEFAULT NOW()
 );
 
@@ -524,8 +522,6 @@ ALTER TABLE "lobby_booking" ADD FOREIGN KEY ("owner_player_id") REFERENCES "play
 ALTER TABLE "lobby_booking_participate" ADD FOREIGN KEY ("player_id") REFERENCES "player" ("player_id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "lobby_booking_participate" ADD FOREIGN KEY ("lobby_booking_id") REFERENCES "lobby_booking" ("id") DEFERRABLE INITIALLY IMMEDIATE;
-
-ALTER TABLE "lobby_booking_participate" ADD FOREIGN KEY ("transaction_group_id") REFERENCES "transaction_group" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "match_booking" ADD FOREIGN KEY ("id") REFERENCES "booking" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 

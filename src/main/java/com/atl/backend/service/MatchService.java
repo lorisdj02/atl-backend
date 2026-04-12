@@ -9,6 +9,7 @@ import com.atl.backend.response.FootballMatchEventsResponse;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -474,11 +475,147 @@ public class MatchService {
                 List<FootballMatchEvent> footballMatchEvents = getFootballMatchEventsByMatchId(matchId);
                 Boolean canMatchFinish = canMatchFinish(matchId);
                 return Optional.of(FootballMatchEventsResponse.builder()
-                        .events(footballMatchEvents.stream().map(event -> FootballMatchEventDTO.fromFootballMatchEvent(event)).toList())
+                        .events(footballMatchEvents.stream()
+                                .map(event -> FootballMatchEventDTO.fromFootballMatchEvent(event)).toList())
                         .canMatchFinish(canMatchFinish)
                         .build());
             }
             default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Boolean isTeamStillPlayingInTournamentByTeamIdAndTournamentIdAndPhase(Integer teamId, Integer tournamentId,
+            TournamentPhase tournamentPhase) {
+        Tournament tournament = tournamentService.getTournamentById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+
+        Team team = teamService.getTeamById(teamId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL -> {
+                List<FootballMatch> footballMatches = getFootballMatchesByTournamentId(tournamentId);
+                switch (tournamentPhase) {
+                    case FINAL -> {
+                        FootballMatch finalMatch = footballMatches.stream()
+                                .filter(match -> match.getMatch().getGroupName().equals("FI"))
+                                .findFirst()
+                                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+                        return finalMatch.getHomeTeam().equals(team) || finalMatch.getAwayTeam().equals(team);
+                    }
+                    case SEMI -> {
+                        List<FootballMatch> semiFinalMatches = footballMatches.stream()
+                                .filter(match -> match.getMatch().getGroupName().equals("SF1")
+                                        || match.getMatch().getGroupName().equals("SF2"))
+                                .toList();
+                        return semiFinalMatches.stream()
+                                .anyMatch(
+                                        match -> match.getHomeTeam().equals(team) || match.getAwayTeam().equals(team));
+                    }
+                    case QUARTER -> {
+                        List<FootballMatch> quarterFinalMatches = footballMatches.stream()
+                                .filter(match -> match.getMatch().getGroupName().equals("QF1")
+                                        || match.getMatch().getGroupName().equals("QF2")
+                                        || match.getMatch().getGroupName().equals("QF3")
+                                        || match.getMatch().getGroupName().equals("QF4"))
+                                .toList();
+                        return quarterFinalMatches.stream()
+                                .anyMatch(
+                                        match -> match.getHomeTeam().equals(team) || match.getAwayTeam().equals(team));
+                    }
+                    case RO16 -> {
+                        List<FootballMatch> roundOf16Matches = footballMatches.stream()
+                                .filter(match -> match.getMatch().getGroupName().startsWith("OF"))
+                                .toList();
+                        return roundOf16Matches.stream()
+                                .anyMatch(
+                                        match -> match.getHomeTeam().equals(team) || match.getAwayTeam().equals(team));
+                    }
+                    case RO32 -> {
+                        // Non è ancora possibile crearlo, ma vabbè
+                        List<FootballMatch> roundOf32Matches = footballMatches.stream()
+                                .filter(match -> match.getMatch().getGroupName().startsWith("32"))
+                                .toList();
+                        return roundOf32Matches.stream()
+                                .anyMatch(
+                                        match -> match.getHomeTeam().equals(team) || match.getAwayTeam().equals(team));
+                    }
+
+                    default -> {
+                        return true;
+                    }
+                }
+            }
+            default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Boolean hasTeamPrizesByTeamIdAndTournamentId(Integer teamId, Integer tournamentId) {
+        Tournament tournament = tournamentService.getTournamentById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+
+        Boolean prize1 = !tournament.getPrize1().equals(BigDecimal.ZERO);
+        Boolean prize2 = !tournament.getPrize2().equals(BigDecimal.ZERO);
+
+        if (!prize1 && !prize2) {
+            return false;
+        }
+
+        Team team = teamService.getTeamById(teamId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
+
+        List<Match> finalMatches = matchRepository.findByTournament_IdAndGroupName(tournamentId, "FI");
+        if (finalMatches.isEmpty() || finalMatches.size() > 1) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+
+        Match finalMatch = finalMatches.get(0);
+        FinalStageBracket finalStageBracket = finalMatch.getFinalStageBracket();
+        if (finalStageBracket == null) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        Short aggregateScoreHome = finalStageBracket.getAggregateScoreHome();
+        Short aggregateScoreAway = finalStageBracket.getAggregateScoreAway();
+        if (aggregateScoreHome == null || aggregateScoreAway == null) {
+            return false;
+        }
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL -> {
+                Optional<FootballMatch> footballMatchOptional = footballMatchRepository
+                        .findByMatch_Id(finalMatch.getId());
+                if (footballMatchOptional.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+                }
+                FootballMatch footballMatch = footballMatchOptional.get();
+                Boolean teamIsHome = footballMatch.getHomeTeam().equals(team);
+                Boolean teamIsAway = footballMatch.getAwayTeam().equals(team);
+                if (!teamIsHome && !teamIsAway) {
+                    return false;
+                }
+                if (teamIsHome && aggregateScoreHome > aggregateScoreAway) {
+                    return prize1;
+                } else if (teamIsAway && aggregateScoreAway > aggregateScoreHome) {
+                    return prize1;
+                } else {
+                    return prize2;
+                }
+            }
+            default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Boolean hasRefereeActiveMatchesByRefereeId(Integer refereeId) {
+        List<RefereeAssignment> refereeAssignments = refereeAssignmentRepository.findByReferee_RefereeId(refereeId);
+        for (RefereeAssignment refereeAssignment : refereeAssignments) {
+            Match match = refereeAssignment.getMatch();
+            if(match.getFinishMatch() == null){
+                return true;
+            }
+        }
+        return false;
     }
 }

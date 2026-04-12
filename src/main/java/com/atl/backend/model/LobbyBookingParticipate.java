@@ -43,10 +43,6 @@ public class LobbyBookingParticipate {
      * private Integer transactionGroup;
      */
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transaction_group_id", nullable = false)
-    private TransactionGroup transactionGroup;
-
     @Column(name = "joined_at", nullable = false)
     private LocalDateTime joinedAt = LocalDateTime.now();
 }

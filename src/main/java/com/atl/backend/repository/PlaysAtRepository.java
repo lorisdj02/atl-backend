@@ -18,4 +18,6 @@ public interface PlaysAtRepository extends JpaRepository<PlaysAt, PlaysAtId> {
     Optional<PlaysAt> findByPlayer_PlayerIdAndTeam_Id(Integer playerId, Integer teamId);
 
     List<PlaysAt> findByTeam_Id(Integer teamId);
+
+    List<PlaysAt> findByPlayer_PlayerId(Integer playerId);
 }

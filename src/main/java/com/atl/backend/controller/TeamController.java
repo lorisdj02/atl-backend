@@ -88,7 +88,7 @@ public class TeamController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{sportCategory}/create/check-name/{teamName}")
+    @GetMapping("/create/{sportCategory}/check-name/{teamName}")
     public ResponseEntity<Boolean> checkTeamNameInCategoryExists(@PathVariable String sportCategory,
             @PathVariable String teamName) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
@@ -158,4 +158,9 @@ public class TeamController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/team/{teamId}/leave")
+    public ResponseEntity<Void> leaveTeam(@PathVariable Integer teamId) {
+        teamService.leaveTeam(teamId);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -35,10 +35,6 @@ public class PrivateBooking {
      * private Integer transactionGroupId;
      */
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transaction_group_id", nullable = false)
-    private TransactionGroup transactionGroup;
-
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 }

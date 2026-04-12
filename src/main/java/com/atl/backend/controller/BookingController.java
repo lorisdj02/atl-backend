@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,7 +38,7 @@ public class BookingController {
     @Autowired
     private BookingService bookingService;
 
-    @GetMapping("/{sportCategory}/book-a-field")
+    @GetMapping("/book-a-field/{sportCategory}")
     public ResponseEntity<BookFieldResponse> getBookFieldResponse(@PathVariable String sportCategory) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -48,8 +49,8 @@ public class BookingController {
 
     // Funziona così:
     // /football/1/join-lobby?totalPlayers=4&selectedCityId=1&startTime=2024-07-01T10:00:00&finishTime=2024-07-01T12:00:00
-    @GetMapping("/{sportCategory}/join-lobby")
-    public ResponseEntity<JoinLobbyResponse> getJoinLobbyResponse(@PathVariable String sportCategory,
+    @GetMapping("/join-lobby-screen/{sportCategory}")
+    public ResponseEntity<JoinLobbyResponse> getJoinLobbyScreen(@PathVariable String sportCategory,
             @RequestParam(required = false) Short totalPlayers, @RequestParam(required = false) Integer selectedCityId,
             @RequestParam(required = false) String startTime, @RequestParam(required = false) String finishTime) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
@@ -79,7 +80,7 @@ public class BookingController {
                 selectedCityId, start, end));
     }
 
-    @GetMapping("/{sportCategory}/free-fields/max-players/{maxPlayers}/city/{cityId}/startDate/{startTime}/finishDate/{finishTime}")
+    @GetMapping("/free-fields/{sportCategory}/max-players/{maxPlayers}/city/{cityId}/startDate/{startTime}/finishDate/{finishTime}")
     public ResponseEntity<FieldsAndMaxPlayersPerFieldResponse> getFreeFieldsByPlayerAndCityAndDate(
             @PathVariable String sportCategory,
             @PathVariable Integer maxPlayers, @PathVariable Integer cityId, @PathVariable String startTime,
@@ -109,17 +110,52 @@ public class BookingController {
     }
 
     /*
-    TODO: Gli endpoint non sono effettivi, dato che passa tutto tramite CheckountSession
-    @PostMapping("/private-booking/create")
-    public ResponseEntity<PrivateBookingDTO> createPrivateBooking(@RequestBody PrivateBookingDTO privateBookingDTO) {
-        PrivateBooking createdBooking = bookingService.createPrivateBooking(privateBookingDTO);
-        return ResponseEntity.ok(PrivateBookingDTO.fromPrivateBooking(createdBooking));
+     * TODO: Gli endpoint non sono effettivi, dato che passa tutto tramite
+     * CheckountSession
+     * 
+     * @PostMapping("/private-booking/create")
+     * public ResponseEntity<PrivateBookingDTO> createPrivateBooking(@RequestBody
+     * PrivateBookingDTO privateBookingDTO) {
+     * PrivateBooking createdBooking =
+     * bookingService.createPrivateBooking(privateBookingDTO);
+     * return
+     * ResponseEntity.ok(PrivateBookingDTO.fromPrivateBooking(createdBooking));
+     * }
+     * 
+     * @PostMapping("/lobby-booking/create")
+     * public ResponseEntity<LobbyBookingDTO> createLobbyBooking(@RequestBody
+     * LobbyBookingDTO lobbyBookingDTO) {
+     * LobbyBooking createdBooking =
+     * bookingService.createLobbyBooking(lobbyBookingDTO);
+     * return ResponseEntity.ok(LobbyBookingDTO.fromLobbyBooking(createdBooking));
+     * }
+     * 
+     * @PostMapping("/lobby-booking/{bookingId}/join/playersToPay/{playersToPay}")
+     * public ResponseEntity<Integer> joinLobbyBooking(@PathVariable Integer
+     * bookingId,
+     * 
+     * @PathVariable Integer playersToPay) {
+     * Integer participants =
+     * bookingService.createLobbyBookingParticipate(bookingId, playersToPay);
+     * return ResponseEntity.ok(participants);
+     * }
+     */
+
+    @DeleteMapping("/lobby-booking/{bookingId}/refund")
+    public ResponseEntity<Void> refundLobbyBooking(@PathVariable Integer bookingId) {
+        bookingService.refundLobbyBooking(bookingId);
+        return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/lobby-booking/create")
-    public ResponseEntity<LobbyBookingDTO> createLobbyBooking(@RequestBody LobbyBookingDTO lobbyBookingDTO) {
-        LobbyBooking createdBooking = bookingService.createLobbyBooking(lobbyBookingDTO);
-        return ResponseEntity.ok(LobbyBookingDTO.fromLobbyBooking(createdBooking));
+    @DeleteMapping("/lobby-booking/{bookingId}/leave")
+    public ResponseEntity<Void> leaveLobbyBooking(@PathVariable Integer bookingId) {
+        bookingService.leaveLobbyBooking(bookingId);
+        return ResponseEntity.noContent().build();
     }
-         */
+
+    @DeleteMapping("/private-booking/{bookingId}/refund")
+    public ResponseEntity<Void> refundPrivateBooking(@PathVariable Integer bookingId) {
+        bookingService.refundPrivateBooking(bookingId);
+        return ResponseEntity.noContent().build();
+    }
 }
