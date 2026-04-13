@@ -1,9 +1,7 @@
 package com.atl.backend.response;
 
-import java.util.HashMap;
 import java.util.List;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Map;
 
 import lombok.Builder;
@@ -18,7 +16,6 @@ import com.atl.backend.dto.FootballMatchDTO;
 import com.atl.backend.dto.FootballMatchEventDTO;
 import com.atl.backend.dto.PlayerDTO;
 import com.atl.backend.dto.TeamDTO;
-import com.atl.backend.model.FinalStageBracket;
 
 @Data
 @Builder

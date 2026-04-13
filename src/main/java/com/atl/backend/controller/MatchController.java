@@ -18,6 +18,7 @@ import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
 import com.atl.backend.service.MatchService;
 import com.atl.backend.service.SportService;
+import com.atl.backend.service.TournamentService;
 import com.atl.backend.service.screen.MatchScreenService;
 
 @RestController
@@ -25,6 +26,8 @@ import com.atl.backend.service.screen.MatchScreenService;
 public class MatchController {
     @Autowired
     private MatchScreenService matchScreenService;
+    @Autowired
+    private TournamentService tournamentService;
     @Autowired
     private SportService sportService;
     @Autowired
@@ -71,7 +74,7 @@ public class MatchController {
 
     @PatchMapping("/match/{matchId}/retire")
     public ResponseEntity<Integer> retireFromMatch(@PathVariable Integer matchId) {
-        Integer response = matchService.retireFromMatch(matchId);
+        Integer response = tournamentService.retireFromMatch(matchId);
         return ResponseEntity.ok(response);
     }
 }

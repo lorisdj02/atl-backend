@@ -22,4 +22,6 @@ public interface TournamentParticipationRepository extends JpaRepository<Tournam
     List<TournamentParticipation> findByTeam_IdAndToPay(Integer teamId, BigDecimal toPay);
 
     List<TournamentParticipation> findByTeam_IdAndToPayGreaterThan(Integer teamId, BigDecimal toPay);
+
+    Void deleteByTeam_IdAndTournament_Id(Integer teamId, Integer tournamentId);
 }

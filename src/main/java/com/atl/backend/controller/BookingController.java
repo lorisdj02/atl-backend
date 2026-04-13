@@ -4,17 +4,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atl.backend.config.ErrorsString;
-import com.atl.backend.dto.LobbyBookingDTO;
-import com.atl.backend.dto.PrivateBookingDTO;
 import com.atl.backend.exception.BadRequestException;
-import com.atl.backend.model.LobbyBooking;
-import com.atl.backend.model.PrivateBooking;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.BookFieldResponse;
 import com.atl.backend.response.FieldsAndMaxPlayersPerFieldResponse;
 import com.atl.backend.response.JoinLobbyResponse;
 import com.atl.backend.service.BookingService;
 import com.atl.backend.service.SportService;
+import com.atl.backend.service.orchestrator.PurchasesOrchestrator;
 import com.atl.backend.service.screen.BookingScreenService;
 
 import java.time.LocalDateTime;
@@ -24,19 +21,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {
     @Autowired
+    private PurchasesOrchestrator purchasesOrchestrator;
+    @Autowired
     private BookingScreenService bookingScreenService;
     @Autowired
     private SportService sportService;
     @Autowired
     private BookingService bookingService;
+
 
     @GetMapping("/book-a-field/{sportCategory}")
     public ResponseEntity<BookFieldResponse> getBookFieldResponse(@PathVariable String sportCategory) {
@@ -143,19 +141,19 @@ public class BookingController {
 
     @DeleteMapping("/lobby-booking/{bookingId}/refund")
     public ResponseEntity<Void> refundLobbyBooking(@PathVariable Integer bookingId) {
-        bookingService.refundLobbyBooking(bookingId);
+        purchasesOrchestrator.refundLobbyBooking(bookingId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/lobby-booking/{bookingId}/leave")
     public ResponseEntity<Void> leaveLobbyBooking(@PathVariable Integer bookingId) {
-        bookingService.leaveLobbyBooking(bookingId);
+        purchasesOrchestrator.leaveLobbyBooking(bookingId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/private-booking/{bookingId}/refund")
     public ResponseEntity<Void> refundPrivateBooking(@PathVariable Integer bookingId) {
-        bookingService.refundPrivateBooking(bookingId);
+        purchasesOrchestrator.refundPrivateBooking(bookingId);
         return ResponseEntity.noContent().build();
     }
 }

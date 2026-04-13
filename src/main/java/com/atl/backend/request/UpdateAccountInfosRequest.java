@@ -1,15 +1,10 @@
 package com.atl.backend.request;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
 
 import lombok.Builder;
 import lombok.Data;
 
 import com.fasterxml.jackson.annotation.*;
-import jakarta.validation.constraints.*;
 import com.atl.backend.config.ApiJsonKeys;
 
 @Data

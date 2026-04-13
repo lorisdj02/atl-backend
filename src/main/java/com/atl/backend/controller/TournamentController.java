@@ -36,6 +36,7 @@ import com.atl.backend.response.TournamentParametersResponse;
 import com.atl.backend.response.TournamentSummaryResponse;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TournamentService;
+import com.atl.backend.service.orchestrator.PurchasesOrchestrator;
 import com.atl.backend.service.screen.TournamentScreenService;
 
 @RestController
@@ -47,6 +48,8 @@ public class TournamentController {
     private SportService sportService;
     @Autowired
     private TournamentService tournamentService;
+    @Autowired
+    private PurchasesOrchestrator purchasesOrchestrator;
 
     @GetMapping("{sportCategory}/all-tournaments")
     public ResponseEntity<AllTournamentsResponse> getAllTournamentsScreen(@PathVariable String sportCategory) {

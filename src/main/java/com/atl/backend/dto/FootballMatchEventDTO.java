@@ -2,10 +2,7 @@ package com.atl.backend.dto;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 import com.atl.backend.model.FootballMatchEvent;
-import com.atl.backend.model.Match;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 

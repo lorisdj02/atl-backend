@@ -21,21 +21,19 @@ import com.atl.backend.dto.TeamDTO;
 import com.atl.backend.dto.TeamRequestDTO;
 import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.exception.*;
-import com.atl.backend.model.Account;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.TeamRequest;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AbstractTeamResponse;
-import com.atl.backend.response.MyGrowthResponse;
 import com.atl.backend.response.PayParticipationResponse;
 import com.atl.backend.response.PlayerRequestsResponse;
 import com.atl.backend.response.PlayersInTeamResponse;
 import com.atl.backend.response.TeamDetailsResponse;
 import com.atl.backend.response.TeamsResponse;
-import com.atl.backend.service.AccountService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TeamService;
-import com.atl.backend.service.screen.ProfileScreenService;
+import com.atl.backend.service.TournamentService;
+import com.atl.backend.service.orchestrator.TournamentTeamOrchestrator;
 import com.atl.backend.service.screen.TeamScreenService;
 
 @RestController
@@ -47,6 +45,10 @@ public class TeamController {
     private SportService sportService;
     @Autowired
     private TeamService teamService;
+    @Autowired
+    TournamentTeamOrchestrator tournamentTeamOrchestrator;
+    @Autowired
+    private TournamentService tournamentService;
 
     @GetMapping("/{sportCategory}")
     public ResponseEntity<TeamsResponse> getTeamsScreen(@PathVariable String sportCategory) {
@@ -101,7 +103,7 @@ public class TeamController {
 
     @GetMapping("/team/{teamId}/not-paid-participations")
     public ResponseEntity<List<TournamentParticipationDTO>> getNotPaidTeamParticipations(@PathVariable Integer teamId) {
-        List<TournamentParticipationDTO> response = teamService.getNotPaidTeamParticipations(teamId);
+        List<TournamentParticipationDTO> response = tournamentService.getNotPaidTeamParticipations(teamId);
         return ResponseEntity.ok(response);
     }
 
@@ -160,7 +162,7 @@ public class TeamController {
 
     @DeleteMapping("/team/{teamId}/leave")
     public ResponseEntity<Void> leaveTeam(@PathVariable Integer teamId) {
-        teamService.leaveTeam(teamId);
+        tournamentTeamOrchestrator.leaveTeam(teamId);
         return ResponseEntity.ok().build();
     }
 }

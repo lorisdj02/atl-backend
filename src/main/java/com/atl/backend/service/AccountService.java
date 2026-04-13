@@ -13,13 +13,12 @@ import com.atl.backend.model.GrowthStep;
 import com.atl.backend.model.Organization;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Referee;
-import com.atl.backend.model.RefereeRole;
 import com.atl.backend.model.Review;
 import com.atl.backend.model.Team;
+import com.atl.backend.model.Tournament;
 import com.atl.backend.model.enums.AccountStatus;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.ReviewStatus;
-import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.repository.AccountRepository;
 import com.atl.backend.repository.CoordinatorRepository;
 import com.atl.backend.repository.FriendInviteRepository;
@@ -28,12 +27,12 @@ import com.atl.backend.repository.OrganizationRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.RefereeRepository;
 import com.atl.backend.repository.ReviewRepository;
+import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.request.UpdateAccountInfosRequest;
 import com.atl.backend.response.LoginResponse;
+import com.atl.backend.service.orchestrator.TournamentTeamOrchestrator;
 
-import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,25 +44,13 @@ import java.util.Optional;
 @Service
 public class AccountService {
     @Autowired
-    @Lazy
-    private PaymentService paymentService;
-
-    @Autowired
-    @Lazy
-    private TeamService teamService;
-
-    @Autowired
-    @Lazy
     private BookingService bookingService;
-
     @Autowired
-    @Lazy
-    private TournamentService tournamentService;
-
-    @Autowired
-    @Lazy
     private MatchService matchService;
-
+    @Autowired
+    private TeamService teamService;
+    @Autowired
+    private PaymentService paymentService;
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
@@ -80,7 +67,11 @@ public class AccountService {
     private ReviewRepository reviewRepository;
     @Autowired
     private FriendInviteRepository friendInviteRepository;
-    
+    @Autowired
+    private TournamentRepository tournamentRepository;
+
+    @Autowired
+    private TournamentTeamOrchestrator tournamentTeamOrchestrator;
 
     public Account registerAccount(Account account, Optional<String> OrgName) {
         saveAccount(account);
@@ -439,17 +430,17 @@ public class AccountService {
         }
         switch (account.getRole()) {
             case PLAYER:
-                teamService.leaveAllTeams();
+                tournamentTeamOrchestrator.leaveAllTeams();
                 bookingService.leaveAllBookings();
                 break;
             case COORDINATOR:
                 Coordinator coordinator = AccountContext.getActiveCoordinator();
-                if(tournamentService.hasCoordinatorActiveTournamentsByCoordinatorId(coordinator.getCoordinatorId())){
+                if (hasCoordinatorActiveTournamentsByCoordinatorId(coordinator.getCoordinatorId())) {
                     throw new ConflictException(ErrorsString.COORDINATOR_HAS_ACTIVE_TOURNAMENTS);
                 }
                 break;
             case REFEREE:
-                if(matchService.hasRefereeActiveMatchesByRefereeId(AccountContext.getRefereeId())){
+                if (matchService.hasRefereeActiveMatchesByRefereeId(AccountContext.getRefereeId())) {
                     throw new ConflictException(ErrorsString.REFEREE_HAS_ACTIVE_MATCHES);
                 }
             default:
@@ -457,5 +448,16 @@ public class AccountService {
         }
 
         softDeleteAccount(accountId);
+    }
+
+    public Boolean hasCoordinatorActiveTournamentsByCoordinatorId(Integer coordinatorId) {
+        List<Tournament> activeTournaments = tournamentRepository
+                .findByCoordinator_CoordinatorId(coordinatorId);
+        for (Tournament tournament : activeTournaments) {
+            if (tournament.isTournamentActive()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

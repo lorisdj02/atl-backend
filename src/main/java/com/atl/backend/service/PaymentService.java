@@ -3,12 +3,9 @@ package com.atl.backend.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Lazy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,11 +32,11 @@ import com.atl.backend.model.enums.BookingStatus;
 import com.atl.backend.model.enums.CheckoutStatus;
 import com.atl.backend.model.enums.CheckoutType;
 import com.atl.backend.model.enums.PurchaseStatus;
-import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.model.enums.TransactionType;
 import com.atl.backend.repository.CheckoutSessionRepository;
+import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.PurchaseRepository;
 import com.atl.backend.repository.TransactionGroupRepository;
 import com.atl.backend.repository.TransactionRepository;
@@ -54,29 +51,34 @@ import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class PaymentService {
-    @Lazy
-    @Autowired
-    private FieldService fieldService;
 
     @Autowired
-    private TournamentService tournamentService;
+    private FieldService fieldService;
     @Autowired
-    private AccountService accountService;
+    private TournamentService tournamentService;
     @Autowired
     private WalletRepository walletRepository;
     @Autowired
     private TransactionRepository transactionRepository;
     @Autowired
     private CheckoutSessionRepository checkoutSessionRepository;
-
     @Autowired
-    @Lazy
     private BookingService bookingService;
-
     @Autowired
     private TransactionGroupRepository transactionGroupRepository;
     @Autowired
     private PurchaseRepository purchaseRepository;
+
+    @Autowired
+    private PlayerRepository playerRepository;
+
+    private Player getExistingPlayerByPlayerId(Integer playerId) {
+        Optional<Player> optPlayer = playerRepository.findById(playerId);
+        if (optPlayer.isEmpty()) {
+            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+        }
+        return optPlayer.get();
+    }
 
     public List<Transaction> getTransactionsByAccountId(Integer accountId) {
         return transactionRepository.findByAccount_Id(accountId);
@@ -190,11 +192,7 @@ public class PaymentService {
                 if (payload.getOwnerPlayerId() == null) {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
                 }
-                Optional<Player> optPlayer = accountService.getPlayerByPlayerId(payload.getOwnerPlayerId());
-                if (optPlayer.isEmpty()) {
-                    throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
-                }
-                Player owner = optPlayer.get();
+                Player owner = getExistingPlayerByPlayerId(payload.getOwnerPlayerId());
                 Field field = optField.get();
                 fieldName = field.getName();
                 fieldAddress = field.getAddress();
@@ -393,7 +391,6 @@ public class PaymentService {
         purchase.setAccount(account);
         purchase.setAmount(originalAmountToPay);
         String payloadJson = session.getPayload();
-        Map<String, Object> payloadMap = new HashMap<>();
         CheckoutPayload payload;
         // Parse the JSON payload into the map
         try {
@@ -589,7 +586,7 @@ public class PaymentService {
         Booking booking = bookingService.getBookingByBookingId(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
 
-        if (booking.getStatus() != BookingStatus.BOOKED) {
+        if (booking.getStatus() != BookingStatus.IN_PROGRESS) {
             throw new ConflictException(ErrorsString.PURCHASE_NOT_REDEEMABLE);
         }
 
@@ -621,7 +618,6 @@ public class PaymentService {
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
     public Boolean isLobbyParticipationRefundedByBookingIdAndAccountId(Integer bookingId, Integer accountId) {
         List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
                 CheckoutType.LOBBY_BOOKING_PARTICIPATE,

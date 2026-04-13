@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.atl.backend.config.ErrorsString;
-import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.RefereeLicense;
 import com.atl.backend.model.RefereeRole;

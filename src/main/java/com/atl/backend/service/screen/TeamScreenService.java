@@ -22,7 +22,6 @@ import com.atl.backend.dto.TeamDTO;
 import com.atl.backend.dto.TeamRequestDTO;
 import com.atl.backend.dto.TournamentDTO;
 import com.atl.backend.dto.TournamentParticipationDTO;
-import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.FootballTeamStat;

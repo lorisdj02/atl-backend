@@ -27,7 +27,6 @@ import com.atl.backend.dto.TeamDTO;
 import com.atl.backend.dto.TournamentDTO;
 import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.exception.ConflictException;
-import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.City;
@@ -109,7 +108,6 @@ public class TournamentScreenService {
                 Field field = optionalField.get();
                 fieldsCache.put(tournament.getFieldId(), field);
                 if (!fieldsCache.containsKey(field.getCity().getId())) {
-                    String cityName = field.getCity().getName();
                     fieldsCache.put(field.getCity().getId(), field);
                 }
             }

@@ -1,10 +1,13 @@
 package com.atl.backend.service;
 
+import com.atl.backend.repository.CallupRepository;
 import com.atl.backend.repository.FinalStageBracketRepository;
 import com.atl.backend.repository.FootballMatchEventRepository;
 import com.atl.backend.repository.FootballMatchRepository;
+import com.atl.backend.repository.FootballStandingRepository;
 import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.RefereeAssignmentRepository;
+import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.response.FootballMatchEventsResponse;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -23,23 +26,24 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.atl.backend.model.enums.*;
-import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.FootballMatchEventDTO;
 import com.atl.backend.dto.TournamentDTO;
 import com.atl.backend.exception.*;
+import com.atl.backend.model.Callup;
 import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballMatchEvent;
+import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.Match;
-import com.atl.backend.model.Player;
 import com.atl.backend.model.RefereeAssignment;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 
 @Service
 public class MatchService {
-    private final FootballMatchEventRepository footballMatchEventRepository;
+    @Autowired
+    private FootballMatchEventRepository footballMatchEventRepository;
     @Autowired
     private TeamService teamService;
     @Autowired
@@ -47,15 +51,16 @@ public class MatchService {
     @Autowired
     private MatchRepository matchRepository;
     @Autowired
-    private TournamentService tournamentService;
-    @Autowired
     private FinalStageBracketRepository finalStageBracketRepository;
     @Autowired
     private RefereeAssignmentRepository refereeAssignmentRepository;
 
-    MatchService(FootballMatchEventRepository footballMatchEventRepository) {
-        this.footballMatchEventRepository = footballMatchEventRepository;
-    }
+    @Autowired
+    private TournamentRepository tournamentRepository;
+    @Autowired
+    private CallupRepository callupRepository;
+    @Autowired
+    private FootballStandingRepository footballStandingRepository;
 
     public Integer calculateMatchesInTournament(TournamentDTO tournamentDTO) {
 
@@ -71,6 +76,18 @@ public class MatchService {
                 / (2 - round2GroupStage);
         final int matchesInFinalStage = numTeamsQualified - 1 + round2FinalStage * (numTeamsQualified - 2);
         return matchesInGroupStage + matchesInFinalStage;
+    }
+
+    private Tournament getExistingTournamentByTournamentId(Integer tournamentId) {
+        return tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+    }
+
+    public Boolean isPlayerCalledUpInTournamentByPlayerIdAndTournamentId(Integer playerId, Integer tournamentId) {
+        Optional<Callup> optionalCallup = callupRepository.findByPlayer_PlayerIdAndTournament_Id(tournamentId,
+                playerId);
+
+        return optionalCallup.isPresent();
     }
 
     public Match saveMatch(Match match) {
@@ -108,17 +125,8 @@ public class MatchService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void generateMatchesForTournament(Integer tournamentId) {
-        Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
-        if (optionalTournament.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
-        }
-
-        System.out.println("[DEBUG - MatchService] - Generating matches for tournament " + tournamentId);
-
-        final Tournament tournament = optionalTournament.get();
-
-        List<Integer> teamIds = new ArrayList<>(tournamentService.getTeamIdsParticipatingInTournament(tournamentId));
+    public void generateMatchesForTournament(Integer tournamentId, List<Integer> teamIds) {
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
         System.out
                 .println("[DEBUG - MatchService] - Retrieved team IDs for tournament " + tournamentId + ": " + teamIds);
@@ -358,15 +366,12 @@ public class MatchService {
     }
 
     public List<Integer> getTeamIdsByTournamentIdAndGroupStage(Integer tournamentId, String groupName) {
-        Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
-        if (optionalTournament.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
-        }
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
         System.out.println("[DEBUG - MatchService] - Retrieving team IDs for tournament " + tournamentId + " and group "
                 + groupName);
 
-        switch (optionalTournament.get().getSport().getSportCategory()) {
+        switch (tournament.getSport().getSportCategory()) {
             case FOOTBALL -> {
                 List<FootballMatch> footballMatches = footballMatchRepository
                         .findByMatch_Tournament_IdAndMatch_GroupName(tournamentId, groupName);
@@ -491,8 +496,7 @@ public class MatchService {
     @Transactional(readOnly = true)
     public Boolean isTeamStillPlayingInTournamentByTeamIdAndTournamentIdAndPhase(Integer teamId, Integer tournamentId,
             TournamentPhase tournamentPhase) {
-        Tournament tournament = tournamentService.getTournamentById(tournamentId)
-                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
         Team team = teamService.getTeamById(teamId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
@@ -557,8 +561,7 @@ public class MatchService {
 
     @Transactional(readOnly = true)
     public Boolean hasTeamPrizesByTeamIdAndTournamentId(Integer teamId, Integer tournamentId) {
-        Tournament tournament = tournamentService.getTournamentById(tournamentId)
-                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
         Boolean prize1 = !tournament.getPrize1().equals(BigDecimal.ZERO);
         Boolean prize2 = !tournament.getPrize2().equals(BigDecimal.ZERO);
@@ -623,37 +626,6 @@ public class MatchService {
         return false;
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public Integer retireFromMatch(Integer matchId) {
-        Player activePlayer = AccountContext.getActivePlayer();
-
-        Optional<Match> optionalMatch = matchRepository.findById(matchId);
-        if (optionalMatch.isEmpty()) {
-            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
-        }
-        Match match = optionalMatch.get();
-
-        Optional<Team> teamOptional = teamService.getTeamByPlayerIdAndSportCategory(activePlayer.getPlayerId(),
-                match.getSportCategory());
-        if (teamOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
-        }
-        Team team = teamOptional.get();
-
-        if (!tournamentService.isPlayerCalledUpInTournament(activePlayer.getPlayerId(),
-                match.getTournament().getId())) {
-            throw new UnauthorizedException(ErrorsString.PLAYER_NOT_CALLED_UP_IN_TOURNAMENT);
-        }
-
-        teamService.needToBeCaptainOrViceCaptain(team.getId(), activePlayer.getPlayerId());
-
-        tournamentService.handleTeamRetireInMatch(matchId, team.getId());
-
-        match.setFinishMatch(LocalDateTime.now());
-        matchRepository.save(match);
-        return match.getId();
-    }
-
     @Transactional(readOnly = true)
     public Boolean areMatchesFinishedByTournamentIdAndGroupName(Integer tournamentId, String prefixGroupName) {
         List<Match> matches = matchRepository.findByTournament_Id(tournamentId);
@@ -695,9 +667,8 @@ public class MatchService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void drawKnockoutStageMatches(int tournamentId) {
-        tournamentService.checkTournamentExists(tournamentId);
-        Tournament tournament = tournamentService.getTournamentById(tournamentId).get();
+    public void drawKnockoutStageMatches(int tournamentId, Map<Integer, List<Team>> teamsPerRank) {
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
         String groupNamePrefix;
         switch (tournament.getNumTeamsQualified()) {
             case 32 -> groupNamePrefix = "32";
@@ -708,7 +679,6 @@ public class MatchService {
             default -> throw new BadRequestException(ErrorsString.INVALID_NUMBER_OF_QUALIFIED_TEAMS);
         }
 
-        Map<Integer, List<Team>> teamsPerRank = tournamentService.getQualifiedTeamsPerRankByTournamentId(tournamentId);
         List<Match> matches = matchRepository.findByTournament_Id(tournamentId);
         List<Match> knockoutStageMatches = matches.stream()
                 .filter(match -> match.getGroupName() != null && match.getGroupName().startsWith(groupNamePrefix))
@@ -775,7 +745,7 @@ public class MatchService {
                     Team awayTeam = null;
                     for (Team team : worstTeams) {
                         if (!usedTeams.contains(team.getId()) &&
-                                !tournamentService.areTeamInSameGroup(tournamentId, homeTeam.getId(), team.getId())) {
+                                !areTeamInSameGroup(tournamentId, homeTeam.getId(), team.getId())) {
                             awayTeam = team;
                             usedTeams.add(team.getId());
                             break;
@@ -802,8 +772,7 @@ public class MatchService {
 
     @Transactional(rollbackFor = Exception.class)
     public void updateKnockoutStageMatches(int tournamentId) {
-        tournamentService.checkTournamentExists(tournamentId);
-        Tournament tournament = tournamentService.getTournamentById(tournamentId).get();
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
         String groupNamePrefix;
 
         switch (tournament.getPhase()) {
@@ -972,4 +941,25 @@ public class MatchService {
             default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
     }
+
+    @Transactional(readOnly = true)
+    public Boolean areTeamInSameGroup(Integer tournamentId, Integer teamId1, Integer teamId2) {
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL:
+                Optional<FootballStanding> footballStandingOptional1 = footballStandingRepository
+                        .findByTournament_IdAndTeam_Id(tournamentId, teamId1);
+                Optional<FootballStanding> footballStandingOptional2 = footballStandingRepository
+                        .findByTournament_IdAndTeam_Id(tournamentId, teamId2);
+                if (footballStandingOptional1.isEmpty() || footballStandingOptional2.isEmpty()) {
+                    throw new NotFoundException(ErrorsString.STANDING_NOT_FOUND);
+                }
+                FootballStanding footballStanding1 = footballStandingOptional1.get();
+                FootballStanding footballStanding2 = footballStandingOptional2.get();
+                return footballStanding1.getGroupName().equals(footballStanding2.getGroupName());
+            default:
+                throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+    }
+
 }

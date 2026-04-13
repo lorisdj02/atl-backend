@@ -1,11 +1,11 @@
 package com.atl.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy; // Metti questo
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +14,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException.Forbidden;
 
 import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
@@ -22,6 +21,7 @@ import com.atl.backend.dto.BookingDTO;
 import com.atl.backend.dto.CoordinatorDTO;
 import com.atl.backend.dto.FieldDTO;
 import com.atl.backend.dto.TournamentDTO;
+import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.ForbiddenException;
@@ -39,7 +39,6 @@ import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.FootballTournamentStats;
 import com.atl.backend.model.Match;
 import com.atl.backend.model.Player;
-import com.atl.backend.model.RefereeRole;
 import com.atl.backend.model.Sport;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
@@ -50,11 +49,14 @@ import com.atl.backend.model.enums.TournamentPhase;
 import com.atl.backend.model.enums.TournamentStatus;
 import com.atl.backend.model.Field;
 import com.atl.backend.repository.CallupRepository;
+import com.atl.backend.repository.CoordinatorRepository;
 import com.atl.backend.repository.FavoriteTournamentRepository;
 import com.atl.backend.repository.FinalStageBracketRepository;
 import com.atl.backend.repository.FootballStandingRepository;
 import com.atl.backend.repository.FootballTournamentStatsRepository;
-import com.atl.backend.repository.SportRepository;
+import com.atl.backend.repository.GrowthStepRepository;
+import com.atl.backend.repository.PlayerRepository;
+import com.atl.backend.repository.RefereeRepository;
 import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.request.ConfirmCallupsRequest;
@@ -63,30 +65,12 @@ import com.atl.backend.response.ScheduleMatchResponse;
 import com.atl.backend.response.TournamentParametersResponse;
 import com.atl.backend.util.StandingsComparators;
 
-import jakarta.persistence.criteria.CriteriaBuilder.In;
 
 @Service
 public class TournamentService {
-    @Lazy
-    @Autowired
-    private TeamService teamService;
 
-    @Lazy
-    @Autowired
-    private MatchService matchService;
-
-    @Autowired
-    @Lazy
-    private AccountService accountService;
-
-    @Lazy
-    @Autowired
-    private PaymentService paymentService;
-
-    @Lazy
     @Autowired
     private BookingService bookingService;
-
     @Autowired
     private TournamentRepository tournamentRepository;
     @Autowired
@@ -105,6 +89,19 @@ public class TournamentService {
     private FieldService fieldService;
     @Autowired
     private SportService sportService;
+    @Autowired
+    private MatchService matchService;
+    @Autowired
+    private TeamService teamService;
+
+    @Autowired
+    private PlayerRepository playerRepository;
+    @Autowired
+    private CoordinatorRepository coordinatorRepository;
+    @Autowired
+    private RefereeRepository refereeRepository;
+    @Autowired
+    private GrowthStepRepository growthStepRepository;
 
     public void deleteAllTournaments() {
         tournamentRepository.deleteAll();
@@ -129,6 +126,30 @@ public class TournamentService {
 
     public void deleteTournament(Integer id) {
         tournamentRepository.deleteById(id);
+    }
+
+    private Player getExistingPlayerByAccountId(Integer accountId) {
+        Optional<Player> playerOpt = playerRepository.findByAccount_Id(accountId);
+        if (playerOpt.isEmpty()) {
+            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+        }
+        return playerOpt.get();
+    }
+
+    private Player getExistingPlayerByPlayerId(Integer playerId) {
+        Optional<Player> playerOpt = playerRepository.findByPlayerId(playerId);
+        if (playerOpt.isEmpty()) {
+            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
+        }
+        return playerOpt.get();
+    }
+
+    private Coordinator getExistingCoordinatorByCoordinatorId(Integer coordinatorId) {
+        Optional<Coordinator> coordinatorOpt = coordinatorRepository.findById(coordinatorId);
+        if (coordinatorOpt.isEmpty()) {
+            throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND);
+        }
+        return coordinatorOpt.get();
     }
 
     public List<FootballStanding> getFootballStandingsByTournamentId(Integer tournamentId) {
@@ -206,21 +227,6 @@ public class TournamentService {
         return participations.stream().map(tp -> tp.getTeam().getId()).toList();
     }
 
-    public Integer countActiveTournamentsByTeamIdAndPlayerId(Integer teamId, Integer playerId) {
-        teamService.checkTeamExists(teamId);
-        List<Tournament> tournaments = getActiveTournamentsByTeamId(teamId);
-
-        Integer count = 0;
-        for (Tournament tournament : tournaments) {
-            Optional<Callup> callup = callupRepository.findByPlayer_PlayerIdAndTournament_Id(playerId,
-                    tournament.getId());
-            if (callup.isPresent()) {
-                count++;
-            }
-        }
-        return count;
-    }
-
     public void checkValidCallups(Integer teamId, List<Integer> playerIds) {
         teamService.checkTeamExists(teamId);
 
@@ -284,7 +290,7 @@ public class TournamentService {
         }
         List<Callup> newCallups = new ArrayList<>();
         for (Integer playerId : playerIds) {
-            Player player = accountService.getPlayerByPlayerId(playerId).get();
+            Player player = getExistingPlayerByPlayerId(playerId);
             Callup callup = new Callup();
             callup.setPlayer(player);
             callup.setTournament(tournament);
@@ -326,7 +332,8 @@ public class TournamentService {
 
         System.out.println("\n\n[DEBUG - TournamentService] - Starting tournament " + tournamentId);
 
-        matchService.generateMatchesForTournament(tournament.getId());
+        matchService.generateMatchesForTournament(tournament.getId(),
+                getTeamIdsParticipatingInTournament(tournamentId));
 
         System.out.println("[DEBUG - TournamentService] - Matches generated for tournament " + tournamentId);
 
@@ -378,14 +385,11 @@ public class TournamentService {
                 for (Integer teamId : teamIds) {
                     List<Integer> playerIds = getCalluppedPlayerIdsByTournamentId(tournament.getId());
                     for (Integer playerId : playerIds) {
-                        Optional<Player> playerOptional = accountService.getPlayerByPlayerId(playerId);
-                        if (playerOptional.isEmpty()) {
-                            throw new IllegalArgumentException(ErrorsString.PLAYER_NOT_FOUND);
-                        }
+                        Player player = getExistingPlayerByPlayerId(playerId);
                         FootballTournamentStats tournamentStats = new FootballTournamentStats();
                         tournamentStats.setTournament(tournament);
                         tournamentStats.setTeam(teamService.getTeamById(teamId).get());
-                        tournamentStats.setPlayer(playerOptional.get());
+                        tournamentStats.setPlayer(player);
                         footballTournamentStatsRepository.save(tournamentStats);
                     }
                 }
@@ -720,8 +724,8 @@ public class TournamentService {
                 throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        BigDecimal coordinatorPayPerMatch = accountService
-                .getCoordinatorPayPerMatchByCoordinatorId(fictitiousTournament.getCoordinatorId());
+        BigDecimal coordinatorPayPerMatch = getCoordinatorPayPerMatchByCoordinatorId(
+                fictitiousTournament.getCoordinatorId());
         // La finale vale 1.5 volte un match normale
         BigDecimal coordinatorPay = coordinatorPayPerMatch.multiply(BigDecimal.valueOf(numMatches + 0.5))
                 .setScale(2, RoundingMode.HALF_UP);
@@ -736,7 +740,7 @@ public class TournamentService {
                 .calculateTournamentCost(hoursPerMatch.multiply(BigDecimal.valueOf(numMatches)))
                 .setScale(2, RoundingMode.HALF_UP);
 
-        Short medianRefereeLevel = accountService.getMedianRefereeLevel();
+        Short medianRefereeLevel = getMedianRefereeLevel();
         Map<String, BigDecimal> refereeRolesPayPerMatch = sportService.getRefereePayPerMatchBySportIdAndLevel(
                 sport.getId(), medianRefereeLevel);
 
@@ -846,13 +850,12 @@ public class TournamentService {
         if (tournamentParticipationOptional.get().getToPay().compareTo(BigDecimal.ZERO) == 0) {
             throw new ConflictException(ErrorsString.TOURNAMENT_PARTICIPATION_ALREADY_PAID);
         }
+    }
 
-        List<Callup> callups = callupRepository.findByTournament_IdAndTeam_Id(tournamentId, teamId);
-        List<Integer> calluppedAccountIds = callups.stream().map(callup -> callup.getPlayer().getAccount().getId())
-                .toList();
-        paymentService.refundPurchaseForCallups(tournamentId, calluppedAccountIds);
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteTournamentParticipationByTeamIdAndTournamentId(Integer teamId, Integer tournamentId) {
         callupRepository.deleteByTeam_IdAndTournament_Id(teamId, tournamentId);
-        tournamentParticipationRepository.delete(tournamentParticipationOptional.get());
+        tournamentParticipationRepository.deleteByTeam_IdAndTournament_Id(teamId, tournamentId);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -862,11 +865,8 @@ public class TournamentService {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
         }
         Tournament tournament = tournamentOptional.get();
-        Optional<Player> playerOptional = accountService.getPlayerByAccountId(accountId);
-        if (playerOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
-        }
-        Player player = playerOptional.get();
+
+        Player player = getExistingPlayerByAccountId(accountId);
 
         Optional<Team> teamOptional = teamService.getTeamByPlayerIdAndSportCategory(player.getPlayerId(),
                 tournament.getSport().getSportCategory());
@@ -886,17 +886,6 @@ public class TournamentService {
         }
         tournamentParticipation.setToPay(tournamentParticipation.getToPay().subtract(amount));
         tournamentParticipationRepository.save(tournamentParticipation);
-    }
-
-    public Boolean hasCoordinatorActiveTournamentsByCoordinatorId(Integer coordinatorId) {
-        List<Tournament> activeTournaments = tournamentRepository
-                .findByCoordinator_CoordinatorId(coordinatorId);
-        for (Tournament tournament : activeTournaments) {
-            if (tournament.isTournamentActive()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -1018,7 +1007,7 @@ public class TournamentService {
     private TournamentPhase handlePostGroupStage(Integer tournamentId) {
         checkTournamentExists(tournamentId);
         Tournament tournament = tournamentRepository.findById(tournamentId).get();
-        matchService.drawKnockoutStageMatches(tournamentId);
+        matchService.drawKnockoutStageMatches(tournamentId, getQualifiedTeamsPerRankByTournamentId(tournamentId));
         switch (tournament.getNumTeamsQualified()) {
             case 16:
                 return TournamentPhase.RO16;
@@ -1046,7 +1035,7 @@ public class TournamentService {
                     if (!footballStanding.getQualified()) {
                         continue;
                     }
-                    if (!footballStandingsPerRank.containsKey(footballStanding.getRankPos())) {
+                    if (!footballStandingsPerRank.containsKey(Integer.valueOf(footballStanding.getRankPos()))) {
                         footballStandingsPerRank.put((int) footballStanding.getRankPos(), new ArrayList<>());
                     }
                     footballStandingsPerRank.get((int) footballStanding.getRankPos()).add(footballStanding);
@@ -1066,12 +1055,29 @@ public class TournamentService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void handleTeamRetireInMatch(Integer matchId, Integer teamId) {
-        Optional<Match> matchOptional = matchService.getMatchById(matchId);
-        if (matchOptional.isEmpty()) {
+    public Integer retireFromMatch(Integer matchId) {
+        Player activePlayer = AccountContext.getActivePlayer();
+
+        Optional<Match> optionalMatch = matchService.getMatchById(matchId);
+        if (optionalMatch.isEmpty()) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
         }
-        Match match = matchOptional.get();
+        Match match = optionalMatch.get();
+
+        Optional<Team> teamOptional = teamService.getTeamByPlayerIdAndSportCategory(activePlayer.getPlayerId(),
+                match.getSportCategory());
+        if (teamOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+        }
+        Team team = teamOptional.get();
+        Integer teamId = team.getId();
+
+        if (!isPlayerCalledUpInTournament(activePlayer.getPlayerId(),
+                match.getTournament().getId())) {
+            throw new UnauthorizedException(ErrorsString.PLAYER_NOT_CALLED_UP_IN_TOURNAMENT);
+        }
+
+        teamService.needToBeCaptainOrViceCaptain(team.getId(), activePlayer.getPlayerId());
 
         Tournament tournament = match.getTournament();
 
@@ -1130,26 +1136,51 @@ public class TournamentService {
             default:
                 throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
+        match.setFinishMatch(LocalDateTime.now());
+        matchService.saveMatch(match);
+        return match.getId();
     }
 
-    @Transactional(readOnly = true)
-    public Boolean areTeamInSameGroup(Integer tournamentId, Integer teamId1, Integer teamId2) {
-        checkTournamentExists(tournamentId);
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
-        switch (tournament.getSport().getSportCategory()) {
-            case FOOTBALL:
-                Optional<FootballStanding> footballStandingOptional1 = footballStandingRepository
-                        .findByTournament_IdAndTeam_Id(tournamentId, teamId1);
-                Optional<FootballStanding> footballStandingOptional2 = footballStandingRepository
-                        .findByTournament_IdAndTeam_Id(tournamentId, teamId2);
-                if (footballStandingOptional1.isEmpty() || footballStandingOptional2.isEmpty()) {
-                    throw new NotFoundException(ErrorsString.STANDING_NOT_FOUND);
-                }
-                FootballStanding footballStanding1 = footballStandingOptional1.get();
-                FootballStanding footballStanding2 = footballStandingOptional2.get();
-                return footballStanding1.getGroupName().equals(footballStanding2.getGroupName());
-            default:
-                throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+    public List<TournamentParticipationDTO> getNotPaidTeamParticipations(Integer teamId) {
+        teamService.checkTeamExists(teamId);
+        return getTeamParticipations(teamId).stream()
+                .filter(participation -> participation.getToPay().compareTo(BigDecimal.ZERO) > 0)
+                .map(TournamentParticipationDTO::fromTournamentParticipation).toList();
+    }
+
+    public Integer countActiveTournamentsByTeamIdAndPlayerId(Integer teamId, Integer playerId) {
+        teamService.checkTeamExists(teamId);
+        List<Tournament> tournaments = getActiveTournamentsByTeamId(teamId);
+
+        Integer count = 0;
+        for (Tournament tournament : tournaments) {
+            Optional<Callup> callup = callupRepository.findByPlayer_PlayerIdAndTournament_Id(playerId,
+                    tournament.getId());
+            if (callup.isPresent()) {
+                count++;
+            }
         }
+        return count;
+    }
+
+    public BigDecimal getCoordinatorPayPerMatchByCoordinatorId(Integer coordinatorId) {
+        Coordinator coordinator = getExistingCoordinatorByCoordinatorId(coordinatorId);
+        Short level = coordinator.getLevel();
+        if (level == null) {
+            level = 1; // Default level if not set
+        }
+
+        BigDecimal pay = growthStepRepository.findCoordinatorPayPerMatchByLevel(level);
+        return pay;
+    }
+
+    private Short getMedianRefereeLevel() {
+        List<Short> levels = refereeRepository.findAllLevelsOrdered();
+        if (levels == null || levels.isEmpty()) {
+            throw new NotFoundException(ErrorsString.REFEREE_NOT_FOUND);
+        }
+        int n = levels.size();
+        int index = (n - 1) / 2; // odd -> middle; even -> lower middle
+        return levels.get(index);
     }
 }

@@ -1,6 +1,5 @@
 package com.atl.backend.service.screen;
 
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.TournamentService;
 
 import java.math.BigDecimal;
@@ -32,7 +31,6 @@ import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.enums.AccountRole;
 import com.atl.backend.model.enums.SportCategory;
-import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.FootballMatchResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
@@ -48,8 +46,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class MatchScreenService {
     @Autowired
-    private TeamService teamService;
-    @Autowired
     private MatchService matchService;
     @Autowired
     private SportService sportService;
@@ -60,7 +56,7 @@ public class MatchScreenService {
 
     @Transactional(readOnly = true)
     public AvailableMatchesResponse getAvailableMatchesScreen(SportCategory sportCategory) {
-        Referee referee = AccountContext.getActiveReferee();
+        AccountContext.isReferee();
         List<Sport> sports = sportService.getSportsBySportCategory(sportCategory);
         Map<Integer, String> sportNames = new HashMap<>();
         Map<Integer, Team> teamsCache = new HashMap<>();
