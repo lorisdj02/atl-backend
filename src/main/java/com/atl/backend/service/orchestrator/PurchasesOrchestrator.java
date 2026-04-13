@@ -8,7 +8,7 @@ import com.atl.backend.auth.AccountContext;
 import com.atl.backend.model.Player;
 import com.atl.backend.service.BookingService;
 import com.atl.backend.service.PaymentService;
-import com.atl.backend.service.TournamentService;
+import com.atl.backend.service.tournamentServices.TournamentService;
 
 @Service
 public class PurchasesOrchestrator {

@@ -35,9 +35,9 @@ import com.atl.backend.response.TournamentDetailsResponse;
 import com.atl.backend.response.TournamentParametersResponse;
 import com.atl.backend.response.TournamentSummaryResponse;
 import com.atl.backend.service.SportService;
-import com.atl.backend.service.TournamentService;
 import com.atl.backend.service.orchestrator.PurchasesOrchestrator;
 import com.atl.backend.service.screen.TournamentScreenService;
+import com.atl.backend.service.tournamentServices.TournamentService;
 
 @RestController
 @RequestMapping("/api/tournaments")

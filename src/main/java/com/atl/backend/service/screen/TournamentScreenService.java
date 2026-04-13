@@ -1,6 +1,10 @@
 package com.atl.backend.service.screen;
 
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.tournamentServices.TournamentService;
+import com.atl.backend.service.tournamentServices.TournamentStandingService;
+import com.atl.backend.service.tournamentServices.TournamentStatsService;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,7 +46,6 @@ import com.atl.backend.response.TournamentSummaryResponse;
 import com.atl.backend.service.AccountService;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.MatchService;
-import com.atl.backend.service.TournamentService;
 import com.atl.backend.model.Field;
 import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
@@ -53,6 +56,10 @@ import com.atl.backend.model.Team;
 
 @Service
 public class TournamentScreenService {
+    @Autowired
+    private TournamentStandingService tournamentStandingService;
+    @Autowired
+    private TournamentStatsService tournamentStatsService;
     @Autowired
     private TeamService teamService;
     @Autowired
@@ -290,7 +297,7 @@ public class TournamentScreenService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<?> getTournamentScreen(Integer tournamentId){
+    public Optional<?> getTournamentScreen(Integer tournamentId) {
         Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
         if (optionalTournament.isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
@@ -318,7 +325,7 @@ public class TournamentScreenService {
 
         List<FootballMatch> matches = matchService.getFootballMatchesByTournamentId(tournamentId);
 
-        List<FootballStanding> standings = tournamentService.getFootballStandingsByTournamentId(tournamentId);
+        List<FootballStanding> standings = tournamentStandingService.getFootballStandingsByTournamentId(tournamentId);
 
         List<Integer> teams = tournamentService.getTeamIdsParticipatingInTournament(tournamentId);
 
@@ -332,10 +339,9 @@ public class TournamentScreenService {
         }
 
         Map<Integer, FootballTeamStatDTO> footballPlayerStatsCache = new HashMap<>();
-        List<FootballTournamentStats> footballTournamentStats = tournamentService
+        List<FootballTournamentStats> footballTournamentStats = tournamentStatsService
                 .getFootballTournamentStatsByTournamentId(tournamentId);
 
-                
         List<Player> players = new ArrayList<>();
         for (FootballTournamentStats stat : footballTournamentStats) {
             if (stat.getGoals() == 0 && stat.getMotm() == 0) {
@@ -378,10 +384,10 @@ public class TournamentScreenService {
         Tournament tournament = optionalTournament.get();
 
         return TournamentSummaryResponse.builder()
-        .tournament(TournamentDTO.fromTournament(tournament))
-        .field(FieldDTO.fromField(tournament.getField()))
-        .sport(SportDTO.fromSport(tournament.getSport()))
-        .cityName(tournament.getField().getCity().getName())
-        .build();
+                .tournament(TournamentDTO.fromTournament(tournament))
+                .field(FieldDTO.fromField(tournament.getField()))
+                .sport(SportDTO.fromSport(tournament.getSport()))
+                .cityName(tournament.getField().getCity().getName())
+                .build();
     }
 }

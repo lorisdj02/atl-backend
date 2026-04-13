@@ -1,4 +1,4 @@
-package com.atl.backend.service;
+package com.atl.backend.service.tournamentServices;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,7 +36,6 @@ import com.atl.backend.model.FavoriteTournament;
 import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballStanding;
-import com.atl.backend.model.FootballTournamentStats;
 import com.atl.backend.model.Match;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Sport;
@@ -52,8 +51,6 @@ import com.atl.backend.repository.CallupRepository;
 import com.atl.backend.repository.CoordinatorRepository;
 import com.atl.backend.repository.FavoriteTournamentRepository;
 import com.atl.backend.repository.FinalStageBracketRepository;
-import com.atl.backend.repository.FootballStandingRepository;
-import com.atl.backend.repository.FootballTournamentStatsRepository;
 import com.atl.backend.repository.GrowthStepRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.RefereeRepository;
@@ -63,24 +60,30 @@ import com.atl.backend.request.ConfirmCallupsRequest;
 import com.atl.backend.response.ApplyTournamentFiltersResponse;
 import com.atl.backend.response.ScheduleMatchResponse;
 import com.atl.backend.response.TournamentParametersResponse;
-import com.atl.backend.util.StandingsComparators;
-
+import com.atl.backend.service.BookingService;
+import com.atl.backend.service.FieldService;
+import com.atl.backend.service.MatchService;
+import com.atl.backend.service.SportService;
+import com.atl.backend.service.TeamService;
 
 @Service
 public class TournamentService {
+
+    @Autowired
+    private TournamentPhaseService tournamentPhaseService;
+    @Autowired
+    private TournamentStandingService tournamentStandingService;
+    @Autowired
+    private TournamentStatsService tournamentStatsService;
 
     @Autowired
     private BookingService bookingService;
     @Autowired
     private TournamentRepository tournamentRepository;
     @Autowired
-    private FootballStandingRepository footballStandingRepository;
-    @Autowired
     private TournamentParticipationRepository tournamentParticipationRepository;
     @Autowired
     private CallupRepository callupRepository;
-    @Autowired
-    private FootballTournamentStatsRepository footballTournamentStatsRepository;
     @Autowired
     private FavoriteTournamentRepository favoriteTournamentRepository;
     @Autowired
@@ -105,10 +108,10 @@ public class TournamentService {
 
     public void deleteAllTournaments() {
         tournamentRepository.deleteAll();
-        footballStandingRepository.deleteAll();
+        tournamentStandingService.deleteAllFootballStandings();
         tournamentParticipationRepository.deleteAll();
         callupRepository.deleteAll();
-        footballTournamentStatsRepository.deleteAll();
+        tournamentStatsService.deleteAllFootballTournamentStats();
         matchService.deleteAllMatches();
     }
 
@@ -152,10 +155,6 @@ public class TournamentService {
         return coordinatorOpt.get();
     }
 
-    public List<FootballStanding> getFootballStandingsByTournamentId(Integer tournamentId) {
-        return footballStandingRepository.findByTournament_Id(tournamentId);
-    }
-
     public List<Tournament> getActiveTournaments() {
         return tournamentRepository.findActiveTournaments();
     }
@@ -185,10 +184,6 @@ public class TournamentService {
 
     public List<FinalStageBracket> getFinalStageBracketsByTournamentId(Integer tournamentId) {
         return finalStageBracketRepository.findByTournament_Id(tournamentId);
-    }
-
-    public List<FootballTournamentStats> getFootballTournamentStatsByTournamentId(Integer tournamentId) {
-        return footballTournamentStatsRepository.findByTournament_Id(tournamentId);
     }
 
     public List<Tournament> getActiveTournamentsByTeamId(Integer teamId) {
@@ -337,7 +332,7 @@ public class TournamentService {
 
         System.out.println("[DEBUG - TournamentService] - Matches generated for tournament " + tournamentId);
 
-        generateStandingsForTournament(tournament);
+        tournamentStandingService.generateStandingsForTournament(tournament);
 
         System.out.println("[DEBUG - TournamentService] - Standings generated for tournament " + tournamentId);
 
@@ -345,7 +340,7 @@ public class TournamentService {
 
         System.out.println("[DEBUG - TournamentService] - Teams qualified for tournament " + tournamentId);
 
-        generateTournamentStats(tournament);
+        tournamentStatsService.generateTournamentStats(tournament, getTeamIdsParticipatingInTournament(tournament.getId()));
 
         System.out.println("[DEBUG - TournamentService] - Tournament stats generated for tournament " + tournamentId);
         tournament.setStatus(TournamentStatus.SCHEDULED);
@@ -353,166 +348,13 @@ public class TournamentService {
         tournamentRepository.save(tournament);
     }
 
-    private void generateStandingsForTournament(Tournament tournament) {
-        switch (tournament.getSport().getSportCategory()) {
-            case FOOTBALL:
-                for (int groupIndex = 1; groupIndex <= tournament.getNumGroups(); groupIndex++) {
-                    String groupName = "" + (char) ('A' + groupIndex - 1);
-                    List<Integer> teamIds = matchService.getTeamIdsByTournamentIdAndGroupStage(tournament.getId(),
-                            groupName);
-
-                    System.out.println(
-                            "[DEBUG - TournamentService] - Generating standings for tournament " + tournament.getId()
-                                    + " and group " + groupName + " with teams " + teamIds);
-                    for (Integer teamId : teamIds) {
-                        FootballStanding footballStanding = new FootballStanding();
-                        footballStanding.setTournament(tournament);
-                        footballStanding.setTeam(teamService.getTeamById(teamId).get());
-                        footballStanding.setGroupName(groupName);
-                        footballStandingRepository.save(footballStanding);
-                    }
-                }
-                break;
-            default:
-                throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
-        }
-    }
-
-    private void generateTournamentStats(Tournament tournament) {
-        switch (tournament.getSport().getSportCategory()) {
-            case FOOTBALL:
-                List<Integer> teamIds = getTeamIdsParticipatingInTournament(tournament.getId());
-                for (Integer teamId : teamIds) {
-                    List<Integer> playerIds = getCalluppedPlayerIdsByTournamentId(tournament.getId());
-                    for (Integer playerId : playerIds) {
-                        Player player = getExistingPlayerByPlayerId(playerId);
-                        FootballTournamentStats tournamentStats = new FootballTournamentStats();
-                        tournamentStats.setTournament(tournament);
-                        tournamentStats.setTeam(teamService.getTeamById(teamId).get());
-                        tournamentStats.setPlayer(player);
-                        footballTournamentStatsRepository.save(tournamentStats);
-                    }
-                }
-                break;
-            default:
-                throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
-        }
-    }
-
     @Transactional(rollbackFor = Exception.class)
     public void updateTeamsQualifiedInTournament(Integer tournamentId, Boolean needToOrder) {
-        checkTournamentExists(tournamentId);
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
-
-        final short qualifiedPerGroup = (short) (tournament.getNumTeamsQualified() / tournament.getNumGroups());
-        final short numTeamsPerGroup = (short) (tournament.getNumTeams() / tournament.getNumGroups());
-        int extraQualified = 0;
-
-        if ((tournament.getNumTeamsQualified() % tournament.getNumGroups()) != 0) {
-            extraQualified = tournament.getNumTeamsQualified() % tournament.getNumGroups();
-        }
-
-        if (needToOrder) {
-            orderStandingsForTournament(tournament.getId());
-        }
-
-        System.out.println("[DEBUG - TournamentService] - Updating qualified teams for tournament " + tournamentId
-                + " with " + qualifiedPerGroup + " qualified per group and " + extraQualified + " extra qualified");
-
-        List<FootballStanding> notQualifiedFootballStandings = new ArrayList<>();
-
-        switch (tournament.getSport().getSportCategory()) {
-            case FOOTBALL:
-                for (int groupIndex = 1; groupIndex <= tournament.getNumGroups(); groupIndex++) {
-                    String groupName = "" + (char) ('A' + groupIndex - 1);
-                    System.out.println(
-                            "[DEBUG - TournamentService] - Evaluating qualification for tournament " + tournamentId
-                                    + " and group " + groupName);
-
-                    List<FootballStanding> footballStandings = footballStandingRepository
-                            .findByTournament_IdAndGroupName(tournamentId, groupName);
-
-                    System.out.println("[DEBUG - TournamentService] - Football standings for tournament " + tournamentId
-                            + " and group " + groupName + ". " + footballStandings.size() + " teams");
-                    for (int i = 0; i < footballStandings.size(); i++) {
-                        if (i < qualifiedPerGroup) {
-                            FootballStanding footballStanding = footballStandings.get(i);
-                            footballStanding.setQualified(true);
-                            footballStandingRepository.save(footballStanding);
-                        } else {
-                            FootballStanding footballStanding = footballStandings.get(i);
-                            footballStanding.setQualified(false);
-                            footballStandingRepository.save(footballStanding);
-                            notQualifiedFootballStandings.add(footballStanding);
-                        }
-                    }
-                }
-
-                for (short consideredPos = 1; consideredPos <= numTeamsPerGroup
-                        && extraQualified > 0; consideredPos++) {
-                    int takenExtraQualified = 0;
-                    List<FootballStanding> notQualifiedForPos = new ArrayList<>();
-
-                    for (FootballStanding footballStanding : notQualifiedFootballStandings) {
-                        if (footballStanding.getRankPos() == consideredPos) {
-                            notQualifiedForPos.add(footballStanding);
-                        }
-                    }
-                    if (notQualifiedForPos.size() > 0 && extraQualified > 0) {
-                        notQualifiedForPos.sort(StandingsComparators.FOOTBALL_STANDING);
-                        for (int i = 0; i < Math.min(extraQualified, notQualifiedForPos.size()); i++) {
-                            FootballStanding footballStanding = notQualifiedForPos.get(i);
-                            footballStanding.setQualified(true);
-                            footballStandingRepository.save(footballStanding);
-                            takenExtraQualified++;
-                        }
-                        extraQualified -= takenExtraQualified;
-                    }
-                }
-
-                break;
-            default:
-                throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
-        }
+        tournamentPhaseService.updateTeamsQualifiedInTournament(tournamentId, needToOrder);
     }
 
     public void orderStandingsForTournament(Integer tournamentId) {
-        checkTournamentExists(tournamentId);
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
-        switch (tournament.getSport().getSportCategory()) {
-            case FOOTBALL:
-                List<FootballStanding> footballStandings = new ArrayList<>(
-                        footballStandingRepository.findByTournament_Id(tournamentId));
-                System.out.println("[DEBUG - TournamentService] - Ordering standings for tournament " + tournamentId
-                        + ". " + footballStandings.size() + " teams");
-                List<FootballStanding> groupFootballStandings = new ArrayList<>();
-                for (int j = 0; j < tournament.getNumGroups(); j++) {
-                    groupFootballStandings = new ArrayList<>();
-                    String groupName = "" + (char) ('A' + j);
-                    for (FootballStanding footballStanding : footballStandings) {
-                        if (footballStanding.getGroupName().equals(groupName)) {
-                            groupFootballStandings.add(footballStanding);
-                        }
-                    }
-                    groupFootballStandings.sort(StandingsComparators.FOOTBALL_STANDING);
-                    System.out.println("[DEBUG - TournamentService] - Ordering standings for group " + groupName + ". "
-                            + groupFootballStandings.size() + " teams");
-                    for (int i = 0; i < groupFootballStandings.size(); i++) {
-                        FootballStanding footballStanding = groupFootballStandings.get(i);
-                        footballStanding.setRankPos((short) (i + 1));
-                        System.out.println(
-                                "[DEBUG - TournamentService] - Setting rank position " + footballStanding.getRankPos()
-                                        + " for team " + footballStanding.getTeam().getName() + " "
-                                        + footballStanding.getTeam().getId() + " in tournament "
-                                        + tournamentId + " and group " + groupName);
-                        footballStandingRepository.save(footballStanding);
-                    }
-                }
-
-                break;
-            default:
-                throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
-        }
+        tournamentPhaseService.orderStandingsForTournament(tournamentId);
     }
 
     public List<Integer> getCalluppedPlayerIdsByTournamentId(Integer tournamentId) {
@@ -891,69 +733,13 @@ public class TournamentService {
     @Transactional(rollbackFor = Exception.class)
     public FootballStanding updateFootballStanding(Integer tournamentId, Integer teamId, Short ptsDelta,
             Short goalsConcededDelta, Short goalsScoredDelta, Short wonDelta, Short drawnDelta, Short lostDelta) {
-
-        Optional<FootballStanding> footballStandingOptional = footballStandingRepository
-                .findByTournament_IdAndTeam_Id(tournamentId, teamId);
-
-        if (footballStandingOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.STANDING_NOT_FOUND);
-        }
-
-        ptsDelta = ptsDelta != null ? ptsDelta : 0;
-        goalsConcededDelta = goalsConcededDelta != null ? goalsConcededDelta : 0;
-        goalsScoredDelta = goalsScoredDelta != null ? goalsScoredDelta : 0;
-        wonDelta = wonDelta != null ? wonDelta : 0;
-        drawnDelta = drawnDelta != null ? drawnDelta : 0;
-        lostDelta = lostDelta != null ? lostDelta : 0;
-
-        FootballStanding footballStanding = footballStandingOptional.get();
-
-        footballStanding.setPts((short) (footballStanding.getPts() + ptsDelta));
-        footballStanding.setGoalsConceded((short) (footballStanding.getGoalsConceded() + goalsConcededDelta));
-        footballStanding.setGoalsScored((short) (footballStanding.getGoalsScored() + goalsScoredDelta));
-        footballStanding.setWon((short) (footballStanding.getWon() + wonDelta));
-        footballStanding.setDrawn((short) (footballStanding.getDrawn() + drawnDelta));
-        footballStanding.setLost((short) (footballStanding.getLost() + lostDelta));
-
-        return footballStandingRepository.save(footballStanding);
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public void giveTournamentPrizes(Integer tournamentId) {
-
-        checkTournamentExists(tournamentId);
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
-
-        if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
-
-        tournament.setStatus(TournamentStatus.PENDING_PAYMENTS);
-        tournamentRepository.save(tournament);
-
-        // TODO: Devi continuare la logica di assegnazione premi
+        return tournamentStandingService.updateFootballStanding(tournamentId, teamId, ptsDelta, goalsConcededDelta,
+                goalsScoredDelta, wonDelta, drawnDelta, lostDelta);
     }
 
     @Transactional(readOnly = true)
-    public Boolean canGoToNextPhase(Integer tournamentId) {
-        checkTournamentExists(tournamentId);
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
-        switch (tournament.getPhase()) {
-            case GROUP:
-                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, null);
-            case RO32:
-                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "32");
-            case RO16:
-                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "OF");
-            case QUARTER:
-                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "QF");
-            case SEMI:
-                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "SF");
-            case FINAL:
-                return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, "FI");
-            default:
-                throw new IllegalArgumentException(ErrorsString.INVALID_TOURNAMENT_PHASE);
-        }
+    public Boolean cangoToNextPhase(Integer tournamentId) {
+        return tournamentPhaseService.canGoToNextPhase(tournamentId);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -969,89 +755,12 @@ public class TournamentService {
 
     @Transactional(rollbackFor = Exception.class)
     public void goToNextPhase(Integer tournamentId) {
-        checkTournamentExists(tournamentId);
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
-        if (!canGoToNextPhase(tournamentId)) {
-            throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
-        }
-        switch (tournament.getPhase()) {
-            case GROUP:
-                updateTeamsQualifiedInTournament(tournamentId, true);
-                tournament.setPhase(handlePostGroupStage(tournamentId));
-                break;
-            case RO32:
-                // Non esiste ancora RO32, ma se dovesse essere aggiunta in futuro questa è la
-                // logica da seguire
-                tournament.setPhase(TournamentPhase.RO16);
-                break;
-            case RO16:
-                if (!canGoToNextPhase(tournamentId)) {
-                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
-                }
-                tournament.setPhase(TournamentPhase.QUARTER);
-                break;
-            case QUARTER:
-                tournament.setPhase(TournamentPhase.SEMI);
-                break;
-            case SEMI:
-                tournament.setPhase(TournamentPhase.FINAL);
-                break;
-            case FINAL:
-                giveTournamentPrizes(tournamentId);
-                break;
-        }
-        tournamentRepository.save(tournament);
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    private TournamentPhase handlePostGroupStage(Integer tournamentId) {
-        checkTournamentExists(tournamentId);
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
-        matchService.drawKnockoutStageMatches(tournamentId, getQualifiedTeamsPerRankByTournamentId(tournamentId));
-        switch (tournament.getNumTeamsQualified()) {
-            case 16:
-                return TournamentPhase.RO16;
-            case 8:
-                return TournamentPhase.QUARTER;
-            case 4:
-                return TournamentPhase.SEMI;
-            case 2:
-                return TournamentPhase.FINAL;
-            default:
-                throw new IllegalArgumentException(ErrorsString.INVALID_NUMBER_OF_QUALIFIED_TEAMS);
-        }
+        tournamentPhaseService.goToNextPhase(tournamentId);
     }
 
     @Transactional(readOnly = true)
     public Map<Integer, List<Team>> getQualifiedTeamsPerRankByTournamentId(Integer tournamentId) {
-        checkTournamentExists(tournamentId);
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
-        Map<Integer, List<Team>> qualifiedTeamsPerRank = new HashMap<>();
-        switch (tournament.getSport().getSportCategory()) {
-            case FOOTBALL:
-                List<FootballStanding> footballStandings = footballStandingRepository.findByTournament_Id(tournamentId);
-                Map<Integer, List<FootballStanding>> footballStandingsPerRank = new HashMap<>();
-                for (FootballStanding footballStanding : footballStandings) {
-                    if (!footballStanding.getQualified()) {
-                        continue;
-                    }
-                    if (!footballStandingsPerRank.containsKey(Integer.valueOf(footballStanding.getRankPos()))) {
-                        footballStandingsPerRank.put((int) footballStanding.getRankPos(), new ArrayList<>());
-                    }
-                    footballStandingsPerRank.get((int) footballStanding.getRankPos()).add(footballStanding);
-                }
-
-                for (Integer rank : footballStandingsPerRank.keySet()) {
-                    List<FootballStanding> standingsForRank = footballStandingsPerRank.get(rank);
-                    standingsForRank.sort(StandingsComparators.FOOTBALL_STANDING);
-                    qualifiedTeamsPerRank.put(rank, standingsForRank.stream().map(FootballStanding::getTeam).toList());
-                }
-
-                break;
-            default:
-                throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
-        }
-        return qualifiedTeamsPerRank;
+        return tournamentPhaseService.getQualifiedTeamsPerRankByTournamentId(tournamentId);
     }
 
     @Transactional(rollbackFor = Exception.class)

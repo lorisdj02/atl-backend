@@ -1,7 +1,5 @@
 package com.atl.backend.service.screen;
 
-import com.atl.backend.service.TournamentService;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +35,7 @@ import com.atl.backend.response.PastAssignedMatchesResponse;
 import com.atl.backend.service.AccountService;
 import com.atl.backend.service.MatchService;
 import com.atl.backend.service.SportService;
+import com.atl.backend.service.tournamentServices.TournamentService;
 import com.atl.backend.exception.*;
 
 import java.util.Optional;

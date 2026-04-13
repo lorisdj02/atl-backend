@@ -3,8 +3,7 @@ package com.atl.backend.config;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TeamService;
-
-import com.atl.backend.service.TournamentService;
+import com.atl.backend.service.tournamentServices.TournamentService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

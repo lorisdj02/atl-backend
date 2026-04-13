@@ -41,7 +41,7 @@ import com.atl.backend.response.PlayersInTeamResponse;
 import com.atl.backend.response.TeamDetailsResponse;
 import com.atl.backend.response.TeamsResponse;
 import com.atl.backend.service.TeamService;
-import com.atl.backend.service.TournamentService;
+import com.atl.backend.service.tournamentServices.TournamentService;
 
 @Service
 public class TeamScreenService {

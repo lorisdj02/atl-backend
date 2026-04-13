@@ -24,10 +24,13 @@ import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.MatchService;
 import com.atl.backend.service.TeamService;
-import com.atl.backend.service.TournamentService;
+import com.atl.backend.service.tournamentServices.TournamentService;
+import com.atl.backend.service.tournamentServices.TournamentStandingService;
 
 @Service
 public class HomeScreenService {
+        @Autowired
+        private TournamentStandingService tournamentStandingService;
         @Autowired
         private FieldService fieldService;
         @Autowired
@@ -100,8 +103,9 @@ public class HomeScreenService {
                                 switch (sportCategory) {
                                         case FOOTBALL:
                                                 footballStandingsPerTournament.put(tournament.getId(),
-                                                                tournamentService.getFootballStandingsByTournamentId(
-                                                                                tournament.getId()));
+                                                                tournamentStandingService
+                                                                                .getFootballStandingsByTournamentId(
+                                                                                                tournament.getId()));
                                                 footballMatchesPerTournament.put(tournament.getId(),
                                                                 matchService.getFootballMatchesByTournamentId(
                                                                                 tournament.getId()));

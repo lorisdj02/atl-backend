@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.atl.backend.auth.AccountContext;
 import com.atl.backend.model.PlaysAt;
 import com.atl.backend.service.TeamService;
-import com.atl.backend.service.TournamentService;
+import com.atl.backend.service.tournamentServices.TournamentService;
 
 @Service
 public class TournamentTeamOrchestrator {

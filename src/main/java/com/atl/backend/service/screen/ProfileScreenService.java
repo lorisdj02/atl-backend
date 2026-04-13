@@ -45,7 +45,7 @@ import com.atl.backend.service.MatchService;
 import com.atl.backend.service.PaymentService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TeamService;
-import com.atl.backend.service.TournamentService;
+import com.atl.backend.service.tournamentServices.TournamentService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

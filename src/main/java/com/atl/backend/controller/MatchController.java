@@ -18,8 +18,8 @@ import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
 import com.atl.backend.service.MatchService;
 import com.atl.backend.service.SportService;
-import com.atl.backend.service.TournamentService;
 import com.atl.backend.service.screen.MatchScreenService;
+import com.atl.backend.service.tournamentServices.TournamentService;
 
 @RestController
 @RequestMapping("/api/matches")
