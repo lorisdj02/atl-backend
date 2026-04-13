@@ -2,7 +2,6 @@ package com.atl.backend.dto;
 
 
 import com.fasterxml.jackson.annotation.*;
-import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data

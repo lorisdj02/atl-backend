@@ -3,6 +3,7 @@ package com.atl.backend.config;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -44,23 +46,21 @@ import javax.sql.DataSource;
 
 @Component
 public class MockDbPopulate {
+    @Autowired
+    private TournamentParticipantService tournamentParticipantService;
+    @Autowired
+    private FieldService fieldService;
+    @Autowired
+    private TournamentService tournamentService;
+    @Autowired
+    private SportService sportService;
+    @Autowired
+    private TeamService teamService;
+    @Autowired
+    private AccountService accountService;
+    @Autowired
+    private DataSource dataSource;
 
-    private final FieldService fieldService;
-    private final TournamentService tournamentService;
-    private final SportService sportService;
-    private final TeamService teamService;
-    private final AccountService accountService;
-    private final DataSource dataSource;
-
-    public MockDbPopulate(AccountService accountService, TeamService teamService, SportService sportService,
-            TournamentService tournamentService, FieldService fieldService, DataSource dataSource) {
-        this.accountService = accountService;
-        this.teamService = teamService;
-        this.sportService = sportService;
-        this.tournamentService = tournamentService;
-        this.fieldService = fieldService;
-        this.dataSource = dataSource;
-    }
 
     @Transactional
     public void createAccounts() {
@@ -111,8 +111,6 @@ public class MockDbPopulate {
                 teamService.joinTeam(playerIds.get((i - 1) * 10 + j - 1), savedTeam.getId());
             }
         }
-
-
 
         System.out.println("[DEBUG] - Created 20 teams, each with 10 players");
     }
@@ -236,7 +234,7 @@ public class MockDbPopulate {
         System.out.println("[DEBUG] - Created 3 fields: Campo 1, Campo 2, Campo 3");
     }
 
-    public void createRefereeRoles(){
+    public void createRefereeRoles() {
         RefereeRole role1 = new RefereeRole();
         role1.setSport(sportService.getSportById(1).get());
         role1.setName("MAIN");
@@ -406,14 +404,14 @@ public class MockDbPopulate {
         sportService.saveRefereeRole(role24);
     }
 
-    public void createGrowthSteps(){
+    public void createGrowthSteps() {
         GrowthStep step1 = new GrowthStep();
         step1.setType(GrowthStepType.REFEREE);
         step1.setTitle("Amateur Referee");
         step1.setLevel((short) 1);
         step1.setX(0);
         step1.setMinRatingOverLastXMatches(BigDecimal.valueOf(0));
-        step1.setMinRefereedMatches((short)0);
+        step1.setMinRefereedMatches((short) 0);
         accountService.saveGrowthStep(step1);
 
         GrowthStep step2 = new GrowthStep();
@@ -422,7 +420,7 @@ public class MockDbPopulate {
         step2.setLevel((short) 2);
         step2.setX(10);
         step2.setMinRatingOverLastXMatches(BigDecimal.valueOf(4.0));
-        step2.setMinRefereedMatches((short)30);
+        step2.setMinRefereedMatches((short) 30);
         accountService.saveGrowthStep(step2);
 
         GrowthStep step3 = new GrowthStep();
@@ -431,7 +429,7 @@ public class MockDbPopulate {
         step3.setLevel((short) 3);
         step3.setX(20);
         step3.setMinRatingOverLastXMatches(BigDecimal.valueOf(4.5));
-        step3.setMinRefereedMatches((short)60);
+        step3.setMinRefereedMatches((short) 60);
         accountService.saveGrowthStep(step3);
 
         GrowthStep step4 = new GrowthStep();
@@ -440,7 +438,7 @@ public class MockDbPopulate {
         step4.setLevel((short) 4);
         step4.setX(30);
         step4.setMinRatingOverLastXMatches(BigDecimal.valueOf(4.8));
-        step4.setMinRefereedMatches((short)100);
+        step4.setMinRefereedMatches((short) 100);
         accountService.saveGrowthStep(step4);
 
         GrowthStep step5 = new GrowthStep();
@@ -449,7 +447,7 @@ public class MockDbPopulate {
         step5.setLevel((short) 1);
         step5.setX(0);
         step5.setMinRatingOverLastXTournaments(BigDecimal.valueOf(0));
-        step5.setMinCoordinatedTournaments((short)0);
+        step5.setMinCoordinatedTournaments((short) 0);
         step5.setCoordinatorPayPerMatch(BigDecimal.valueOf(12.5));
         accountService.saveGrowthStep(step5);
 
@@ -459,7 +457,7 @@ public class MockDbPopulate {
         step6.setLevel((short) 2);
         step6.setX(3);
         step6.setMinRatingOverLastXTournaments(BigDecimal.valueOf(3.5));
-        step6.setMinCoordinatedTournaments((short)3);
+        step6.setMinCoordinatedTournaments((short) 3);
         step6.setCoordinatorPayPerMatch(BigDecimal.valueOf(15));
         accountService.saveGrowthStep(step6);
 
@@ -469,7 +467,7 @@ public class MockDbPopulate {
         step7.setLevel((short) 3);
         step7.setX(5);
         step7.setMinRatingOverLastXTournaments(BigDecimal.valueOf(4.0));
-        step7.setMinCoordinatedTournaments((short)10);
+        step7.setMinCoordinatedTournaments((short) 10);
         step7.setCoordinatorPayPerMatch(BigDecimal.valueOf(17.5));
         accountService.saveGrowthStep(step7);
 
@@ -479,7 +477,7 @@ public class MockDbPopulate {
         step8.setLevel((short) 4);
         step8.setX(10);
         step8.setMinRatingOverLastXTournaments(BigDecimal.valueOf(4.5));
-        step8.setMinCoordinatedTournaments((short)20);
+        step8.setMinCoordinatedTournaments((short) 20);
         step8.setCoordinatorPayPerMatch(BigDecimal.valueOf(20));
         accountService.saveGrowthStep(step8);
     }
@@ -512,9 +510,9 @@ public class MockDbPopulate {
         System.out.println("[DEBUG] - Created tournament 'Torneo in corso' with 8 teams, all paid");
 
         for (int i = 1; i <= 8; i++) {
-                List<Player> players = teamService.getPlayersByTeamId(teamIds.get(i - 1));
-                List<Integer> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
-                tournamentService.participateToTournament(savedTournament1.getId(), teamIds.get(i - 1), playerIds);
+            List<Player> players = teamService.getPlayersByTeamId(teamIds.get(i - 1));
+            List<Integer> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
+            tournamentParticipantService.participateToTournament(savedTournament1.getId(), teamIds.get(i - 1), playerIds);
         }
 
         System.out.println("[DEBUG] - All 8 teams participated to 'Torneo in corso'");
@@ -544,10 +542,10 @@ public class MockDbPopulate {
 
         System.out.println("[DEBUG] - Created tournament 'Torneo da cominciare' with 9 teams, all paid");
 
-                for (int i = 1; i <= 8; i++) {
-                List<Player> players = teamService.getPlayersByTeamId(teamIds.get(i + 8 - 1));
-                List<Integer> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
-                tournamentService.participateToTournament(savedTournament2.getId(), teamIds.get(i + 8 - 1), playerIds);
+        for (int i = 1; i <= 8; i++) {
+            List<Player> players = teamService.getPlayersByTeamId(teamIds.get(i + 8 - 1));
+            List<Integer> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
+            tournamentParticipantService.participateToTournament(savedTournament2.getId(), teamIds.get(i + 8 - 1), playerIds);
         }
         System.out.println("[DEBUG] - Created tournament 'Torneo da cominciare' with 9 teams, all paid");
     }

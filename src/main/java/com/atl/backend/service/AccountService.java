@@ -30,7 +30,9 @@ import com.atl.backend.repository.ReviewRepository;
 import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.request.UpdateAccountInfosRequest;
 import com.atl.backend.response.LoginResponse;
-import com.atl.backend.service.orchestrator.TournamentTeamOrchestrator;
+import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.orchestrator.TournamentTeamMatchOrchestrator;
+import com.atl.backend.service.paymentServices.PaymentService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -71,7 +73,7 @@ public class AccountService {
     private TournamentRepository tournamentRepository;
 
     @Autowired
-    private TournamentTeamOrchestrator tournamentTeamOrchestrator;
+    private TournamentTeamMatchOrchestrator tournamentTeamMatchOrchestrator;
 
     public Account registerAccount(Account account, Optional<String> OrgName) {
         saveAccount(account);
@@ -430,7 +432,7 @@ public class AccountService {
         }
         switch (account.getRole()) {
             case PLAYER:
-                tournamentTeamOrchestrator.leaveAllTeams();
+                tournamentTeamMatchOrchestrator.leaveAllTeams();
                 bookingService.leaveAllBookings();
                 break;
             case COORDINATOR:

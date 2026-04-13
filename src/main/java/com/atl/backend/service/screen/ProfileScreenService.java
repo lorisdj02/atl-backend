@@ -41,11 +41,11 @@ import com.atl.backend.response.ReviewsResponse;
 import com.atl.backend.response.WalletResponse;
 import com.atl.backend.service.AccountService;
 import com.atl.backend.service.BookingService;
-import com.atl.backend.service.MatchService;
-import com.atl.backend.service.PaymentService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TeamService;
-import com.atl.backend.service.tournamentServices.TournamentService;
+import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.paymentServices.PaymentService;
+import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -67,9 +67,9 @@ public class ProfileScreenService {
     @Autowired
     private BookingService bookingService;
     @Autowired
-    private TournamentService tournamentService;
-    @Autowired
     private MatchService matchService;
+    @Autowired
+    private TournamentParticipantService tournamentParticipantService;
 
     @Transactional(readOnly = true)
     public MyGrowthResponse getMyGrowthScreen() {
@@ -169,7 +169,7 @@ public class ProfileScreenService {
         Map<String, Integer> numLobbyJoinedPerCategory = new HashMap<>();
         for (SportCategory sportCategory : SportCategory.values()) {
             numTournamentPerCategory.put(sportCategory.name(),
-                    tournamentService.countTournamentsByPlayerIdAndSportCategory(player.getPlayerId(), sportCategory));
+                    tournamentParticipantService.countTournamentsByPlayerIdAndSportCategory(player.getPlayerId(), sportCategory));
             numPrivateBookingPerCategory.put(sportCategory.name(),
                     bookingService.countPrivateBookingsByPlayerIdAndSportCategory(player.getPlayerId(), sportCategory));
             numLobbyJoinedPerCategory.put(sportCategory.name(),

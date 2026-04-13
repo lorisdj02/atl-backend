@@ -23,7 +23,7 @@ public class MatchBooking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coordinator_id", nullable = false)
-    private Player coordinator;
+    private Coordinator coordinator;
 
     /*
      * @Column(name = "match_id", nullable = false)

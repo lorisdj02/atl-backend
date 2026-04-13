@@ -32,9 +32,9 @@ import com.atl.backend.response.TeamDetailsResponse;
 import com.atl.backend.response.TeamsResponse;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TeamService;
-import com.atl.backend.service.orchestrator.TournamentTeamOrchestrator;
+import com.atl.backend.service.orchestrator.TournamentTeamMatchOrchestrator;
 import com.atl.backend.service.screen.TeamScreenService;
-import com.atl.backend.service.tournamentServices.TournamentService;
+import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 
 @RestController
 @RequestMapping("/api/teams")
@@ -46,9 +46,9 @@ public class TeamController {
     @Autowired
     private TeamService teamService;
     @Autowired
-    TournamentTeamOrchestrator tournamentTeamOrchestrator;
+    TournamentTeamMatchOrchestrator tournamentTeamMatchOrchestrator;
     @Autowired
-    private TournamentService tournamentService;
+    private TournamentParticipantService tournamentParticipantService;
 
     @GetMapping("/{sportCategory}")
     public ResponseEntity<TeamsResponse> getTeamsScreen(@PathVariable String sportCategory) {
@@ -103,7 +103,7 @@ public class TeamController {
 
     @GetMapping("/team/{teamId}/not-paid-participations")
     public ResponseEntity<List<TournamentParticipationDTO>> getNotPaidTeamParticipations(@PathVariable Integer teamId) {
-        List<TournamentParticipationDTO> response = tournamentService.getNotPaidTeamParticipations(teamId);
+        List<TournamentParticipationDTO> response = tournamentParticipantService.getNotPaidTeamParticipations(teamId);
         return ResponseEntity.ok(response);
     }
 
@@ -162,7 +162,7 @@ public class TeamController {
 
     @DeleteMapping("/team/{teamId}/leave")
     public ResponseEntity<Void> leaveTeam(@PathVariable Integer teamId) {
-        tournamentTeamOrchestrator.leaveTeam(teamId);
+        tournamentTeamMatchOrchestrator.leaveTeam(teamId);
         return ResponseEntity.ok().build();
     }
 }

@@ -12,7 +12,6 @@ import com.atl.backend.response.PersonalPlayerStatsResponse;
 import com.atl.backend.response.RefereeLicensesResponse;
 import com.atl.backend.response.ReviewsResponse;
 import com.atl.backend.response.WalletResponse;
-import com.atl.backend.service.AccountService;
 import com.atl.backend.service.screen.ProfileScreenService;
 
 @RestController
@@ -20,8 +19,6 @@ import com.atl.backend.service.screen.ProfileScreenService;
 public class ProfileController {
     @Autowired
     private ProfileScreenService profileScreenService;
-    @Autowired
-    private AccountService accountService;
 
     @GetMapping("/growth-screen")
     public ResponseEntity<MyGrowthResponse> getMyGrowthScreen() {

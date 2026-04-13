@@ -1,9 +1,11 @@
 package com.atl.backend.service.screen;
 
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 import com.atl.backend.service.tournamentServices.TournamentStandingService;
-import com.atl.backend.service.tournamentServices.TournamentStatsService;
+import com.atl.backend.service.tournamentServices.TournamentStatService;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -45,7 +47,6 @@ import com.atl.backend.response.TournamentDetailsResponse;
 import com.atl.backend.response.TournamentSummaryResponse;
 import com.atl.backend.service.AccountService;
 import com.atl.backend.service.FieldService;
-import com.atl.backend.service.MatchService;
 import com.atl.backend.model.Field;
 import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
@@ -56,14 +57,19 @@ import com.atl.backend.model.Team;
 
 @Service
 public class TournamentScreenService {
+
+    @Autowired
+    private TournamentParticipantService tournamentParticipantService;
+    @Autowired
+    private TournamentService tournamentService;
     @Autowired
     private TournamentStandingService tournamentStandingService;
     @Autowired
-    private TournamentStatsService tournamentStatsService;
+    private TournamentStatService tournamentStatService;
+
     @Autowired
     private TeamService teamService;
-    @Autowired
-    private TournamentService tournamentService;
+
     @Autowired
     private AccountService accountService;
     @Autowired
@@ -186,7 +192,7 @@ public class TournamentScreenService {
         if (!tournament.getAtlEvent()) {
             // Per gli eventi ATL, le squadre partecipanti rimangono nascoste fino
             // all'inizio del torneo.
-            List<Integer> teams = tournamentService.getTeamIdsParticipatingInTournament(tournamentId);
+            List<Integer> teams = tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId);
 
             for (Integer teamId : teams) {
                 Optional<Team> optionalTeam = teamService.getTeamById(teamId);
@@ -207,7 +213,7 @@ public class TournamentScreenService {
                     currentPlayer.getPlayerId(), tournament.getSport().getSportCategory());
             if (accountTeamOptional.isPresent()) {
                 accountTeam = accountTeamOptional.get();
-                Optional<TournamentParticipation> teamParticipationOptional = tournamentService
+                Optional<TournamentParticipation> teamParticipationOptional = tournamentParticipantService
                         .getTournamentParticipationByTeamIdAndTournamentId(accountTeam.getId(), tournamentId);
                 if (teamParticipationOptional.isPresent()) {
                     teamParticipation = teamParticipationOptional.get();
@@ -245,12 +251,13 @@ public class TournamentScreenService {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
         }
 
-        List<Integer> teamIds = tournamentService.getTeamIdsParticipatingInTournament(tournamentId);
+        List<Integer> teamIds = tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId);
         if (!teamIds.contains(team.getId())) {
             throw new ConflictException(ErrorsString.TEAM_MUST_PARTECIPATE_TO_TOURNAMENT);
         }
 
-        List<Integer> calluppedPlayerIds = tournamentService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournamentId,
+        List<Integer> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(
+                tournamentId,
                 team.getId());
         for (Integer playerId : calluppedPlayerIds) {
             Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
@@ -283,7 +290,8 @@ public class TournamentScreenService {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
         }
 
-        List<Integer> calluppedPlayerIds = tournamentService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournamentId,
+        List<Integer> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(
+                tournamentId,
                 accountTeam.get().getId());
 
         List<Player> players = teamService.getPlayersByTeamId(accountTeam.get().getId());
@@ -327,7 +335,7 @@ public class TournamentScreenService {
 
         List<FootballStanding> standings = tournamentStandingService.getFootballStandingsByTournamentId(tournamentId);
 
-        List<Integer> teams = tournamentService.getTeamIdsParticipatingInTournament(tournamentId);
+        List<Integer> teams = tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId);
 
         Map<Integer, Team> teamsCache = new HashMap<>();
         for (Integer teamId : teams) {
@@ -339,7 +347,7 @@ public class TournamentScreenService {
         }
 
         Map<Integer, FootballTeamStatDTO> footballPlayerStatsCache = new HashMap<>();
-        List<FootballTournamentStats> footballTournamentStats = tournamentStatsService
+        List<FootballTournamentStats> footballTournamentStats = tournamentStatService
                 .getFootballTournamentStatsByTournamentId(tournamentId);
 
         List<Player> players = new ArrayList<>();

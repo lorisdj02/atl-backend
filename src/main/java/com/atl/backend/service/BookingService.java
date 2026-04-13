@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.atl.backend.repository.BookingRepository;
+import com.atl.backend.repository.FootballMatchRepository;
 import com.atl.backend.repository.LobbyBookingRepository;
 import com.atl.backend.repository.MatchBookingRepository;
+import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.PrivateBookingRepository;
 import com.atl.backend.repository.PurchaseRepository;
 import com.atl.backend.response.FieldsAndMaxPlayersPerFieldResponse;
@@ -15,9 +17,11 @@ import com.atl.backend.repository.LobbyBookingParticipateRepository;
 
 import com.atl.backend.model.PrivateBooking;
 import com.atl.backend.model.Purchase;
+import com.atl.backend.model.Tournament;
 import com.atl.backend.model.enums.BookingStatus;
 import com.atl.backend.model.enums.BookingType;
 import com.atl.backend.model.enums.CheckoutType;
+import com.atl.backend.model.enums.FootballMatchStatus;
 import com.atl.backend.model.enums.PurchaseStatus;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.auth.AccountContext;
@@ -25,17 +29,21 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.CheckoutPayload;
 import com.atl.backend.dto.FieldDTO;
 import com.atl.backend.dto.LobbyBookingDTO;
+import com.atl.backend.dto.MatchBookingDTO;
 import com.atl.backend.dto.PrivateBookingDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
+import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Booking;
 import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.model.LobbyBookingParticipate;
+import com.atl.backend.model.Match;
 import com.atl.backend.model.MatchBooking;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Field;
+import com.atl.backend.model.FootballMatch;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -64,6 +72,10 @@ public class BookingService {
 
     @Autowired
     private PurchaseRepository purchaseRepository;
+    @Autowired
+    private MatchRepository matchRepository;
+    @Autowired
+    private FootballMatchRepository footballMatchRepository;
 
     public Optional<Booking> getBookingByBookingId(Integer bookingId) {
         return bookingRepository.findById(bookingId);
@@ -521,5 +533,77 @@ public class BookingService {
             return false;
         }
         return true;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public MatchBooking createMatchBooking(Integer matchId, LocalDateTime startTime,
+            LocalDateTime finishTime) {
+
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+
+        Booking booking = createBooking(match.getTournament().getField().getId(), startTime.toString(),
+                finishTime.toString(), match.getTournament().getSport().getSportCategory().toString(),
+                BookingType.MATCH);
+
+        MatchBooking matchBooking = new MatchBooking();
+        matchBooking.setBooking(booking);
+        matchBooking.setMatch(match);
+        matchBooking.setCoordinator(match.getTournament().getCoordinator());
+        return matchBookingRepository.save(matchBooking);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public MatchBookingDTO scheduleMatch(Integer matchId, LocalDateTime scheduledStart) {
+        // Il match deve essere schedulato almeno 2 ore prima dell'orario attuale
+        if (scheduledStart.isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new BadRequestException(ErrorsString.MATCH_SCHEDULE_TOO_LATE);
+        }
+
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        Tournament tournament = match.getTournament();
+
+        if (!tournament.isTournamentActive()) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_NOT_ACTIVE);
+        }
+
+        if (!tournament.getCoordinator().equals(AccountContext.getActiveCoordinator())) {
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
+        }
+
+        Short minutesPerRound = tournament.getSport().getMinutesPerRound();
+        Short minutesPerPause = tournament.getSport().getMinutesPerPause();
+
+        // Considero 15 minuti di preparazione
+        LocalDateTime startTime = scheduledStart.minusMinutes(15);
+
+        // Considero la durata massima della partita, che è 2 round più una pausa, più
+        // 15 minuti di buffer finale
+        LocalDateTime finishTime = scheduledStart.plusMinutes(minutesPerRound * 2 + minutesPerPause + 15);
+
+        if (!isFieldFree(tournament.getField().getId(), startTime, finishTime)) {
+            throw new ConflictException(ErrorsString.FIELD_NOT_AVAILABLE);
+        }
+
+        if (match.getScheduledStart().equals(scheduledStart)) {
+            throw new ConflictException(ErrorsString.MATCH_ALREADY_SCHEDULED_FOR_THIS_TIME);
+        } else if (match.getScheduledStart() != null
+                && match.getScheduledStart().isBefore(LocalDateTime.now().plusHours(24))) {
+            throw new ConflictException(ErrorsString.YOU_CANNOT_RESCHEDULE_MATCH_LESS_THAN_24_HOURS_BEFORE);
+        }
+
+        MatchBooking matchBooking = createMatchBooking(matchId, startTime, finishTime);
+
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL -> {
+                FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+                footballMatch.setStatus(FootballMatchStatus.SCHEDULED);
+                footballMatchRepository.save(footballMatch);
+            }
+            default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+        return MatchBookingDTO.fromMatchBooking(matchBooking);
     }
 }

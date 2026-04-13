@@ -67,12 +67,12 @@ public class FootballMatchDTO extends MatchDTO {
         dto.setLegOrder(baseDto.getLegOrder());
         dto.setCoordinatorStatus(baseDto.getCoordinatorStatus());
         dto.setFinalStageBracketId(baseDto.getFinalStageBracketId());
-        
+
         dto.setHomeTeamId(footballMatch.getHomeTeam() != null ? footballMatch.getHomeTeam().getId() : null);
         dto.setScoreHome(footballMatch.getScoreHome());
         dto.setPenaltyScoreHome(footballMatch.getPenaltyScoreHome());
         dto.setMissedPenaltyHome(footballMatch.getMissedPenaltyHome());
-        
+
         dto.setAwayTeamId(footballMatch.getAwayTeam() != null ? footballMatch.getAwayTeam().getId() : null);
         dto.setScoreAway(footballMatch.getScoreAway());
         dto.setPenaltyScoreAway(footballMatch.getPenaltyScoreAway());

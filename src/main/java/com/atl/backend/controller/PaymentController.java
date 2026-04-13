@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atl.backend.response.CheckoutResponse;
-import com.atl.backend.service.PaymentService;
+import com.atl.backend.service.paymentServices.PaymentService;
 
 @RestController
 @RequestMapping("/api/payments")

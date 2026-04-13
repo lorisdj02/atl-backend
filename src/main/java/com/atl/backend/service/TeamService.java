@@ -495,4 +495,26 @@ public class TeamService {
         return playsAtRepository.findByPlayer_PlayerId(playerId);
     }
 
+    public FootballTeamStat upgradeFootballTeamStat(Integer playerId, Integer teamId, Short goalsDelta, Short motmDelta,
+            Short redCardsDelta, Short yellowCardsDelta) {
+        Optional<FootballTeamStat> footballTeamStatOptional = footballTeamStatRepository
+                .findByTeam_IdAndPlayer_PlayerId(teamId, playerId);
+        if (footballTeamStatOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TEAM_STAT_NOT_FOUND);
+        }
+
+        goalsDelta = (goalsDelta != null) ? goalsDelta : 0;
+        motmDelta = (motmDelta != null) ? motmDelta : 0;
+        redCardsDelta = (redCardsDelta != null) ? redCardsDelta : 0;
+        yellowCardsDelta = (yellowCardsDelta != null) ? yellowCardsDelta : 0;
+
+        FootballTeamStat footballTeamStat = footballTeamStatOptional.get();
+        footballTeamStat.setGoals((short) (footballTeamStat.getGoals() + goalsDelta));
+        footballTeamStat.setMotm((short) (footballTeamStat.getMotm() + motmDelta));
+        footballTeamStat.setRedCards((short) (footballTeamStat.getRedCards() + redCardsDelta));
+        footballTeamStat.setYellowCards((short) (footballTeamStat.getYellowCards() + yellowCardsDelta));
+        return footballTeamStatRepository.save(footballTeamStat);
+
+    }
+
 }

@@ -49,6 +49,8 @@ public class ErrorsString {
 
     static final public String FINAL_STAGE_BRACKET_NOT_FOUND = "FINAL_STAGE_BRACKET_NOT_FOUND";
 
+    static final public String TEAM_STAT_NOT_FOUND = "TEAM_STAT_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -143,6 +145,16 @@ public class ErrorsString {
 
     static final public String WRONG_TOURNAMENT_PHASE = "WRONG_TOURNAMENT_PHASE";
 
+    static final public String MATCH_SCHEDULE_TOO_LATE = "MATCH_SCHEDULE_TOO_LATE";
+
+    static final public String TOURNAMENT_NOT_ACTIVE = "TOURNAMENT_NOT_ACTIVE";
+
+    static final public String MATCH_ALREADY_SCHEDULED_FOR_THIS_TIME = "MATCH_ALREADY_SCHEDULED_FOR_THIS_TIME";
+
+    static final public String YOU_CANNOT_RESCHEDULE_MATCH_LESS_THAN_24_HOURS_BEFORE = "YOU_CANNOT_RESCHEDULE_MATCH_LESS_THAN_24_HOURS_BEFORE";
+
+    static final public String MOTM_ALREADY_ASSIGNED = "MOTM_ALREADY_ASSIGNED";
+    
     // Authentication errors
 
     static final public String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";

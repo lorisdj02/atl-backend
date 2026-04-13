@@ -1,9 +1,7 @@
 package com.atl.backend.dto;
 
-import java.time.LocalDateTime;
 
 import com.atl.backend.model.Account;
-import com.atl.backend.model.Booking;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;

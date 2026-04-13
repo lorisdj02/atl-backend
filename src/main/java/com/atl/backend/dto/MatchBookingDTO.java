@@ -32,7 +32,7 @@ public class MatchBookingDTO extends BookingDTO {
         dto.setStatus(matchBooking.getBooking().getStatus().toString());
         dto.setSportCategory(matchBooking.getBooking().getSportCategory().toString());
         dto.setBookingType(matchBooking.getBooking().getBookingType().toString());
-        dto.setCoordinatorId(matchBooking.getCoordinator().getPlayerId());
+        dto.setCoordinatorId(matchBooking.getCoordinator().getCoordinatorId());
         dto.setMatchId(matchBooking.getMatch().getId());
         return dto;
     }

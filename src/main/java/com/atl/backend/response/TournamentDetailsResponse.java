@@ -4,8 +4,6 @@ import com.atl.backend.dto.TeamDTO;
 import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.config.ApiJsonKeys;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 

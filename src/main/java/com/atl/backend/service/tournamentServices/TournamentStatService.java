@@ -18,7 +18,7 @@ import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.service.TeamService;
 
 @Service
-public class TournamentStatsService {
+public class TournamentStatService {
     @Autowired
     private PlayerRepository playerRepository;
     @Autowired
@@ -67,5 +67,24 @@ public class TournamentStatsService {
             default:
                 throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
+    }
+
+    public void updateFootballTournamentStats(Integer tournamentId, Integer playerId, Integer teamId,
+            Short goalsDelta, Short motmDelta, Short redCardsDelta,
+            Short yellowCardsDelta) {
+        FootballTournamentStats footballTournamentStats = footballTournamentStatsRepository
+                .findByTournament_IdAndPlayer_PlayerIdAndTeam_Id(tournamentId, playerId, teamId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_STAT_NOT_FOUND));
+
+        goalsDelta = goalsDelta != null ? goalsDelta : (short) 0;
+        motmDelta = motmDelta != null ? motmDelta : (short) 0;
+        redCardsDelta = redCardsDelta != null ? redCardsDelta : (short) 0;
+        yellowCardsDelta = yellowCardsDelta != null ? yellowCardsDelta : (short) 0;
+
+        footballTournamentStats.setGoals((short) (footballTournamentStats.getGoals() + goalsDelta));
+        footballTournamentStats.setMotm((short) (footballTournamentStats.getMotm() + motmDelta));
+        footballTournamentStats.setRedCards((short) (footballTournamentStats.getRedCards() + redCardsDelta));
+        footballTournamentStats.setYellowCards((short) (footballTournamentStats.getYellowCards() + yellowCardsDelta));
+        footballTournamentStatsRepository.save(footballTournamentStats);
     }
 }

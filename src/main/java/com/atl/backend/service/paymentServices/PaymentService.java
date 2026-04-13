@@ -1,8 +1,7 @@
-package com.atl.backend.service;
+package com.atl.backend.service.paymentServices;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +19,6 @@ import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.exception.PaymentRequiredException;
 import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Account;
-import com.atl.backend.model.Booking;
 import com.atl.backend.model.CheckoutSession;
 import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.model.Player;
@@ -28,7 +26,6 @@ import com.atl.backend.model.Purchase;
 import com.atl.backend.model.Transaction;
 import com.atl.backend.model.TransactionGroup;
 import com.atl.backend.model.Wallet;
-import com.atl.backend.model.enums.BookingStatus;
 import com.atl.backend.model.enums.CheckoutStatus;
 import com.atl.backend.model.enums.CheckoutType;
 import com.atl.backend.model.enums.PurchaseStatus;
@@ -42,6 +39,9 @@ import com.atl.backend.repository.TransactionGroupRepository;
 import com.atl.backend.repository.TransactionRepository;
 import com.atl.backend.repository.WalletRepository;
 import com.atl.backend.response.CheckoutResponse;
+import com.atl.backend.service.BookingService;
+import com.atl.backend.service.FieldService;
+import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -72,6 +72,8 @@ public class PaymentService {
 
     @Autowired
     private PlayerRepository playerRepository;
+    @Autowired
+    private TournamentParticipantService tournamentParticipantService;
 
     private Player getExistingPlayerByPlayerId(Integer playerId) {
         Optional<Player> optPlayer = playerRepository.findById(playerId);
@@ -263,18 +265,6 @@ public class PaymentService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundPurchaseForCallups(Integer tournamentId, List<Integer> calluppedAccountIds) {
-        for (Integer accountId : calluppedAccountIds) {
-            List<Purchase> purchases = getPurchasesByTournamentIdAndAccountId(tournamentId, accountId);
-            for (Purchase purchase : purchases) {
-                if (purchase.getStatus() == PurchaseStatus.CONFIRMED) {
-                    refundPurchase(purchase.getId());
-                }
-            }
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
     public Transaction createTransaction(Account account, BigDecimal amount, BigDecimal netAmount, BigDecimal tax,
             BigDecimal fee, TransactionGroup transactionGroup,
             TransactionType type, TransactionSource source, TransactionStatus status) {
@@ -408,7 +398,8 @@ public class PaymentService {
             // TODO: da rivedere... tournament_fee e lobby_booking_partecipate forse non
             // funzionano
             case TOURNAMENT_FEE:
-                tournamentService.decreseTournamentParticipation_ToPay(payload.getTournamentId(), account.getId(),
+                tournamentParticipantService.decreseTournamentParticipation_ToPay(payload.getTournamentId(),
+                        account.getId(),
                         amountToPay);
                 purchase.setObjectId(payload.getTournamentId());
                 break;
@@ -431,202 +422,6 @@ public class PaymentService {
         }
 
         return purchaseRepository.save(purchase);
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public void refundPurchase(Integer purchaseId) {
-        Optional<Purchase> optPurchase = purchaseRepository.findById(purchaseId);
-        if (optPurchase.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND);
-        }
-        Purchase purchase = optPurchase.get();
-
-        if (purchase.getStatus() != PurchaseStatus.CONFIRMED) {
-            throw new ConflictException(ErrorsString.PURCHASE_NOT_REFUNDABLE);
-        }
-        Wallet wallet = walletRepository.findByAccount_Id(purchase.getAccount().getId())
-                .orElseThrow(() -> new NotFoundException(ErrorsString.WALLET_NOT_FOUND));
-        TransactionGroup transactionGroup = purchase.getTransactionGroup();
-        List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroup.getId());
-        Integer numberOfRefundedTransactions = 0;
-        for (Transaction transaction : transactions) {
-            if (transaction.getStatus() == TransactionStatus.CONFIRMED && transaction.getRefundable()) {
-
-                switch (transaction.getSource()) {
-                    case INVITE_WALLET:
-                        wallet.setInviteBalance(wallet.getInviteBalance().add(transaction.getNetAmount()));
-                        break;
-                    case PRIZE_WALLET:
-                        wallet.setPrizeBalance(wallet.getPrizeBalance().add(transaction.getNetAmount()));
-                        break;
-                    default:
-                        wallet.setPersonalBalance(wallet.getPersonalBalance().add(transaction.getNetAmount()));
-                        break;
-                }
-                Transaction refundTransaction = new Transaction();
-                refundTransaction.setAccount(transaction.getAccount());
-                refundTransaction.setAmount(transaction.getNetAmount());
-                refundTransaction.setNetAmount(transaction.getNetAmount());
-                refundTransaction.setTax(BigDecimal.ZERO);
-                refundTransaction.setFee(BigDecimal.ZERO);
-                refundTransaction.setTransactionGroup(transactionGroup);
-                refundTransaction.setType(TransactionType.REFUND);
-                refundTransaction.setSource(transaction.getSource());
-                refundTransaction.setStatus(TransactionStatus.CONFIRMED);
-                refundTransaction.setRelatedTransaction(transaction);
-                transactionRepository.save(refundTransaction);
-
-                transaction.setStatus(TransactionStatus.REFUNDED);
-                transactionRepository.save(transaction);
-                numberOfRefundedTransactions++;
-            }
-        }
-        walletRepository.save(wallet);
-        if (numberOfRefundedTransactions == 0) {
-            throw new PaymentRequiredException(ErrorsString.PURCHASE_NOT_REFUNDABLE);
-        } else if (numberOfRefundedTransactions < transactions.size()) {
-            transactionGroup.setStatus(TransactionStatus.PARTIAL_REFUND);
-            purchase.setStatus(PurchaseStatus.PARTIAL_REFUND);
-        } else {
-            transactionGroup.setStatus(TransactionStatus.REFUNDED);
-            purchase.setStatus(PurchaseStatus.REFUNDED);
-        }
-        transactionGroupRepository.save(transactionGroup);
-        purchaseRepository.save(purchase);
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public void redeemPurchase(Integer purchaseId) {
-        Optional<Purchase> optPurchase = purchaseRepository.findById(purchaseId);
-        if (optPurchase.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND);
-        }
-        Purchase purchase = optPurchase.get();
-        if (purchase.getStatus() != PurchaseStatus.CONFIRMED) {
-            throw new ConflictException(ErrorsString.PURCHASE_NOT_REDEEMABLE);
-        }
-        purchase.setStatus(PurchaseStatus.REDEEMED);
-        setTransactionsNotRefundableByTransactionGroupId(purchase.getTransactionGroup().getId());
-        purchaseRepository.save(purchase);
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public void setTransactionsNotRefundableByTransactionGroupId(Integer transactionGroupId) {
-        checkTransactionGroup(transactionGroupId);
-        List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroupId);
-        for (Transaction transaction : transactions) {
-            transaction.setRefundable(false);
-            transactionRepository.save(transaction);
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public void refundLobbyParticipationByBookingIdAndAccountId(Integer bookingId, Integer accountId) {
-        List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
-                CheckoutType.LOBBY_BOOKING_PARTICIPATE, bookingId, accountId, PurchaseStatus.CONFIRMED);
-        if (purchases.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND);
-        }
-        for (Purchase purchase : purchases) {
-            refundPurchase(purchase.getId());
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public void refundLobbyCreationByBookingId(Integer bookingId) {
-        List<Purchase> purchases = new ArrayList<>();
-
-        List<Purchase> lobbyBookingCreate = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
-                CheckoutType.LOBBY_BOOKING_CREATE, bookingId, null, PurchaseStatus.CONFIRMED);
-
-        if (lobbyBookingCreate.isEmpty() || lobbyBookingCreate.size() > 1) {
-            throw new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND);
-        }
-        purchases.add(lobbyBookingCreate.get(0));
-
-        List<Purchase> lobbyBookingParticipate = purchaseRepository.findByTypeAndObjectIdAndStatus(
-                CheckoutType.LOBBY_BOOKING_PARTICIPATE, bookingId, PurchaseStatus.CONFIRMED);
-        purchases.addAll(lobbyBookingParticipate);
-
-        if (purchases.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND);
-        }
-
-        for (Purchase purchase : purchases) {
-            refundPurchase(purchase.getId());
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public void refundLobbyParticipationByAccountId(Integer bookingId, Integer accountId) {
-        List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
-                CheckoutType.LOBBY_BOOKING_PARTICIPATE, bookingId, accountId, PurchaseStatus.CONFIRMED);
-        if (purchases.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND);
-        }
-        for (Purchase purchase : purchases) {
-            refundPurchase(purchase.getId());
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public void refundPrivateBookingByBookingId(Integer bookingId) {
-        List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndStatus(
-                CheckoutType.PRIVATE_BOOKING, bookingId, PurchaseStatus.CONFIRMED);
-        if (purchases.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND);
-        }
-        for (Purchase purchase : purchases) {
-            refundPurchase(purchase.getId());
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public void redeemBookingPurchasesByBookingId(Integer bookingId) {
-        List<Purchase> purchases = new ArrayList<>();
-        Booking booking = bookingService.getBookingByBookingId(bookingId)
-                .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
-
-        if (booking.getStatus() != BookingStatus.IN_PROGRESS) {
-            throw new ConflictException(ErrorsString.PURCHASE_NOT_REDEEMABLE);
-        }
-
-        switch (booking.getBookingType()) {
-            case LOBBY:
-                purchases.addAll(purchaseRepository.findByTypeAndObjectIdAndStatus(
-                        CheckoutType.LOBBY_BOOKING_PARTICIPATE, bookingId, PurchaseStatus.CONFIRMED));
-                purchases.addAll(purchaseRepository.findByTypeAndObjectIdAndStatus(
-                        CheckoutType.LOBBY_BOOKING_CREATE, bookingId, PurchaseStatus.CONFIRMED));
-                break;
-            case PRIVATE:
-                purchases = purchaseRepository.findByTypeAndObjectIdAndStatus(
-                        CheckoutType.PRIVATE_BOOKING, bookingId, PurchaseStatus.CONFIRMED);
-                break;
-            case MATCH:
-                // Non ci sono acquisti da riscattare per le partite, dato che non si paga
-                // direttamente la partita, ma si pagano i tornei o le prenotazioni dei campi
-                break;
-        }
-
-        // Se è vuoto, va bene, vuol dire che non c'è nulla da riscattare, non lancio
-        // un'eccezione
-        if (purchases.isEmpty()) {
-            return;
-        }
-
-        for (Purchase purchase : purchases) {
-            redeemPurchase(purchase.getId());
-        }
-    }
-
-    public Boolean isLobbyParticipationRefundedByBookingIdAndAccountId(Integer bookingId, Integer accountId) {
-        List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
-                CheckoutType.LOBBY_BOOKING_PARTICIPATE,
-                bookingId, accountId, PurchaseStatus.REFUNDED);
-        if (purchases.isEmpty()) {
-            return false;
-        }
-        return true;
     }
 
     @Transactional(readOnly = true)

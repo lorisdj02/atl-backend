@@ -41,14 +41,14 @@ import com.atl.backend.response.PlayersInTeamResponse;
 import com.atl.backend.response.TeamDetailsResponse;
 import com.atl.backend.response.TeamsResponse;
 import com.atl.backend.service.TeamService;
-import com.atl.backend.service.tournamentServices.TournamentService;
+import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 
 @Service
 public class TeamScreenService {
     @Autowired
     private TeamService teamService;
     @Autowired
-    private TournamentService tournamentService;
+    private TournamentParticipantService tournamentParticipantService;
 
     @Transactional(readOnly = true)
     public TeamsResponse getTeamsScreen(SportCategory sportCategory) {
@@ -93,10 +93,10 @@ public class TeamScreenService {
                     if (team.getVip() == false
                             && playersInTeamResponse.getPlayers().stream()
                                     .noneMatch(player -> player.getPlayerId().equals(stat.getPlayer().getPlayerId()))) {
-                                        continue; // Skip historical players for non-VIP teams
+                        continue; // Skip historical players for non-VIP teams
                     }
                     footballPlayerStatsCache.put(stat.getPlayer().getPlayerId(), stat);
-                    }
+                }
                 break;
             default:
                 throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -122,7 +122,7 @@ public class TeamScreenService {
             throw new UnauthorizedException(ErrorsString.NEED_TO_BE_IN_TEAM);
         }
 
-        List<TournamentParticipation> tournamentParticipations = tournamentService
+        List<TournamentParticipation> tournamentParticipations = tournamentParticipantService
                 .getNotPaidTournamentParticipationsByTeamId(teamId);
         Map<Integer, Tournament> tournamentsCache = new HashMap<>();
         Map<Integer, Boolean> isCalledUpPerTournament = new HashMap<>();
@@ -130,7 +130,7 @@ public class TeamScreenService {
             Tournament tournament = tournamentParticipation.getTournament();
             tournamentsCache.put(tournament.getId(), tournament);
             isCalledUpPerTournament.put(tournament.getId(),
-                    tournamentService.isPlayerCalledUpInTournament(player.getPlayerId(), tournament.getId()));
+                    tournamentParticipantService.isPlayerCalledUpInTournament(player.getPlayerId(), tournament.getId()));
         }
 
         return PayParticipationResponse.builder()
@@ -149,14 +149,14 @@ public class TeamScreenService {
         Team team = teamService.getTeamById(teamId).get();
         Player activePlayer = AccountContext.getActivePlayer();
 
-        if(!teamService.isPlayerInTeam(teamId, activePlayer.getPlayerId())) {
+        if (!teamService.isPlayerInTeam(teamId, activePlayer.getPlayerId())) {
             throw new UnauthorizedException(ErrorsString.NEED_TO_BE_IN_TEAM);
         }
 
-        if(!team.getViceCaptainPlayers().contains(activePlayer) && !team.getCaptainPlayer().equals(activePlayer)) {
+        if (!team.getViceCaptainPlayers().contains(activePlayer) && !team.getCaptainPlayer().equals(activePlayer)) {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
         }
-        
+
         List<TeamRequest> teamRequests = teamService.getTeamRequestsByTeamId(teamId);
         Map<Integer, Player> playersCache = new HashMap<>();
         for (TeamRequest teamRequest : teamRequests) {
@@ -172,13 +172,14 @@ public class TeamScreenService {
     }
 
     @Transactional(readOnly = true)
-    public TeamDetailsResponse getTeamDetailsScreen(Integer teamId){
+    public TeamDetailsResponse getTeamDetailsScreen(Integer teamId) {
         teamService.checkTeamExists(teamId);
         TeamRequest existingRequest = null;
         Boolean isPlayerInTeam = false;
-        if(AccountContext.getAccountRole() == AccountRole.PLAYER) {
-            Optional<TeamRequest> optionalTeamRequest = teamService.getTeamRequestByTeamIdAndPlayerId(teamId, AccountContext.getActivePlayer().getPlayerId());
-            if(optionalTeamRequest.isPresent()) {
+        if (AccountContext.getAccountRole() == AccountRole.PLAYER) {
+            Optional<TeamRequest> optionalTeamRequest = teamService.getTeamRequestByTeamIdAndPlayerId(teamId,
+                    AccountContext.getActivePlayer().getPlayerId());
+            if (optionalTeamRequest.isPresent()) {
                 existingRequest = optionalTeamRequest.get();
             }
             isPlayerInTeam = teamService.isPlayerInTeam(teamId, AccountContext.getActivePlayer().getPlayerId());

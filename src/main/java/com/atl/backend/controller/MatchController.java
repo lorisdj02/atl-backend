@@ -16,8 +16,9 @@ import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
-import com.atl.backend.service.MatchService;
 import com.atl.backend.service.SportService;
+import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.orchestrator.TournamentTeamMatchOrchestrator;
 import com.atl.backend.service.screen.MatchScreenService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 
@@ -32,6 +33,9 @@ public class MatchController {
     private SportService sportService;
     @Autowired
     private MatchService matchService;
+    @Autowired
+    private TournamentTeamMatchOrchestrator tournamentTeamMatchOrchestrator;
+
 
     @GetMapping("/{sportCategory}/referee/available-matches")
     public ResponseEntity<AvailableMatchesResponse> getAvailableMatchesScreen(@PathVariable String sportCategory) {
@@ -75,6 +79,12 @@ public class MatchController {
     @PatchMapping("/match/{matchId}/retire")
     public ResponseEntity<Integer> retireFromMatch(@PathVariable Integer matchId) {
         Integer response = tournamentService.retireFromMatch(matchId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/match/{matchId}/add-motm/{playerId}")
+    public ResponseEntity<Integer> addMotmToMatch(@PathVariable Integer matchId, @PathVariable Integer playerId) {
+        Integer response = tournamentTeamMatchOrchestrator.addMotmToMatch(matchId, playerId);
         return ResponseEntity.ok(response);
     }
 }

@@ -33,9 +33,9 @@ import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.FootballMatchResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
 import com.atl.backend.service.AccountService;
-import com.atl.backend.service.MatchService;
 import com.atl.backend.service.SportService;
-import com.atl.backend.service.tournamentServices.TournamentService;
+import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.exception.*;
 
 import java.util.Optional;
@@ -49,9 +49,9 @@ public class MatchScreenService {
     @Autowired
     private SportService sportService;
     @Autowired
-    private TournamentService tournamentService;
-    @Autowired
     private AccountService accountService;
+    @Autowired
+    private TournamentParticipantService tournamentParticipantService;
 
     @Transactional(readOnly = true)
     public AvailableMatchesResponse getAvailableMatchesScreen(SportCategory sportCategory) {
@@ -202,7 +202,7 @@ public class MatchScreenService {
         Map<Integer, List<PlayerDTO>> playersPerTeam = new HashMap<>();
         if (footballMatch.getHomeTeam() != null) {
             Team homeTeam = footballMatch.getHomeTeam();
-            List<Integer> calluppedPlayerIds = tournamentService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(),
+            List<Integer> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(),
                     homeTeam.getId());
             List<PlayerDTO> calluppedPlayers = new ArrayList<>();
             for (Integer playerId : calluppedPlayerIds) {
@@ -218,7 +218,7 @@ public class MatchScreenService {
         }
         if (footballMatch.getAwayTeam() != null) {
             Team awayTeam = footballMatch.getAwayTeam();
-            List<Integer> calluppedPlayerIds = tournamentService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(),
+            List<Integer> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(),
                     awayTeam.getId());
             List<PlayerDTO> calluppedPlayers = new ArrayList<>();
             for (Integer playerId : calluppedPlayerIds) {

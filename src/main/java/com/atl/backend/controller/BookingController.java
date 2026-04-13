@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.MatchBookingDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.BookFieldResponse;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
@@ -34,7 +36,6 @@ public class BookingController {
     private SportService sportService;
     @Autowired
     private BookingService bookingService;
-
 
     @GetMapping("/book-a-field/{sportCategory}")
     public ResponseEntity<BookFieldResponse> getBookFieldResponse(@PathVariable String sportCategory) {
@@ -69,7 +70,7 @@ public class BookingController {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }
 
-        if (startTime != null && finishTime != null && start.isAfter(end)) {
+        if (startTime != null && finishTime != null && start != null && end != null && start.isAfter(end)) {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }
 
@@ -97,7 +98,7 @@ public class BookingController {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }
 
-        if (start.isAfter(end)) {
+        if (start != null && end != null && start.isAfter(end)) {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }
 
@@ -155,5 +156,19 @@ public class BookingController {
     public ResponseEntity<Void> refundPrivateBooking(@PathVariable Integer bookingId) {
         purchasesOrchestrator.refundPrivateBooking(bookingId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/match-booking/{matchId}/schedule/{scheduledStart}")
+    public ResponseEntity<MatchBookingDTO> scheduleMatch(@PathVariable Integer matchId,
+            @PathVariable String scheduledStart) {
+        LocalDateTime scheduledStartTime;
+        try {
+            scheduledStartTime = LocalDateTime.parse(scheduledStart);
+        } catch (Exception e) {
+            throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
+        }
+
+        MatchBookingDTO matchBookingDTO = bookingService.scheduleMatch(matchId, scheduledStartTime);
+        return ResponseEntity.ok(matchBookingDTO);
     }
 }

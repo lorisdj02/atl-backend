@@ -3,7 +3,6 @@ package com.atl.backend.dto;
 import com.atl.backend.model.FinalStageBracket;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
-import lombok.Builder;
 import lombok.Data;
 
 @Data

@@ -22,23 +22,28 @@ import com.atl.backend.model.enums.*;
 import com.atl.backend.response.*;
 import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
-import com.atl.backend.service.MatchService;
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 import com.atl.backend.service.tournamentServices.TournamentStandingService;
 
 @Service
 public class HomeScreenService {
         @Autowired
+        private TournamentService tournamentService;
+        @Autowired
         private TournamentStandingService tournamentStandingService;
+        @Autowired
+        private TournamentParticipantService tournamentParticipantService;
+
         @Autowired
         private FieldService fieldService;
         @Autowired
         private MatchService matchService;
         @Autowired
         private TeamService teamService;
-        @Autowired
-        private TournamentService tournamentService;
+
         @Autowired
         private BookingService bookingService;
 
@@ -118,7 +123,7 @@ public class HomeScreenService {
                                 minutesPausePerTournament.put(tournament.getId(),
                                                 tournament.getSport().getMinutesPerPause());
                                 fieldsCache.put(tournament.getField().getId(), tournament.getField());
-                                final List<Integer> teamIds = tournamentService
+                                final List<Integer> teamIds = tournamentParticipantService
                                                 .getTeamIdsParticipatingInTournament(tournament.getId());
                                 for (Integer teamId : teamIds) {
                                         teamsCache.put(teamId, teamService.getTeamById(teamId).get());
@@ -192,7 +197,7 @@ public class HomeScreenService {
                                 default:
                                         break;
                         }
-                        List<Integer> teamIds = tournamentService
+                        List<Integer> teamIds = tournamentParticipantService
                                         .getTeamIdsParticipatingInTournament(tournament.getId());
                         for (Integer teamId : teamIds) {
                                 teamsCache.put(teamId, teamService.getTeamById(teamId).get());
