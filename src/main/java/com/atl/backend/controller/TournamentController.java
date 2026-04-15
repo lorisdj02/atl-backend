@@ -148,14 +148,17 @@ public class TournamentController {
         return ResponseEntity.ok(tournament);
     }
 
-    // Endpoint per partecipare a un torneo, che include la logica di conferma dei callup
+    // Endpoint per partecipare a un torneo, che include la logica di conferma dei
+    // callup
     @PostMapping("/tournament/{tournamentId}/confirm-callups")
-    public ResponseEntity<TournamentParticipationDTO> confirmCallups(@PathVariable Integer tournamentId, @RequestBody ConfirmCallupsRequest request) {
+    public ResponseEntity<TournamentParticipationDTO> confirmCallups(@PathVariable Integer tournamentId,
+            @RequestBody ConfirmCallupsRequest request) {
         TournamentParticipation response = tournamentParticipantService.confirmCallups(tournamentId, request);
         return ResponseEntity.ok(TournamentParticipationDTO.fromTournamentParticipation(response));
     }
 
-    // Endpoint per eliminare la partecipazione di una squadra a un torneo, che include la logica di eliminazione dei callup
+    // Endpoint per eliminare la partecipazione di una squadra a un torneo, che
+    // include la logica di eliminazione dei callup
     @DeleteMapping("/tournament/{tournamentId}/team/{teamId}/delete-callups")
     public ResponseEntity<Void> deleteCallups(@PathVariable Integer tournamentId, @PathVariable Integer teamId) {
         purchasesOrchestrator.deleteCallups(tournamentId, teamId);
@@ -165,6 +168,18 @@ public class TournamentController {
     @PatchMapping("/tournament/{tournamentId}/go-next-phase")
     public ResponseEntity<Void> goToCoordinatorNextPhase(@PathVariable Integer tournamentId) {
         tournamentPhaseService.goToCoordinatorNextPhase(tournamentId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/tournament/{tournamentId}/start")
+    public ResponseEntity<Void> startTournament(@PathVariable Integer tournamentId) {
+        tournamentService.startTournament(tournamentId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/tournament/{tournamentId}/toggle-favorite-status")
+    public ResponseEntity<Void> toggleFavoriteStatus(@PathVariable Integer tournamentId) {
+        tournamentService.toggleTournamentFavoriteStatus(tournamentId);
+        return ResponseEntity.ok().build();
     }
 }

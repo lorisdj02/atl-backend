@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.NotFoundException;
+import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.repository.FootballStandingRepository;
@@ -76,7 +78,13 @@ public class TournamentStandingService {
         return footballStandingRepository.save(footballStanding);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void generateStandingsForTournament(Tournament tournament) {
+
+        if (!tournament.getCoordinator().equals(AccountContext.getActiveCoordinator())) {
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
+        }
+
         switch (tournament.getSport().getSportCategory()) {
             case FOOTBALL:
                 for (int groupIndex = 1; groupIndex <= tournament.getNumGroups(); groupIndex++) {
@@ -102,8 +110,10 @@ public class TournamentStandingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void updateTeamsQualifiedInTournament(Integer tournamentId, Boolean needToOrder) {
-        Tournament tournament = getExistingTournament(tournamentId);
+    public void updateTeamsQualifiedInTournament(Tournament tournament, Boolean needToOrder) {
+        if (!tournament.getCoordinator().equals(AccountContext.getActiveCoordinator())) {
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
+        }
 
         final short qualifiedPerGroup = (short) (tournament.getNumTeamsQualified() / tournament.getNumGroups());
         final short numTeamsPerGroup = (short) (tournament.getNumTeams() / tournament.getNumGroups());
@@ -117,7 +127,7 @@ public class TournamentStandingService {
             orderStandingsForTournament(tournament.getId());
         }
 
-        System.out.println("[DEBUG - TournamentService] - Updating qualified teams for tournament " + tournamentId
+        System.out.println("[DEBUG - TournamentService] - Updating qualified teams for tournament " + tournament.getId()
                 + " with " + qualifiedPerGroup + " qualified per group and " + extraQualified + " extra qualified");
 
         List<FootballStanding> notQualifiedFootballStandings = new ArrayList<>();
@@ -127,13 +137,13 @@ public class TournamentStandingService {
                 for (int groupIndex = 1; groupIndex <= tournament.getNumGroups(); groupIndex++) {
                     String groupName = "" + (char) ('A' + groupIndex - 1);
                     System.out.println(
-                            "[DEBUG - TournamentService] - Evaluating qualification for tournament " + tournamentId
+                            "[DEBUG - TournamentService] - Evaluating qualification for tournament " + tournament.getId()
                                     + " and group " + groupName);
 
                     List<FootballStanding> footballStandings = footballStandingRepository
-                            .findByTournament_IdAndGroupName(tournamentId, groupName);
+                            .findByTournament_IdAndGroupName(tournament.getId(), groupName);
 
-                    System.out.println("[DEBUG - TournamentService] - Football standings for tournament " + tournamentId
+                    System.out.println("[DEBUG - TournamentService] - Football standings for tournament " + tournament.getId()
                             + " and group " + groupName + ". " + footballStandings.size() + " teams");
                     for (int i = 0; i < footballStandings.size(); i++) {
                         if (i < qualifiedPerGroup) {

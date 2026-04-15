@@ -17,11 +17,15 @@ public interface TournamentParticipationRepository extends JpaRepository<Tournam
 
     List<TournamentParticipation> findByTournament_Id(Integer tournamentId);
 
+    List<TournamentParticipation> findByTournament_IdAndToPayGreaterThan(Integer tournamentId, BigDecimal toPay);
+
+    List<TournamentParticipation> findByTournament_IdAndToPay(Integer tournamentId, BigDecimal toPay);
+
     Optional<TournamentParticipation> findByTeam_IdAndTournament_Id(Integer teamId, Integer tournamentId);
 
     List<TournamentParticipation> findByTeam_IdAndToPay(Integer teamId, BigDecimal toPay);
 
     List<TournamentParticipation> findByTeam_IdAndToPayGreaterThan(Integer teamId, BigDecimal toPay);
 
-    Void deleteByTeam_IdAndTournament_Id(Integer teamId, Integer tournamentId);
+    void deleteByTeam_IdAndTournament_Id(Integer teamId, Integer tournamentId);
 }

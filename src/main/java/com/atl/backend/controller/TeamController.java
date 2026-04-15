@@ -165,4 +165,10 @@ public class TeamController {
         tournamentTeamMatchOrchestrator.leaveTeam(teamId);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/team/{teamId}/expel/{playerId}")
+    public ResponseEntity<Void> expelPlayer(@PathVariable Integer teamId, @PathVariable Integer playerId) {
+        tournamentTeamMatchOrchestrator.expelPlayer(teamId, playerId);
+        return ResponseEntity.ok().build();
+    }
 }

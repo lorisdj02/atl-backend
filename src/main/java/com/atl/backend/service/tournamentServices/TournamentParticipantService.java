@@ -15,7 +15,9 @@ import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
+import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Callup;
+import com.atl.backend.model.FailedTournamentParticipation;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
@@ -23,11 +25,13 @@ import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TournamentStatus;
 import com.atl.backend.repository.CallupRepository;
+import com.atl.backend.repository.FailedTournamentParticipationRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.request.ConfirmCallupsRequest;
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.paymentServices.PaymentRefundService;
 
 @Service
 public class TournamentParticipantService {
@@ -43,6 +47,10 @@ public class TournamentParticipantService {
 
     @Autowired
     private TeamService teamService;
+    @Autowired
+    private PaymentRefundService paymentRefundService;
+    @Autowired
+    private FailedTournamentParticipationRepository failedTournamentParticipationRepository;
 
     private Player getExistingPlayerByPlayerId(Integer playerId) {
         Optional<Player> playerOpt = playerRepository.findByPlayerId(playerId);
@@ -199,7 +207,14 @@ public class TournamentParticipantService {
     }
 
     public List<Integer> getTeamIdsParticipatingInTournament(Integer tournamentId) {
-        List<TournamentParticipation> participations = getTournamentParticipationsByTournamentId(tournamentId);
+        List<TournamentParticipation> participations = tournamentParticipationRepository
+                .findByTournament_IdAndToPay(tournamentId, BigDecimal.ZERO);
+        return participations.stream().map(tp -> tp.getTeam().getId()).toList();
+    }
+
+    public List<Integer> getTeamIdsExcludedFromTournament(Integer tournamentId) {
+        List<TournamentParticipation> participations = tournamentParticipationRepository
+                .findByTournament_IdAndToPayGreaterThan(tournamentId, BigDecimal.ZERO);
         return participations.stream().map(tp -> tp.getTeam().getId()).toList();
     }
 
@@ -289,8 +304,54 @@ public class TournamentParticipantService {
 
     public List<TournamentParticipationDTO> getNotPaidTeamParticipations(Integer teamId) {
         teamService.checkTeamExists(teamId);
-        return getTeamParticipations(teamId).stream()
+        List<TournamentParticipation> participations = tournamentParticipationRepository
+                .findByTeam_IdAndToPayGreaterThan(teamId, BigDecimal.ZERO);
+        return participations.stream()
                 .filter(participation -> participation.getToPay().compareTo(BigDecimal.ZERO) > 0)
                 .map(TournamentParticipationDTO::fromTournamentParticipation).toList();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void refundAllExcludedTeamsInTournament(Tournament tournament) {
+
+        if (!tournament.getCoordinator().equals(AccountContext.getActiveCoordinator())) {
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
+        }
+
+        List<Player> playersToRefund = new ArrayList<>();
+        List<TournamentParticipation> participations = tournamentParticipationRepository
+                .findByTournament_IdAndToPayGreaterThan(tournament.getId(), BigDecimal.ZERO);
+        List<Integer> excludedTeamIds = participations.stream().map(tp -> tp.getTeam().getId()).toList();
+
+        for (Integer teamId : excludedTeamIds) {
+            List<Player> players = teamService.getPlayersByTeamId(teamId);
+            playersToRefund.addAll(players);
+        }
+
+        for (Player player : playersToRefund) {
+            paymentRefundService.refundTournamentFeeByTournamentIdAndAccountId(tournament.getId(),
+                    player.getAccount().getId());
+        }
+
+        for (TournamentParticipation participation : participations) {
+            callupRepository.deleteByTeam_IdAndTournament_Id(participation.getTeam().getId(), tournament.getId());
+
+            FailedTournamentParticipation failedParticipation = FailedTournamentParticipation
+                    .fromTournamentAndTeam(participation.getTournament(), participation.getTeam());
+            tournamentParticipationRepository.delete(participation);
+            failedTournamentParticipationRepository.save(failedParticipation);
+        }
+    }
+
+    public List<Integer> getNotPaidTournamentIdsByTeamId(Integer teamId) {
+        teamService.checkTeamExists(teamId);
+        List<TournamentParticipation> tournamentParticipations = tournamentParticipationRepository
+                .findByTeam_IdAndToPayGreaterThan(teamId, BigDecimal.ZERO);
+
+        if (tournamentParticipations.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
+        }
+        return tournamentParticipations.stream()
+                .map(t -> t.getTournament().getId()).toList();
     }
 }

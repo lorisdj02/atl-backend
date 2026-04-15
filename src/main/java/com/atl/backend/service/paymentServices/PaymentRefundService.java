@@ -211,4 +211,11 @@ public class PaymentRefundService {
         return true;
     }
 
+    public void refundTournamentFeeByTournamentIdAndAccountId(Integer tournamentId, Integer accountId){
+        List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
+                CheckoutType.TOURNAMENT_FEE, tournamentId, accountId, PurchaseStatus.CONFIRMED);
+        for (Purchase purchase : purchases) {
+            refundPurchase(purchase.getId());
+        }
+    }
 }

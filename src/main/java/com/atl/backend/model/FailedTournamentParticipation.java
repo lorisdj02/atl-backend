@@ -5,7 +5,9 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "failed_tournament_participation")
+@Table(name = "failed_tournament_participation", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"tournament_id", "team_id"})
+})
 public class FailedTournamentParticipation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,4 +30,11 @@ public class FailedTournamentParticipation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id", nullable = false)
     private Team team;
+
+    static public FailedTournamentParticipation fromTournamentAndTeam(Tournament tournament, Team team) {
+        FailedTournamentParticipation failedParticipation = new FailedTournamentParticipation();
+        failedParticipation.setTournament(tournament);
+        failedParticipation.setTeam(team);
+        return failedParticipation;
+    }
 }

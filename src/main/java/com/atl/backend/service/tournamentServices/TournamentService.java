@@ -101,6 +101,7 @@ public class TournamentService {
     @Autowired
     private GrowthStepRepository growthStepRepository;
 
+
     public void deleteAllTournaments() {
         tournamentRepository.deleteAll();
         tournamentStandingService.deleteAllFootballStandings();
@@ -195,6 +196,12 @@ public class TournamentService {
     @Transactional(rollbackFor = Exception.class)
     public void startTournament(Integer tournamentId) {
         checkTournamentExists(tournamentId);
+
+        if (!AccountContext.getActiveCoordinator()
+                .equals(tournamentRepository.findById(tournamentId).get().getCoordinator())) {
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
+        }
+
         Tournament tournament = tournamentRepository.findById(tournamentId).get();
         if (tournament.getStatus() != TournamentStatus.CREATED) {
             throw new IllegalStateException(ErrorsString.TOURNAMENT_NOT_IN_CREATED_STATUS);
@@ -204,9 +211,11 @@ public class TournamentService {
             throw new IllegalStateException(ErrorsString.NUM_TEAMS_DIFFERS_FROM_PAID_TEAMS);
         }
 
+        tournamentParticipantService.refundAllExcludedTeamsInTournament(tournament);
+
         System.out.println("\n\n[DEBUG - TournamentService] - Starting tournament " + tournamentId);
 
-        matchGenerationService.generateMatchesForTournament(tournament.getId(),
+        matchGenerationService.generateMatchesForTournament(tournament,
                 tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId));
 
         System.out.println("[DEBUG - TournamentService] - Matches generated for tournament " + tournamentId);
@@ -215,7 +224,7 @@ public class TournamentService {
 
         System.out.println("[DEBUG - TournamentService] - Standings generated for tournament " + tournamentId);
 
-        tournamentStandingService.updateTeamsQualifiedInTournament(tournamentId, true);
+        tournamentStandingService.updateTeamsQualifiedInTournament(tournament, true);
 
         System.out.println("[DEBUG - TournamentService] - Teams qualified for tournament " + tournamentId);
 
@@ -611,5 +620,21 @@ public class TournamentService {
         int n = levels.size();
         int index = (n - 1) / 2; // odd -> middle; even -> lower middle
         return levels.get(index);
+    }
+
+    public void toggleTournamentFavoriteStatus(Integer tournamentId){
+        Account account = AccountContext.getActiveAccount();
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+
+        Optional<FavoriteTournament> favoriteOpt = favoriteTournamentRepository.findByAccount_IdAndTournament_Id(account.getId(), tournamentId);
+        if (favoriteOpt.isPresent()) {
+            favoriteTournamentRepository.delete(favoriteOpt.get());
+        } else {
+            FavoriteTournament favoriteTournament = new FavoriteTournament();
+            favoriteTournament.setAccount(account);
+            favoriteTournament.setTournament(tournament);
+            favoriteTournamentRepository.save(favoriteTournament);
+        }
     }
 }

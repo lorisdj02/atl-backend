@@ -13,11 +13,14 @@ import com.atl.backend.model.Player;
 import com.atl.backend.model.PlaysAt;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.TeamRequest;
+import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.repository.PlaysAtRepository;
 import com.atl.backend.repository.TeamRepository;
 import com.atl.backend.repository.TeamRequestRepository;
+import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.response.PlayersInTeamResponse;
+import com.atl.backend.service.paymentServices.PaymentRefundService;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,7 @@ import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.exception.*;
 
 import java.util.Optional;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +53,11 @@ public class TeamService {
     private SportService sportService;
     @Autowired
     private FieldService fieldService;
+    @Autowired
+    private PaymentRefundService paymentRefundService;
+
+    @Autowired
+    private TournamentParticipationRepository tournamentParticipationRepository;
 
     public List<TeamRequest> getAllTeamRequests() {
         return teamRequestRepository.findAll();
@@ -97,44 +106,64 @@ public class TeamService {
         return Optional.empty();
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public void leaveTeam(Integer teamId, Integer activeTournamentsCount) {
-        Player player = AccountContext.getActivePlayer();
-        Optional<PlaysAt> playsAtOptional = playsAtRepository.findByPlayer_PlayerIdAndTeam_Id(player.getPlayerId(),
-                teamId);
-        Optional<Team> teamOptional = teamRepository.findById(teamId);
-        if (playsAtOptional.isPresent() && teamOptional.isPresent()) {
-            Team team = teamOptional.get();
-            PlaysAt playsAt = playsAtOptional.get();
+    @Transactional(readOnly = true)
+    private PlaysAt canPlayerLeaveTeam(Team team, Integer playerId, Integer activeTournamentsCount) {
+        Player player = getExistingPlayerByPlayerId(playerId);
+        PlaysAt playsAt = playsAtRepository.findByPlayer_PlayerIdAndTeam_Id(player.getPlayerId(),
+                team.getId()).orElseThrow(() -> new NotFoundException(ErrorsString.PLAYER_NOT_IN_TEAM));
 
-            if (activeTournamentsCount > 0) {
-                throw new ConflictException(ErrorsString.PLAYER_IS_IN_ACTIVE_TOURNAMENTS);
-            }
-
-            if (team.getCaptainPlayer().equals(player) && team.getViceCaptainPlayers().isEmpty()) {
-                throw new ConflictException(ErrorsString.CAPTAIN_CANNOT_LEAVE_TEAM_WITHOUT_VICE_CAPTAIN);
-            } else {
-                team.setNumPlayers((short) (team.getNumPlayers() - 1));
-
-                if (team.getVice1Player() != null) {
-                    team.setCaptainPlayer(player);
-                    team.setVice1Player(team.getVice2Player());
-                    team.setVice2Player(null);
-                } else if (team.getVice2Player() != null) {
-                    team.setCaptainPlayer(team.getVice2Player());
-                    team.setVice2Player(null);
-                } else {
-                    throw new ConflictException(ErrorsString.TEAM_WITHOUT_CAPTAIN_AND_VICE_CAPTAINS);
-                }
-
-                teamRepository.save(team);
-            }
-
-            playsAtRepository.delete(playsAt);
-        } else {
-            throw new NotFoundException(ErrorsString.PLAYER_NOT_IN_TEAM);
+        if (activeTournamentsCount > 0) {
+            throw new ConflictException(ErrorsString.PLAYER_IS_IN_ACTIVE_TOURNAMENTS);
         }
 
+        if (team.getCaptainPlayer().equals(player) && team.getViceCaptainPlayers().isEmpty()) {
+            throw new ConflictException(ErrorsString.CAPTAIN_CANNOT_LEAVE_TEAM_WITHOUT_VICE_CAPTAIN);
+        }
+
+        return playsAt;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    private void removePlayer(Integer teamId, Player player, Integer activeTournamentsCount,
+            List<Integer> notPaidTournamentIds) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
+        canPlayerLeaveTeam(team, player.getPlayerId(), activeTournamentsCount);
+
+        PlaysAt playsAt = canPlayerLeaveTeam(team, player.getPlayerId(), activeTournamentsCount);
+
+        team.setNumPlayers((short) (team.getNumPlayers() - 1));
+
+        if (team.getVice1Player() != null && team.getCaptainPlayer().equals(player)) {
+            team.setCaptainPlayer(player);
+            team.setVice1Player(team.getVice2Player());
+            team.setVice2Player(null);
+        } else if (team.getVice2Player() != null && team.getCaptainPlayer().equals(player)) {
+            team.setCaptainPlayer(team.getVice2Player());
+            team.setVice2Player(null);
+        }
+
+        teamRepository.save(team);
+
+        for (Integer tournamentId : notPaidTournamentIds) {
+            paymentRefundService.refundTournamentFeeByTournamentIdAndAccountId(tournamentId,
+                    player.getAccount().getId());
+        }
+
+        playsAtRepository.delete(playsAt);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void leaveTeam(Integer teamId, Integer activeTournamentsCount, List<Integer> notPaidTournamentIds) {
+        Player player = AccountContext.getActivePlayer();
+        removePlayer(teamId, player, activeTournamentsCount, notPaidTournamentIds);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void expelPlayer(Integer teamId, Integer playerId, Integer activeTournamentsCount,
+            List<Integer> notPaidTournamentIds) {
+        Player player = getExistingPlayerByPlayerId(playerId);
+        removePlayer(teamId, player, activeTournamentsCount, notPaidTournamentIds);
     }
 
     @Transactional(rollbackFor = Exception.class)

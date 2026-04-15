@@ -443,6 +443,8 @@ CREATE UNIQUE INDEX ON "team" ("captain_player_id", "sport_category");
 
 CREATE UNIQUE INDEX ON "team" ("name", "sport_category");
 
+CREATE UNIQUE INDEX ON "failed_tournament_participation" ("tournament_id", "team_id");
+
 COMMENT ON TABLE "cities" IS 'Utile per avere le città di ATL';
 
 COMMENT ON TABLE "sport" IS 'Ha gli sport in modo ordinato';

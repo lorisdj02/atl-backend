@@ -83,4 +83,12 @@ public class PaymentRedeemService {
         }
     }
 
+    public void redeemTournamentFeePurchasesByTournamentId(Integer tournamentId) {
+        List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndStatus(
+                CheckoutType.TOURNAMENT_FEE, tournamentId, PurchaseStatus.CONFIRMED);
+
+        for (Purchase purchase : purchases) {
+            redeemPurchase(purchase.getId());
+        }
+    }
 }

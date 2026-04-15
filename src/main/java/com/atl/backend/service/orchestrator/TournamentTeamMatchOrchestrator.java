@@ -36,7 +36,15 @@ public class TournamentTeamMatchOrchestrator {
     public void leaveTeam(Integer teamId) {
         Integer activeTournamentsCount = tournamentService.countActiveTournamentsByTeamIdAndPlayerId(teamId,
                 AccountContext.getActivePlayer().getPlayerId());
-        teamService.leaveTeam(teamId, activeTournamentsCount);
+        List<Integer> notPaidTournamentIds = tournamentParticipantService.getNotPaidTournamentIdsByTeamId(teamId);
+        teamService.leaveTeam(teamId, activeTournamentsCount, notPaidTournamentIds);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void expelPlayer(Integer teamId, Integer playerId) {
+        Integer activeTournamentsCount = tournamentService.countActiveTournamentsByTeamIdAndPlayerId(teamId, playerId);
+        List<Integer> notPaidTournamentIds = tournamentParticipantService.getNotPaidTournamentIdsByTeamId(teamId);
+        teamService.expelPlayer(teamId, playerId, activeTournamentsCount, notPaidTournamentIds);
     }
 
     @Transactional(rollbackFor = Exception.class)

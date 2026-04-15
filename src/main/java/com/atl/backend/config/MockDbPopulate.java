@@ -31,11 +31,13 @@ import com.atl.backend.model.RefereeRole;
 import com.atl.backend.model.Sport;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
+import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.AccountRole;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TournamentPhase;
 import com.atl.backend.model.enums.TournamentStatus;
+import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.service.AccountService;
 
 import jakarta.transaction.Transactional;
@@ -61,6 +63,8 @@ public class MockDbPopulate {
     @Autowired
     private DataSource dataSource;
 
+    @Autowired
+    private TournamentParticipationRepository tournamentParticipationRepository;
 
     @Transactional
     public void createAccounts() {
@@ -513,6 +517,9 @@ public class MockDbPopulate {
             List<Player> players = teamService.getPlayersByTeamId(teamIds.get(i - 1));
             List<Integer> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
             tournamentParticipantService.participateToTournament(savedTournament1.getId(), teamIds.get(i - 1), playerIds);
+            TournamentParticipation tp = tournamentParticipationRepository.findByTeam_IdAndTournament_Id(teamIds.get(i - 1), savedTournament1.getId()).get();
+            tp.setToPay(BigDecimal.ZERO);
+            tournamentParticipationRepository.save(tp);
         }
 
         System.out.println("[DEBUG] - All 8 teams participated to 'Torneo in corso'");

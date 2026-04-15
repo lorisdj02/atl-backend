@@ -23,6 +23,7 @@ import com.atl.backend.model.CheckoutSession;
 import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Purchase;
+import com.atl.backend.model.Tournament;
 import com.atl.backend.model.Transaction;
 import com.atl.backend.model.TransactionGroup;
 import com.atl.backend.model.Wallet;
@@ -33,16 +34,16 @@ import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.model.enums.TransactionType;
 import com.atl.backend.repository.CheckoutSessionRepository;
+import com.atl.backend.repository.FieldRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.PurchaseRepository;
+import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.repository.TransactionGroupRepository;
 import com.atl.backend.repository.TransactionRepository;
 import com.atl.backend.repository.WalletRepository;
 import com.atl.backend.response.CheckoutResponse;
 import com.atl.backend.service.BookingService;
-import com.atl.backend.service.FieldService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
-import com.atl.backend.service.tournamentServices.TournamentService;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,11 +53,12 @@ import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class PaymentService {
+    @Autowired
+    private TournamentRepository tournamentRepository;
 
     @Autowired
-    private FieldService fieldService;
-    @Autowired
-    private TournamentService tournamentService;
+    private FieldRepository fieldRepository;
+
     @Autowired
     private WalletRepository walletRepository;
     @Autowired
@@ -164,7 +166,9 @@ public class PaymentService {
         switch (session.getType()) {
             case TOURNAMENT_FEE:
                 Integer tournamentId = payload.getTournamentId();
-                tournamentName = tournamentService.getTournamentName(tournamentId);
+                Tournament tournament = tournamentRepository.findById(tournamentId)
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+                tournamentName = tournament.getName();
                 break;
             case LOBBY_BOOKING_PARTICIPATE:
                 Integer lobbyId = payload.getLobbyId();
@@ -188,15 +192,12 @@ public class PaymentService {
             case LOBBY_BOOKING_CREATE:
 
                 Integer fieldId = payload.getFieldId();
-                Optional<Field> optField = fieldService.getFieldById(fieldId);
-                if (optField.isEmpty()) {
-                    throw new NotFoundException(ErrorsString.FIELD_NOT_FOUND);
-                }
+                Field field = fieldRepository.findById(fieldId)
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.FIELD_NOT_FOUND));
                 if (payload.getOwnerPlayerId() == null) {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
                 }
                 Player owner = getExistingPlayerByPlayerId(payload.getOwnerPlayerId());
-                Field field = optField.get();
                 fieldName = field.getName();
                 fieldAddress = field.getAddress();
                 cityName = field.getCity().getName();
@@ -210,12 +211,9 @@ public class PaymentService {
                 break;
             case PRIVATE_BOOKING:
                 Integer privateFieldId = payload.getFieldId();
-                Optional<Field> optPrivateField = fieldService.getFieldById(privateFieldId);
-                if (optPrivateField.isEmpty()) {
-                    throw new NotFoundException(ErrorsString.FIELD_NOT_FOUND);
-                }
+                Field privateField = fieldRepository.findById(privateFieldId)
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.FIELD_NOT_FOUND));
 
-                Field privateField = optPrivateField.get();
                 fieldName = privateField.getName();
                 cityName = privateField.getCity().getName();
                 fieldAddress = privateField.getAddress();
