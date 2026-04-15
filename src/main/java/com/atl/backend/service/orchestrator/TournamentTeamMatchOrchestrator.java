@@ -1,6 +1,9 @@
 package com.atl.backend.service.orchestrator;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import com.atl.backend.model.Team;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.service.TeamService;
 import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.paymentServices.PaymentRefundService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 import com.atl.backend.service.tournamentServices.TournamentStatService;
@@ -31,20 +35,47 @@ public class TournamentTeamMatchOrchestrator {
     TournamentParticipantService tournamentParticipantService;
     @Autowired
     TournamentStatService tournamentStatService;
+    @Autowired
+    PaymentRefundService paymentRefundService;
 
     @Transactional(rollbackFor = Exception.class)
     public void leaveTeam(Integer teamId) {
         Integer activeTournamentsCount = tournamentService.countActiveTournamentsByTeamIdAndPlayerId(teamId,
                 AccountContext.getActivePlayer().getPlayerId());
         List<Integer> notPaidTournamentIds = tournamentParticipantService.getNotPaidTournamentIdsByTeamId(teamId);
-        teamService.leaveTeam(teamId, activeTournamentsCount, notPaidTournamentIds);
+        teamService.leaveTeam(teamId, activeTournamentsCount);
+
+        Map<Integer, BigDecimal> refundPerTournament = new HashMap<>();
+        for (Integer tournamentId : notPaidTournamentIds) {
+            BigDecimal refundAmount = paymentRefundService.refundTournamentFeeByTournamentIdAndAccountId(tournamentId,
+                    AccountContext.getActivePlayer().getAccount().getId());
+            refundPerTournament.put(tournamentId, refundAmount);
+        }
+
+        for (Map.Entry<Integer, BigDecimal> entry : refundPerTournament.entrySet()) {
+            tournamentParticipantService.updateToPayTournamentParticipationByTournamentIdAndTeamId(entry.getKey(),
+                    teamId, entry.getValue().negate());
+        }
+
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void expelPlayer(Integer teamId, Integer playerId) {
         Integer activeTournamentsCount = tournamentService.countActiveTournamentsByTeamIdAndPlayerId(teamId, playerId);
+        teamService.expelPlayer(teamId, playerId, activeTournamentsCount);
+
         List<Integer> notPaidTournamentIds = tournamentParticipantService.getNotPaidTournamentIdsByTeamId(teamId);
-        teamService.expelPlayer(teamId, playerId, activeTournamentsCount, notPaidTournamentIds);
+        Map<Integer, BigDecimal> refundPerTournament = new HashMap<>();
+        for (Integer tournamentId : notPaidTournamentIds) {
+            BigDecimal refundAmount = paymentRefundService.refundTournamentFeeByTournamentIdAndAccountId(tournamentId,
+                    AccountContext.getActivePlayer().getAccount().getId());
+            refundPerTournament.put(tournamentId, refundAmount);
+        }
+
+        for (Map.Entry<Integer, BigDecimal> entry : refundPerTournament.entrySet()) {
+            tournamentParticipantService.updateToPayTournamentParticipationByTournamentIdAndTeamId(entry.getKey(),
+                    teamId, entry.getValue().negate());
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)

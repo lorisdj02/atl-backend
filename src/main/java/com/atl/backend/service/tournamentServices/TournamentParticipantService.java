@@ -354,4 +354,17 @@ public class TournamentParticipantService {
         return tournamentParticipations.stream()
                 .map(t -> t.getTournament().getId()).toList();
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void updateToPayTournamentParticipationByTournamentIdAndTeamId(Integer tournamentId, Integer teamId,
+            BigDecimal toPayDelta) {
+        Optional<TournamentParticipation> tournamentParticipationOptional = tournamentParticipationRepository
+                .findByTeam_IdAndTournament_Id(teamId, tournamentId);
+        if (tournamentParticipationOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TOURNAMENT_PARTICIPATION_NOT_FOUND);
+        }
+        TournamentParticipation tournamentParticipation = tournamentParticipationOptional.get();
+        tournamentParticipation.setToPay(tournamentParticipation.getToPay().add(toPayDelta));
+        saveTournamentParticipation(tournamentParticipation);
+    }
 }

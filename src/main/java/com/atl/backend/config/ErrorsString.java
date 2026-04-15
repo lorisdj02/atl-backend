@@ -154,6 +154,8 @@ public class ErrorsString {
     static final public String YOU_CANNOT_RESCHEDULE_MATCH_LESS_THAN_24_HOURS_BEFORE = "YOU_CANNOT_RESCHEDULE_MATCH_LESS_THAN_24_HOURS_BEFORE";
 
     static final public String MOTM_ALREADY_ASSIGNED = "MOTM_ALREADY_ASSIGNED";
+
+    static final public String NEGATIVE_AMOUNT_TRANSACTION = "NEGATIVE_AMOUNT_TRANSACTION";
     
     // Authentication errors
 

@@ -13,14 +13,11 @@ import com.atl.backend.model.Player;
 import com.atl.backend.model.PlaysAt;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.TeamRequest;
-import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.repository.PlaysAtRepository;
 import com.atl.backend.repository.TeamRepository;
 import com.atl.backend.repository.TeamRequestRepository;
-import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.response.PlayersInTeamResponse;
-import com.atl.backend.service.paymentServices.PaymentRefundService;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +28,6 @@ import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.exception.*;
 
 import java.util.Optional;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,11 +49,6 @@ public class TeamService {
     private SportService sportService;
     @Autowired
     private FieldService fieldService;
-    @Autowired
-    private PaymentRefundService paymentRefundService;
-
-    @Autowired
-    private TournamentParticipationRepository tournamentParticipationRepository;
 
     public List<TeamRequest> getAllTeamRequests() {
         return teamRequestRepository.findAll();
@@ -106,6 +97,11 @@ public class TeamService {
         return Optional.empty();
     }
 
+    public List<Integer> getPlayerIdsByTeamId(Integer teamId) {
+        List<PlaysAt> playsAts = playsAtRepository.findByTeam_Id(teamId);
+        return playsAts.stream().map(playsAt -> playsAt.getPlayer().getPlayerId()).toList();
+    }
+
     @Transactional(readOnly = true)
     private PlaysAt canPlayerLeaveTeam(Team team, Integer playerId, Integer activeTournamentsCount) {
         Player player = getExistingPlayerByPlayerId(playerId);
@@ -124,8 +120,7 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    private void removePlayer(Integer teamId, Player player, Integer activeTournamentsCount,
-            List<Integer> notPaidTournamentIds) {
+    private void removePlayer(Integer teamId, Player player, Integer activeTournamentsCount) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
         canPlayerLeaveTeam(team, player.getPlayerId(), activeTournamentsCount);
@@ -144,26 +139,19 @@ public class TeamService {
         }
 
         teamRepository.save(team);
-
-        for (Integer tournamentId : notPaidTournamentIds) {
-            paymentRefundService.refundTournamentFeeByTournamentIdAndAccountId(tournamentId,
-                    player.getAccount().getId());
-        }
-
         playsAtRepository.delete(playsAt);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void leaveTeam(Integer teamId, Integer activeTournamentsCount, List<Integer> notPaidTournamentIds) {
+    public void leaveTeam(Integer teamId, Integer activeTournamentsCount) {
         Player player = AccountContext.getActivePlayer();
-        removePlayer(teamId, player, activeTournamentsCount, notPaidTournamentIds);
+        removePlayer(teamId, player, activeTournamentsCount);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void expelPlayer(Integer teamId, Integer playerId, Integer activeTournamentsCount,
-            List<Integer> notPaidTournamentIds) {
+    public void expelPlayer(Integer teamId, Integer playerId, Integer activeTournamentsCount) {
         Player player = getExistingPlayerByPlayerId(playerId);
-        removePlayer(teamId, player, activeTournamentsCount, notPaidTournamentIds);
+        removePlayer(teamId, player, activeTournamentsCount);
     }
 
     @Transactional(rollbackFor = Exception.class)

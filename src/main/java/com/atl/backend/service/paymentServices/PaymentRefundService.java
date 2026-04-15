@@ -58,11 +58,6 @@ public class PaymentRefundService {
                 .orElseThrow(() -> new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND));
     }
 
-    private List<Purchase> getPurchasesByTournamentIdAndAccountId(Integer tournamentId, Integer accountId) {
-        return purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
-                CheckoutType.TOURNAMENT_FEE, tournamentId, accountId, PurchaseStatus.CONFIRMED);
-    }
-
     private void checkTransactionGroup(Integer transactionGroupId) {
         Optional<TransactionGroup> optTransactionGroup = transactionGroupRepository.findById(transactionGroupId);
         if (optTransactionGroup.isEmpty()) {
@@ -71,7 +66,7 @@ public class PaymentRefundService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundPurchase(Integer purchaseId) {
+    public BigDecimal refundPurchase(Integer purchaseId) {
         Purchase purchase = getExistingPurchase(purchaseId);
 
         if (purchase.getStatus() != PurchaseStatus.CONFIRMED) {
@@ -82,8 +77,13 @@ public class PaymentRefundService {
         TransactionGroup transactionGroup = purchase.getTransactionGroup();
         List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroup.getId());
         Integer numberOfRefundedTransactions = 0;
+        BigDecimal totalRefundedAmount = BigDecimal.ZERO;
         for (Transaction transaction : transactions) {
             if (transaction.getStatus() == TransactionStatus.CONFIRMED && transaction.getRefundable()) {
+
+                if (transaction.getAmount().compareTo(BigDecimal.ZERO) < 0) {
+                    throw new ConflictException(ErrorsString.NEGATIVE_AMOUNT_TRANSACTION);
+                }
 
                 switch (transaction.getSource()) {
                     case INVITE_WALLET:
@@ -99,6 +99,7 @@ public class PaymentRefundService {
                 Transaction refundTransaction = craftRefundTransaction(transaction);
                 transactionRepository.save(refundTransaction);
 
+                totalRefundedAmount = totalRefundedAmount.add(transaction.getNetAmount());
                 transaction.setStatus(TransactionStatus.REFUNDED);
                 transactionRepository.save(transaction);
                 numberOfRefundedTransactions++;
@@ -116,16 +117,16 @@ public class PaymentRefundService {
         }
         transactionGroupRepository.save(transactionGroup);
         purchaseRepository.save(purchase);
+        return totalRefundedAmount;
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundPurchaseForCallups(Integer tournamentId, List<Integer> calluppedAccountIds) {
+    public void refundPurchaseForPlayerIds(Integer tournamentId, List<Integer> calluppedAccountIds) {
         for (Integer accountId : calluppedAccountIds) {
-            List<Purchase> purchases = getPurchasesByTournamentIdAndAccountId(tournamentId, accountId);
+            List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
+                    CheckoutType.TOURNAMENT_FEE, tournamentId, accountId, PurchaseStatus.CONFIRMED);
             for (Purchase purchase : purchases) {
-                if (purchase.getStatus() == PurchaseStatus.CONFIRMED) {
-                    refundPurchase(purchase.getId());
-                }
+                refundPurchase(purchase.getId());
             }
         }
     }
@@ -211,11 +212,13 @@ public class PaymentRefundService {
         return true;
     }
 
-    public void refundTournamentFeeByTournamentIdAndAccountId(Integer tournamentId, Integer accountId){
+    public BigDecimal refundTournamentFeeByTournamentIdAndAccountId(Integer tournamentId, Integer accountId) {
         List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
                 CheckoutType.TOURNAMENT_FEE, tournamentId, accountId, PurchaseStatus.CONFIRMED);
+        BigDecimal totalRefundedAmount = BigDecimal.ZERO;
         for (Purchase purchase : purchases) {
-            refundPurchase(purchase.getId());
+            totalRefundedAmount = totalRefundedAmount.add(refundPurchase(purchase.getId()));
         }
+        return totalRefundedAmount;
     }
 }
