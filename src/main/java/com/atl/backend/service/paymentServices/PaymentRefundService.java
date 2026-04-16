@@ -1,11 +1,13 @@
 package com.atl.backend.service.paymentServices;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,6 +103,8 @@ public class PaymentRefundService {
 
                 totalRefundedAmount = totalRefundedAmount.add(transaction.getNetAmount());
                 transaction.setStatus(TransactionStatus.REFUNDED);
+                transaction.setRefundable(false);
+                transaction.setUpdatedAt(LocalDateTime.now());
                 transactionRepository.save(transaction);
                 numberOfRefundedTransactions++;
             }
@@ -198,6 +202,7 @@ public class PaymentRefundService {
         List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroupId);
         for (Transaction transaction : transactions) {
             transaction.setRefundable(false);
+            transaction.setUpdatedAt(LocalDateTime.now());
             transactionRepository.save(transaction);
         }
     }

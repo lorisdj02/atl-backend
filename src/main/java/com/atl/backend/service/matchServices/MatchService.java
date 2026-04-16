@@ -5,7 +5,6 @@ import com.atl.backend.repository.FootballMatchEventRepository;
 import com.atl.backend.repository.FootballMatchRepository;
 import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.PlayerRepository;
-import com.atl.backend.repository.RefereeAssignmentRepository;
 import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.response.FootballMatchEventsResponse;
 import com.atl.backend.service.TeamService;
@@ -13,11 +12,13 @@ import com.atl.backend.service.TeamService;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import com.atl.backend.model.enums.*;
 import com.atl.backend.config.ErrorsString;
@@ -28,7 +29,6 @@ import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballMatchEvent;
 import com.atl.backend.model.Match;
-import com.atl.backend.model.RefereeAssignment;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 
@@ -44,8 +44,6 @@ public class MatchService {
     private MatchRepository matchRepository;
     @Autowired
     private FinalStageBracketRepository finalStageBracketRepository;
-    @Autowired
-    private RefereeAssignmentRepository refereeAssignmentRepository;
 
     @Autowired
     private TournamentRepository tournamentRepository;
@@ -133,19 +131,6 @@ public class MatchService {
         }
     }
 
-    public List<FootballMatch> getAssignedFootballMatchesByRefereeId(Integer refereeId) {
-        List<RefereeAssignment> refereeAssignments = refereeAssignmentRepository.findByReferee_RefereeId(refereeId);
-        List<FootballMatch> assignedFootballMatches = new ArrayList<>();
-        for (RefereeAssignment refereeAssignment : refereeAssignments) {
-            Match match = refereeAssignment.getMatch();
-            if (match.getSportCategory() == SportCategory.FOOTBALL) {
-                Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(match.getId());
-                footballMatchOptional.ifPresent(assignedFootballMatches::add);
-            }
-        }
-        return assignedFootballMatches;
-    }
-
     public List<Team> getTeamsByMatchId(Integer matchId) {
         Optional<Match> matchOptional = matchRepository.findById(matchId);
         if (matchOptional.isEmpty()) {
@@ -168,10 +153,6 @@ public class MatchService {
         return footballMatchRepository.findByStatus(FootballMatchStatus.SCHEDULED);
     }
 
-    public List<RefereeAssignment> getRefereeAssignmentsForMatch(Integer matchId) {
-        return refereeAssignmentRepository.findByMatch_Id(matchId);
-    }
-
     public Boolean canMatchFinish(Integer matchId) {
         Optional<Match> optionalMatch = matchRepository.findById(matchId);
         if (optionalMatch.isEmpty()) {
@@ -186,7 +167,7 @@ public class MatchService {
                 }
                 FootballMatch footballMatch = footballMatchOptional.get();
                 if (footballMatch.getStatus() != FootballMatchStatus.START_HALF
-                        || footballMatch.getStatus() != FootballMatchStatus.PENALTY_SHOOT_OUT) {
+                        && footballMatch.getStatus() != FootballMatchStatus.PENALTY_SHOOT_OUT) {
                     return false;
                 }
             }
@@ -198,7 +179,7 @@ public class MatchService {
         Short aggregateScoreHome = finalStageBracket.getAggregateScoreHome();
         Short aggregateScoreAway = finalStageBracket.getAggregateScoreAway();
         if (aggregateScoreHome == null || aggregateScoreAway == null) {
-            return false;
+            throw new NotFoundException(ErrorsString.FINAL_STAGE_BRACKET_NOT_FOUND);
         }
         return aggregateScoreHome != aggregateScoreAway;
     }
@@ -355,18 +336,6 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
-    public Boolean hasRefereeActiveMatchesByRefereeId(Integer refereeId) {
-        List<RefereeAssignment> refereeAssignments = refereeAssignmentRepository.findByReferee_RefereeId(refereeId);
-        for (RefereeAssignment refereeAssignment : refereeAssignments) {
-            Match match = refereeAssignment.getMatch();
-            if (match.getFinishMatch() == null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Transactional(readOnly = true)
     public Boolean areMatchesFinishedByTournamentIdAndGroupName(Integer tournamentId, String prefixGroupName) {
         List<Match> matches = matchRepository.findByTournament_Id(tournamentId);
         if (matches.isEmpty()) {
@@ -476,6 +445,7 @@ public class MatchService {
         if (newStatus != null) {
             footballMatch.setStatus(newStatus);
         }
+        footballMatch.setUpdatedAt(LocalDateTime.now());
         return saveFootballMatch(footballMatch);
     }
 
@@ -527,5 +497,21 @@ public class MatchService {
 
         matchRepository.save(match);
         return match.getMotmPlayer().getPlayerId();
+    }
+
+    public void startFootballPenaltyShootout(Integer matchId) {
+        FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        if (footballMatch.getStatus() != FootballMatchStatus.START_HALF) {
+            throw new ConflictException(ErrorsString.CANNOT_START_PENALTY_SHOOTOUT);
+        }
+
+        if (canMatchFinish(matchId)) {
+            throw new ConflictException(ErrorsString.CANNOT_START_PENALTY_SHOOTOUT);
+        }
+
+        footballMatch.setStatus(FootballMatchStatus.PENALTY_SHOOT_OUT);
+        footballMatch.setUpdatedAt(LocalDateTime.now());
+        footballMatchRepository.save(footballMatch);
     }
 }

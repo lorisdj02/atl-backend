@@ -62,6 +62,12 @@ public class Field {
     @Column(name = "closed_days", nullable = false, length = 7)
     private String closedDays = "0000001";
 
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     public String getCompleteAddress(){
         return address + ", " + city.getName();
     }

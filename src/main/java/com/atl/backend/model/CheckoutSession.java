@@ -1,5 +1,6 @@
 package com.atl.backend.model;
 
+import com.atl.backend.dto.CheckoutPayload;
 import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
@@ -30,17 +31,20 @@ public class CheckoutSession {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
-    private CheckoutStatus status;
+    private CheckoutStatus status = CheckoutStatus.PENDING;
 
     @Column(nullable = false, columnDefinition = "jsonb")
-    private String payload;
+    private CheckoutPayload payload;
 
     @Column(nullable = false)
     private BigDecimal amount;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "expires_at", nullable = false)
-    private LocalDateTime expiresAt;
+    private LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(10);
 }

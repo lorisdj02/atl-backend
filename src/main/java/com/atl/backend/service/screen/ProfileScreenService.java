@@ -39,10 +39,12 @@ import com.atl.backend.response.PersonalPlayerStatsResponse;
 import com.atl.backend.response.RefereeLicensesResponse;
 import com.atl.backend.response.ReviewsResponse;
 import com.atl.backend.response.WalletResponse;
-import com.atl.backend.service.AccountService;
 import com.atl.backend.service.BookingService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.accountServices.AccountService;
+import com.atl.backend.service.accountServices.CoordinatorService;
+import com.atl.backend.service.accountServices.RefereeService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.paymentServices.PaymentService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
@@ -58,6 +60,11 @@ public class ProfileScreenService {
 
     @Autowired
     private AccountService accountService;
+    @Autowired
+    private CoordinatorService coordinatorService;
+    @Autowired
+    private RefereeService refereeService;
+
     @Autowired
     private SportService sportService;
     @Autowired
@@ -87,7 +94,7 @@ public class ProfileScreenService {
 
         switch (account.getRole()) {
             case COORDINATOR:
-                Optional<Coordinator> coordinator = accountService.getCoordinatorByAccountId(accountId);
+                Optional<Coordinator> coordinator = coordinatorService.getCoordinatorByAccountId(accountId);
                 if (coordinator.isEmpty()) {
                     throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND);
                 }
@@ -96,7 +103,7 @@ public class ProfileScreenService {
                 level = coordinator.get().getLevel();
                 break;
             case REFEREE:
-                Optional<Referee> referee = accountService.getRefereeByAccountId(accountId);
+                Optional<Referee> referee = refereeService.getRefereeByAccountId(accountId);
                 if (referee.isEmpty()) {
                     throw new NotFoundException(ErrorsString.REFEREE_NOT_FOUND);
                 }

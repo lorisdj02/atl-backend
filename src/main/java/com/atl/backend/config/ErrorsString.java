@@ -51,6 +51,8 @@ public class ErrorsString {
 
     static final public String TEAM_STAT_NOT_FOUND = "TEAM_STAT_NOT_FOUND";
 
+    static final public String REFEREE_LICENSE_NOT_FOUND = "REFEREE_LICENSE_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -74,6 +76,13 @@ public class ErrorsString {
     static final public String PAYMENT_AMOUNT_EXCEEDS_TO_PAY = "PAYMENT_AMOUNT_EXCEEDS_TO_PAY";
 
     static final public String INVALID_TOURNAMENT_PHASE = "INVALID_TOURNAMENT_PHASE";
+
+    static final public String INVALID_MATCH_SCHEDULE = "INVALID_MATCH_SCHEDULE";
+
+    static final public String INVALID_CHECKOUT_TYPE = "INVALID_CHECKOUT_TYPE";
+
+    static final public String INVALID_CHECKOUT_AMOUNT = "INVALID_CHECKOUT_AMOUNT";
+
 
     // Conflict errors
 
@@ -156,7 +165,21 @@ public class ErrorsString {
     static final public String MOTM_ALREADY_ASSIGNED = "MOTM_ALREADY_ASSIGNED";
 
     static final public String NEGATIVE_AMOUNT_TRANSACTION = "NEGATIVE_AMOUNT_TRANSACTION";
+
+    static final public String MATCH_NOT_SCHEDULED = "MATCH_NOT_SCHEDULED";
+
+    static final public String MATCH_ALREADY_HAS_ENOUGH_REFEREES = "MATCH_ALREADY_HAS_ENOUGH_REFEREES";
+
+    static final public String CANNOT_START_PENALTY_SHOOTOUT = "CANNOT_START_PENALTY_SHOOTOUT";
+
+    static final public String REFEREE_LICENSE_MISMATCH = "REFEREE_LICENSE_MISMATCH";
+
+    static final public String VICE_CAPTAIN_CANNOT_EXPEL_VICE_CAPTAIN = "VICE_CAPTAIN_CANNOT_EXPEL_VICE_CAPTAIN";
     
+    static final public String CAPTAIN_CANNOT_BE_EXPELLED = "CAPTAIN_CANNOT_BE_EXPELLED";
+
+    static final public String NO_AVAILABLE_SPOTS = "NO_AVAILABLE_SPOTS";
+
     // Authentication errors
 
     static final public String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";

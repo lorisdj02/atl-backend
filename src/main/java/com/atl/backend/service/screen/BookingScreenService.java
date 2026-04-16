@@ -20,9 +20,9 @@ import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.response.JoinLobbyResponse;
 import com.atl.backend.response.LobbyInfoResponse;
 import com.atl.backend.response.BookFieldResponse;
-import com.atl.backend.service.AccountService;
 import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
+import com.atl.backend.service.accountServices.PlayerService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class BookingScreenService {
         @Autowired
         private FieldService fieldService;
         @Autowired
-        private AccountService accountService;
+        private PlayerService playerService;
 
         @Transactional(readOnly = true)
         public BookFieldResponse getBookFieldScreen(SportCategory sportCategory) {
@@ -60,7 +60,7 @@ public class BookingScreenService {
                         Integer selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
 
                 Integer playerId = AccountContext.getPlayerId();
-                Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
+                Optional<Player> optionalPlayer = playerService.getPlayerByPlayerId(playerId);
                 if (optionalPlayer.isEmpty()) {
                         throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
                 }

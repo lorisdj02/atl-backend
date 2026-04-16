@@ -103,7 +103,7 @@ public class TournamentTeamMatchOrchestrator {
                         .orElseThrow(() -> new BadRequestException(ErrorsString.PLAYER_NOT_IN_TEAM));
 
                 matchService.addMotmToMatch(matchId, playerId);
-                teamService.upgradeFootballTeamStat(playerId, playerId, null, (short) 1, null, null);
+                teamService.updateFootballTeamStat(playerId, playerId, null, (short) 1, null, null);
                 tournamentStatService.updateFootballTournamentStats(match.getTournament().getId(), playerId,
                         playerTeam.getId(), null, (short) 1, null, null);
                 break;

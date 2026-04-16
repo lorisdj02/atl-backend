@@ -15,7 +15,11 @@ import com.atl.backend.model.Organization;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Referee;
 import com.atl.backend.model.enums.AccountRole;
-import com.atl.backend.service.AccountService;
+import com.atl.backend.service.accountServices.AccountService;
+import com.atl.backend.service.accountServices.CoordinatorService;
+import com.atl.backend.service.accountServices.OrganizationService;
+import com.atl.backend.service.accountServices.PlayerService;
+import com.atl.backend.service.accountServices.RefereeService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,6 +32,14 @@ import jakarta.servlet.http.HttpServletResponse;
 public class AuthFilter extends OncePerRequestFilter {
     @Autowired
     private AccountService accountService;
+    @Autowired
+    private PlayerService playerService;
+    @Autowired
+    private CoordinatorService coordinatorService;
+    @Autowired
+    private RefereeService refereeService;
+    @Autowired
+    private OrganizationService organizationService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -56,7 +68,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
                 switch (account.getRole()) {
                     case PLAYER -> {
-                        Optional<Player> playerOpt = accountService.getPlayerByAccountId(account.getId());
+                        Optional<Player> playerOpt = playerService.getPlayerByAccountId(account.getId());
                         if (playerOpt.isEmpty()) {
                             throw new ForbiddenException(ErrorsString.PLAYER_NOT_FOUND);
                         }
@@ -64,7 +76,7 @@ public class AuthFilter extends OncePerRequestFilter {
                         contextData.setPlayerId(player.getPlayerId());
                     }
                     case COORDINATOR -> {
-                        Optional<Coordinator> coordinatorOpt = accountService
+                        Optional<Coordinator> coordinatorOpt = coordinatorService
                                 .getCoordinatorByAccountId(account.getId());
                         if (coordinatorOpt.isEmpty()) {
                             throw new ForbiddenException(ErrorsString.COORDINATOR_NOT_FOUND);
@@ -73,7 +85,7 @@ public class AuthFilter extends OncePerRequestFilter {
                         contextData.setCoordinatorId(coordinator.getCoordinatorId());
                     }
                     case REFEREE -> {
-                        Optional<Referee> refereeOpt = accountService.getRefereeByAccountId(account.getId());
+                        Optional<Referee> refereeOpt = refereeService.getRefereeByAccountId(account.getId());
                         if (refereeOpt.isEmpty()) {
                             throw new ForbiddenException(ErrorsString.REFEREE_NOT_FOUND);
                         }
@@ -81,7 +93,7 @@ public class AuthFilter extends OncePerRequestFilter {
                         contextData.setRefereeId(referee.getRefereeId());
                     }
                     case ORGANIZATION -> {
-                        Optional<Organization> organizationOpt = accountService
+                        Optional<Organization> organizationOpt = organizationService
                                 .getOrganizationByAccountId(account.getId());
                         if (organizationOpt.isEmpty()) {
                             throw new ForbiddenException(ErrorsString.ORGANIZATION_NOT_FOUND);

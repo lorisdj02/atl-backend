@@ -3,6 +3,10 @@ package com.atl.backend.config;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.accountServices.AccountService;
+import com.atl.backend.service.accountServices.CoordinatorService;
+import com.atl.backend.service.accountServices.OrganizationService;
+import com.atl.backend.service.accountServices.PlayerService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 
@@ -38,7 +42,6 @@ import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TournamentPhase;
 import com.atl.backend.model.enums.TournamentStatus;
 import com.atl.backend.repository.TournamentParticipationRepository;
-import com.atl.backend.service.AccountService;
 
 import jakarta.transaction.Transactional;
 import java.sql.Connection;
@@ -62,6 +65,12 @@ public class MockDbPopulate {
     private AccountService accountService;
     @Autowired
     private DataSource dataSource;
+    @Autowired
+    private PlayerService playerService;
+    @Autowired
+    private OrganizationService organizationService;
+    @Autowired
+    private CoordinatorService coordinatorService;
 
     @Autowired
     private TournamentParticipationRepository tournamentParticipationRepository;
@@ -98,7 +107,7 @@ public class MockDbPopulate {
 
     @Transactional
     public void createTeams() {
-        List<Integer> playerIds = accountService.getAllPlayers().stream().map(player -> player.getPlayerId()).toList();
+        List<Integer> playerIds = playerService.getAllPlayers().stream().map(player -> player.getPlayerId()).toList();
 
         List<Team> teams = new ArrayList<>();
 
@@ -107,7 +116,7 @@ public class MockDbPopulate {
             String alias = "TAA";
             team.setName("team" + i);
             team.setSportCategory(SportCategory.FOOTBALL);
-            team.setCaptainPlayer(accountService.getPlayerByPlayerId(playerIds.get(i - 1)).get());
+            team.setCaptainPlayer(playerService.getPlayerByPlayerId(playerIds.get(i - 1)).get());
             team.setAlias(alias);
             Team savedTeam = teamService.saveTeam(team);
             teams.add(savedTeam);
@@ -129,7 +138,7 @@ public class MockDbPopulate {
         football5v5.setMinutesPerRound((short) 20);
         football5v5.setMinutesPerPause((short) 5);
         football5v5.setSportCategory(SportCategory.FOOTBALL);
-        football5v5.setMinReferee((short) 1);
+        football5v5.setNumRefereesPerMatch((short) 1);
         sportService.saveSport(football5v5);
 
         Sport football7v7 = new Sport();
@@ -140,7 +149,7 @@ public class MockDbPopulate {
         football7v7.setMinutesPerRound((short) 25);
         football7v7.setMinutesPerPause((short) 10);
         football7v7.setSportCategory(SportCategory.FOOTBALL);
-        football7v7.setMinReferee((short) 1);
+        football7v7.setNumRefereesPerMatch((short) 1);
         sportService.saveSport(football7v7);
 
         Sport football8v8 = new Sport();
@@ -151,7 +160,7 @@ public class MockDbPopulate {
         football8v8.setMinutesPerRound((short) 30);
         football8v8.setMinutesPerPause((short) 10);
         football8v8.setSportCategory(SportCategory.FOOTBALL);
-        football8v8.setMinReferee((short) 1);
+        football8v8.setNumRefereesPerMatch((short) 1);
         sportService.saveSport(football8v8);
 
         Sport football11v11 = new Sport();
@@ -162,7 +171,7 @@ public class MockDbPopulate {
         football11v11.setMinutesPerRound((short) 45);
         football11v11.setMinutesPerPause((short) 15);
         football11v11.setSportCategory(SportCategory.FOOTBALL);
-        football11v11.setMinReferee((short) 3);
+        football11v11.setNumRefereesPerMatch((short) 3);
         sportService.saveSport(football11v11);
 
         System.out.println("[DEBUG] - Created 4 sports: Football 5v5, Football 7v7, Football 8v8, Football 11v11");
@@ -189,7 +198,7 @@ public class MockDbPopulate {
     public void createFields() {
         Map<SportCategory, Short> maxPlayersPerSportCategoryField1 = new HashMap<>();
         maxPlayersPerSportCategoryField1.put(SportCategory.FOOTBALL, (short) 10);
-        List<Organization> organizations = accountService.getAllOrganizations();
+        List<Organization> organizations = organizationService.getAllOrganizations();
 
         Field field1 = new Field();
         field1.setName("Campo 1");
@@ -488,7 +497,7 @@ public class MockDbPopulate {
 
     @Transactional
     public void createTournaments() {
-        List<Coordinator> coordinators = accountService.getAllCoordinators();
+        List<Coordinator> coordinators = coordinatorService.getAllCoordinators();
         List<Integer> fieldIds = fieldService.getAllFields().stream().map(field -> field.getId()).toList();
         List<Integer> teamIds = teamService.getAllTeams().stream().map(team -> team.getId()).toList();
 

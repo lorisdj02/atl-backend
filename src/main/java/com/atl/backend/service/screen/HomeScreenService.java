@@ -23,6 +23,7 @@ import com.atl.backend.response.*;
 import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
@@ -41,6 +42,8 @@ public class HomeScreenService {
         private FieldService fieldService;
         @Autowired
         private MatchService matchService;
+        @Autowired
+        private MatchRefereeService matchRefereeService;
         @Autowired
         private TeamService teamService;
 
@@ -241,7 +244,7 @@ public class HomeScreenService {
 
                 switch (sportCategory) {
                         case FOOTBALL:
-                                assignedFootballMatches = matchService.getAssignedFootballMatchesByRefereeId(refereeId);
+                                assignedFootballMatches = matchRefereeService.getAssignedFootballMatchesByRefereeId(refereeId);
                                 for (FootballMatch footballMatch : assignedFootballMatches) {
                                         List<Team> teams = matchService
                                                         .getTeamsByMatchId(footballMatch.getMatch().getId());

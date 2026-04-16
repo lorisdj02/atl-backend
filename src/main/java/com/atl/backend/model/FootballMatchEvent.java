@@ -1,5 +1,7 @@
 package com.atl.backend.model;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -56,4 +58,10 @@ public class FootballMatchEvent {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "modified_table", columnDefinition = "jsonb")
     private String modifiedTable;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

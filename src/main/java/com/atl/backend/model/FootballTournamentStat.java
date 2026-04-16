@@ -1,13 +1,15 @@
 package com.atl.backend.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
 @Entity
 @IdClass(FootballTournamentStatsId.class)
-@Table(name = "football_tournament_stats")
-public class FootballTournamentStats {
+@Table(name = "football_tournament_stat")
+public class FootballTournamentStat {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
@@ -37,4 +39,10 @@ public class FootballTournamentStats {
 
     @Column(name = "red_cards", nullable = false)
     private Short redCards = 0;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

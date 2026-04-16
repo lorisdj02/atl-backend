@@ -1,5 +1,6 @@
 package com.atl.backend.service.tournamentServices;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +38,7 @@ public class TournamentPhaseService {
     private MatchService matchService;
     @Autowired
     private MatchCombinationService matchCombinationService;
-    
+
     @Autowired
     private FootballStandingRepository footballStandingRepository;
 
@@ -111,13 +112,15 @@ public class TournamentPhaseService {
                 giveTournamentPrizes(tournamentId);
                 break;
         }
+        tournament.setUpdatedAt(LocalDateTime.now());
         tournamentRepository.save(tournament);
     }
 
     @Transactional(rollbackFor = Exception.class)
     private TournamentPhase handlePostGroupStage(Integer tournamentId) {
         Tournament tournament = getExistingTournament(tournamentId);
-        matchCombinationService.drawKnockoutStageMatches(tournamentId, getQualifiedTeamsPerRankByTournamentId(tournamentId));
+        matchCombinationService.drawKnockoutStageMatches(tournamentId,
+                getQualifiedTeamsPerRankByTournamentId(tournamentId));
         switch (tournament.getNumTeamsQualified()) {
             case 16:
                 return TournamentPhase.RO16;
@@ -174,7 +177,6 @@ public class TournamentPhaseService {
         }
 
         tournament.setStatus(TournamentStatus.PENDING_PAYMENTS);
-        tournamentRepository.save(tournament);
 
         // TODO: Devi continuare la logica di assegnazione premi
     }

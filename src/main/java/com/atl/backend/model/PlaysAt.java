@@ -1,5 +1,7 @@
 package com.atl.backend.model;
 
+import java.time.LocalDateTime;
+
 import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
@@ -25,4 +27,10 @@ public class PlaysAt {
     @Enumerated(EnumType.STRING)
     @Column(name = "sport_category", nullable = false, length = 15)
     private SportCategory sportCategory;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

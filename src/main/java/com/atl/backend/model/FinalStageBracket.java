@@ -1,5 +1,8 @@
 package com.atl.backend.model;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
@@ -46,6 +49,12 @@ public class FinalStageBracket {
     @Enumerated(EnumType.STRING)
     @Column(name = "next_final_stage_bracket_slot", length = 15)
     private MatchSlotType nextFinalStageBracketSlot;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     public boolean isHomeWinner() {
         return aggregateScoreHome > aggregateScoreAway;

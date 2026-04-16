@@ -56,7 +56,7 @@ public class Match {
      * @Column(name = "final_stage_bracket_id")
      * private Integer finalStageBracketId;
      */
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "final_stage_bracket_id")
     private FinalStageBracket finalStageBracket;
@@ -64,4 +64,10 @@ public class Match {
     @Enumerated(EnumType.STRING)
     @Column(name = "leg_order", length = 15)
     private LegOrderType legOrder;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

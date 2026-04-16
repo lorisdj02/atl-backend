@@ -1,6 +1,7 @@
 package com.atl.backend.service.tournamentServices;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -299,6 +300,7 @@ public class TournamentParticipantService {
             throw new BadRequestException(ErrorsString.PAYMENT_AMOUNT_EXCEEDS_TO_PAY);
         }
         tournamentParticipation.setToPay(tournamentParticipation.getToPay().subtract(amount));
+        tournamentParticipation.setUpdatedAt(LocalDateTime.now());
         saveTournamentParticipation(tournamentParticipation);
     }
 
@@ -366,5 +368,19 @@ public class TournamentParticipantService {
         TournamentParticipation tournamentParticipation = tournamentParticipationOptional.get();
         tournamentParticipation.setToPay(tournamentParticipation.getToPay().add(toPayDelta));
         saveTournamentParticipation(tournamentParticipation);
+    }
+
+    public BigDecimal getToPayByTournamentIdAndPlayerId(Integer tournamentId, Integer accountId) {
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
+        Player player = getExistingPlayerByAccountId(accountId);
+
+        Team team = teamService.getTeamByPlayerIdAndSportCategory(player.getPlayerId(),
+                tournament.getSport().getSportCategory())
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
+
+        TournamentParticipation tournamentParticipation = tournamentParticipationRepository
+                .findByTeam_IdAndTournament_Id(team.getId(), tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_PARTICIPATION_NOT_FOUND));
+        return tournamentParticipation.getToPay();
     }
 }

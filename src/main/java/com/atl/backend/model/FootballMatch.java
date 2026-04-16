@@ -65,6 +65,12 @@ public class FootballMatch {
     @Column(nullable = false, length = 31)
     private FootballMatchStatus status = FootballMatchStatus.NOT_SCHEDULED;
 
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     public List<Team> getTeams() {
         return List.of(homeTeam, awayTeam);
     }

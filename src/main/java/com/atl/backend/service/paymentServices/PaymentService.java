@@ -145,12 +145,7 @@ public class PaymentService {
         }
         Wallet wallet = walletOpt.get();
 
-        ObjectMapper mapper = new ObjectMapper();
-        String payloadJson = session.getPayload();
-        if (payloadJson == null) {
-            throw new NotFoundException(ErrorsString.CHECKOUT_SESSION_NOT_FOUND);
-        }
-        CheckoutPayload payload = mapper.readValue(payloadJson, CheckoutPayload.class);
+        CheckoutPayload payload = session.getPayload();
 
         String tournamentName = null;
         String bookingUsername = null;
@@ -256,10 +251,6 @@ public class PaymentService {
 
     public TransactionGroup saveTransactionGroup(TransactionGroup transactionGroup) {
         return transactionGroupRepository.save(transactionGroup);
-    }
-
-    public Purchase savePurchase(Purchase purchase) {
-        return purchaseRepository.save(purchase);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -379,18 +370,10 @@ public class PaymentService {
         Purchase purchase = new Purchase();
         purchase.setAccount(account);
         purchase.setAmount(originalAmountToPay);
-        String payloadJson = session.getPayload();
-        CheckoutPayload payload;
-        // Parse the JSON payload into the map
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            payload = mapper.readValue(payloadJson, CheckoutPayload.class);
-        } catch (Exception e) {
-            throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
-        }
-        purchase.setDetail(payloadJson);
+        CheckoutPayload payload = session.getPayload();
+        //TODO: controlla i dettagli da inserire in base al tipo di checkout, solo da visualizzare
+        purchase.setDetail(" ");
         purchase.setTransactionGroup(transactionGroup);
-        purchase.setDetail(payloadJson);
         purchase.setType(session.getType());
         switch (session.getType()) {
             // TODO: da rivedere... tournament_fee e lobby_booking_partecipate forse non
@@ -434,5 +417,19 @@ public class PaymentService {
         // vuoto o meno
         return wallet.getPrizeBalance().compareTo(BigDecimal.ZERO) == 0
                 && wallet.getPersonalBalance().compareTo(BigDecimal.ZERO) == 0;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public CheckoutSession createCheckoutSession(CheckoutPayload payload, CheckoutType checkoutType) {
+        Account account = AccountContext.getActiveAccount();
+
+
+        CheckoutSession session = new CheckoutSession();
+        session.setAccount(account);
+        session.setType(checkoutType);
+        session.setPayload(payload);
+        session.setAmount(payload.getAmount());
+        return checkoutSessionRepository.save(session);
+
     }
 }

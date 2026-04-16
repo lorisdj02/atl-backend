@@ -28,6 +28,7 @@ import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.exception.*;
 
 import java.util.Optional;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -138,6 +139,8 @@ public class TeamService {
             team.setVice2Player(null);
         }
 
+        team.setUpdatedAt(LocalDateTime.now());
+
         teamRepository.save(team);
         playsAtRepository.delete(playsAt);
     }
@@ -151,6 +154,18 @@ public class TeamService {
     @Transactional(rollbackFor = Exception.class)
     public void expelPlayer(Integer teamId, Integer playerId, Integer activeTournamentsCount) {
         Player player = getExistingPlayerByPlayerId(playerId);
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
+
+        if (team.getCaptainPlayer().equals(player)) {
+            throw new ConflictException(ErrorsString.CAPTAIN_CANNOT_BE_EXPELLED);
+        }
+
+        needToBeCaptainOrViceCaptain(teamId, playerId);
+        if (team.getViceCaptainPlayers().contains(player)
+                && !team.getCaptainPlayer().equals(AccountContext.getActivePlayer())) {
+            throw new ConflictException(ErrorsString.VICE_CAPTAIN_CANNOT_EXPEL_VICE_CAPTAIN);
+        }
         removePlayer(teamId, player, activeTournamentsCount);
     }
 
@@ -184,6 +199,7 @@ public class TeamService {
         if (!team.getCaptainPlayer().equals(player)) {
             team.setNumPlayers((short) (team.getNumPlayers() + 1));
         }
+        team.setUpdatedAt(LocalDateTime.now());
         teamRepository.save(team);
         return Optional.of(playsAtRepository.save(playsAt));
     }
@@ -512,7 +528,7 @@ public class TeamService {
         return playsAtRepository.findByPlayer_PlayerId(playerId);
     }
 
-    public FootballTeamStat upgradeFootballTeamStat(Integer playerId, Integer teamId, Short goalsDelta, Short motmDelta,
+    public FootballTeamStat updateFootballTeamStat(Integer playerId, Integer teamId, Short goalsDelta, Short motmDelta,
             Short redCardsDelta, Short yellowCardsDelta) {
         Optional<FootballTeamStat> footballTeamStatOptional = footballTeamStatRepository
                 .findByTeam_IdAndPlayer_PlayerId(teamId, playerId);
@@ -530,6 +546,7 @@ public class TeamService {
         footballTeamStat.setMotm((short) (footballTeamStat.getMotm() + motmDelta));
         footballTeamStat.setRedCards((short) (footballTeamStat.getRedCards() + redCardsDelta));
         footballTeamStat.setYellowCards((short) (footballTeamStat.getYellowCards() + yellowCardsDelta));
+        footballTeamStat.setUpdatedAt(LocalDateTime.now());
         return footballTeamStatRepository.save(footballTeamStat);
 
     }

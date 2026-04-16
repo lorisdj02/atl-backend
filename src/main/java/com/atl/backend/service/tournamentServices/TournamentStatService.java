@@ -1,5 +1,6 @@
 package com.atl.backend.service.tournamentServices;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,11 +10,11 @@ import org.springframework.stereotype.Service;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Callup;
-import com.atl.backend.model.FootballTournamentStats;
+import com.atl.backend.model.FootballTournamentStat;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.repository.CallupRepository;
-import com.atl.backend.repository.FootballTournamentStatsRepository;
+import com.atl.backend.repository.FootballTournamentStatRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.service.TeamService;
 
@@ -24,16 +25,16 @@ public class TournamentStatService {
     @Autowired
     private CallupRepository callupRepository;
     @Autowired
-    private FootballTournamentStatsRepository footballTournamentStatsRepository;
+    private FootballTournamentStatRepository footballTournamentStatRepository;
     @Autowired
     private TeamService teamService;
 
-    public List<FootballTournamentStats> getFootballTournamentStatsByTournamentId(Integer tournamentId) {
-        return footballTournamentStatsRepository.findByTournament_Id(tournamentId);
+    public List<FootballTournamentStat> getFootballTournamentStatsByTournamentId(Integer tournamentId) {
+        return footballTournamentStatRepository.findByTournament_Id(tournamentId);
     }
 
     public void deleteAllFootballTournamentStats() {
-        footballTournamentStatsRepository.deleteAll();
+        footballTournamentStatRepository.deleteAll();
     }
 
     private Player getExistingPlayerByPlayerId(Integer playerId) {
@@ -56,11 +57,11 @@ public class TournamentStatService {
                     List<Integer> playerIds = getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(), teamId);
                     for (Integer playerId : playerIds) {
                         Player player = getExistingPlayerByPlayerId(playerId);
-                        FootballTournamentStats tournamentStats = new FootballTournamentStats();
+                        FootballTournamentStat tournamentStats = new FootballTournamentStat();
                         tournamentStats.setTournament(tournament);
                         tournamentStats.setTeam(teamService.getTeamById(teamId).get());
                         tournamentStats.setPlayer(player);
-                        footballTournamentStatsRepository.save(tournamentStats);
+                        footballTournamentStatRepository.save(tournamentStats);
                     }
                 }
                 break;
@@ -72,7 +73,7 @@ public class TournamentStatService {
     public void updateFootballTournamentStats(Integer tournamentId, Integer playerId, Integer teamId,
             Short goalsDelta, Short motmDelta, Short redCardsDelta,
             Short yellowCardsDelta) {
-        FootballTournamentStats footballTournamentStats = footballTournamentStatsRepository
+        FootballTournamentStat footballTournamentStats = footballTournamentStatRepository
                 .findByTournament_IdAndPlayer_PlayerIdAndTeam_Id(tournamentId, playerId, teamId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_STAT_NOT_FOUND));
 
@@ -85,6 +86,7 @@ public class TournamentStatService {
         footballTournamentStats.setMotm((short) (footballTournamentStats.getMotm() + motmDelta));
         footballTournamentStats.setRedCards((short) (footballTournamentStats.getRedCards() + redCardsDelta));
         footballTournamentStats.setYellowCards((short) (footballTournamentStats.getYellowCards() + yellowCardsDelta));
-        footballTournamentStatsRepository.save(footballTournamentStats);
+        footballTournamentStats.setUpdatedAt(LocalDateTime.now());
+        footballTournamentStatRepository.save(footballTournamentStats);
     }
 }

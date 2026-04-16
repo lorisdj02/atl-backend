@@ -32,8 +32,9 @@ import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.FootballMatchResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
-import com.atl.backend.service.AccountService;
 import com.atl.backend.service.SportService;
+import com.atl.backend.service.accountServices.PlayerService;
+import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.exception.*;
@@ -47,11 +48,13 @@ public class MatchScreenService {
     @Autowired
     private MatchService matchService;
     @Autowired
+    private MatchRefereeService matchRefereeService;
+    @Autowired
     private SportService sportService;
     @Autowired
-    private AccountService accountService;
-    @Autowired
     private TournamentParticipantService tournamentParticipantService;
+    @Autowired
+    private PlayerService playerService;
 
     @Transactional(readOnly = true)
     public AvailableMatchesResponse getAvailableMatchesScreen(SportCategory sportCategory) {
@@ -115,7 +118,7 @@ public class MatchScreenService {
         Map<Integer, Short> minutesPausePerTournament = new HashMap<>();
         switch (sportCategory) {
             case FOOTBALL -> {
-                List<FootballMatch> footballMatches = matchService
+                List<FootballMatch> footballMatches = matchRefereeService
                         .getAssignedFootballMatchesByRefereeId(referee.getRefereeId());
 
                 for (FootballMatch match : footballMatches) {
@@ -182,7 +185,7 @@ public class MatchScreenService {
             requiredRoles.add("ASSISTANT1");
             requiredRoles.add("ASSISTANT2");
         }
-        List<RefereeAssignment> refereeAssignments = matchService
+        List<RefereeAssignment> refereeAssignments = matchRefereeService
                 .getRefereeAssignmentsForMatch(footballMatch.getMatch().getId());
         List<String> assignedRoles = refereeAssignments.stream()
                 .map(RefereeAssignment::getRole)
@@ -202,11 +205,12 @@ public class MatchScreenService {
         Map<Integer, List<PlayerDTO>> playersPerTeam = new HashMap<>();
         if (footballMatch.getHomeTeam() != null) {
             Team homeTeam = footballMatch.getHomeTeam();
-            List<Integer> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(),
-                    homeTeam.getId());
+            List<Integer> calluppedPlayerIds = tournamentParticipantService
+                    .getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(),
+                            homeTeam.getId());
             List<PlayerDTO> calluppedPlayers = new ArrayList<>();
             for (Integer playerId : calluppedPlayerIds) {
-                Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
+                Optional<Player> optionalPlayer = playerService.getPlayerByPlayerId(playerId);
                 if (optionalPlayer.isEmpty()) {
                     throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
                 }
@@ -218,11 +222,12 @@ public class MatchScreenService {
         }
         if (footballMatch.getAwayTeam() != null) {
             Team awayTeam = footballMatch.getAwayTeam();
-            List<Integer> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(),
-                    awayTeam.getId());
+            List<Integer> calluppedPlayerIds = tournamentParticipantService
+                    .getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(),
+                            awayTeam.getId());
             List<PlayerDTO> calluppedPlayers = new ArrayList<>();
             for (Integer playerId : calluppedPlayerIds) {
-                Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
+                Optional<Player> optionalPlayer = playerService.getPlayerByPlayerId(playerId);
                 if (optionalPlayer.isEmpty()) {
                     throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
                 }

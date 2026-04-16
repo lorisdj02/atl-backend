@@ -1,5 +1,7 @@
 package com.atl.backend.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -26,4 +28,10 @@ public class FriendInvite {
 
     @Column(name = "redeemed", nullable = false)
     private Boolean redeemed = false;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,6 +18,7 @@ import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
 import com.atl.backend.service.SportService;
+import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.orchestrator.TournamentTeamMatchOrchestrator;
 import com.atl.backend.service.screen.MatchScreenService;
@@ -33,6 +35,8 @@ public class MatchController {
     private SportService sportService;
     @Autowired
     private MatchService matchService;
+    @Autowired
+    private MatchRefereeService matchRefereeService;
     @Autowired
     private TournamentTeamMatchOrchestrator tournamentTeamMatchOrchestrator;
 
@@ -68,7 +72,7 @@ public class MatchController {
     }
 
     @GetMapping("/match/{matchId}/events")
-    public ResponseEntity<?> getTournamentEvents(@PathVariable Integer matchId) {
+    public ResponseEntity<?> getMatchEvents(@PathVariable Integer matchId) {
         Optional<?> response = matchService.getMatchEvents(matchId);
         if (response.isEmpty()) {
             throw new BadRequestException(ErrorsString.MATCH_NOT_FOUND);
@@ -86,5 +90,17 @@ public class MatchController {
     public ResponseEntity<Integer> addMotmToMatch(@PathVariable Integer matchId, @PathVariable Integer playerId) {
         Integer response = tournamentTeamMatchOrchestrator.addMotmToMatch(matchId, playerId);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/match/{matchId}/insert-referee-assignment/{refereeRoleName}")
+    public ResponseEntity<Void> insertRefereeAssignment(@PathVariable Integer matchId, @PathVariable String refereeRoleName) {
+        matchRefereeService.insertRefereeAssignment(matchId, refereeRoleName);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/match/{matchId}/football/start-penalty-shootout")
+    public ResponseEntity<Void> startPenaltyShootout(@PathVariable Integer matchId) {
+        matchService.startFootballPenaltyShootout(matchId);
+        return ResponseEntity.ok().build();
     }
 }

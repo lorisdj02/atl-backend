@@ -1,6 +1,8 @@
-CREATE TABLE "cities" (
+CREATE TABLE "city" (
   "id" int PRIMARY KEY,
-  "name" text UNIQUE NOT NULL
+  "name" text UNIQUE NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "sport" (
@@ -11,7 +13,7 @@ CREATE TABLE "sport" (
   "max_players_per_team" int NOT NULL,
   "minutes_per_round" int NOT NULL,
   "minutes_per_pause" int NOT NULL,
-  "min_referee" int NOT NULL
+  "num_referees_per_match" int NOT NULL
 );
 
 CREATE TABLE "account" (
@@ -34,6 +36,7 @@ CREATE TABLE "account" (
   "favorite_sport_category" varchar(15) NOT NULL DEFAULT 'FOOTBALL',
   "birthdate" date NOT NULL,
   "created_at" timestamp DEFAULT now(),
+  "updated_at" timestamp,
   "last_login" timestamp DEFAULT now()
 );
 
@@ -67,13 +70,16 @@ CREATE TABLE "account_restriction" (
   "type" varchar(31) NOT NULL,
   "valid_from" date NOT NULL,
   "valid_to" date,
-  "created_at" timestamp NOT NULL DEFAULT NOW()
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "friend_invite" (
   "invited_account_id" int PRIMARY KEY,
   "inviter_account_id" int NOT NULL,
-  "redeemed" bool NOT NULL DEFAULT false
+  "redeemed" bool NOT NULL DEFAULT false,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "growth_step" (
@@ -101,13 +107,17 @@ CREATE TABLE "field" (
   "hour_cost_private" numeric(10,2) NOT NULL,
   "opening_time" time NOT NULL,
   "closing_time" time NOT NULL,
-  "closed_days" char(7) NOT NULL DEFAULT '0000001'
+  "closed_days" char(7) NOT NULL DEFAULT '0000001',
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "field_category" (
   "field_id" int NOT NULL,
   "sport_category" varchar(15) NOT NULL,
-  "max_players" smallint NOT NULL
+  "max_players" smallint NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "referee_role" (
@@ -126,7 +136,8 @@ CREATE TABLE "referee_license" (
   "issued_at" date NOT NULL,
   "verified_at" timestamp,
   "expires_at" date,
-  "created_at" timestamp NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp,
   PRIMARY KEY ("sport_id", "referee_id")
 );
 
@@ -144,20 +155,26 @@ CREATE TABLE "team" (
   "max_players" smallint NOT NULL DEFAULT 24,
   "rank_pts" int NOT NULL DEFAULT 0,
   "sport_category" varchar(15) NOT NULL,
-  "vip" bool NOT NULL DEFAULT false
-  "visible" bool NOT NULL DEFAULT true
+  "vip" bool NOT NULL DEFAULT false,
+  "visible" bool NOT NULL DEFAULT true,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "plays_at" (
   "team_id" int NOT NULL,
   "player_id" int NOT NULL,
   "sport_category" varchar(15) NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp,
   PRIMARY KEY ("team_id", "player_id")
 );
 
 CREATE TABLE "team_request" (
   "team_id" int NOT NULL,
   "player_id" int NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp,
   PRIMARY KEY ("team_id", "player_id")
 );
 
@@ -167,7 +184,9 @@ CREATE TABLE "football_team_stat" (
   "goals" smallint NOT NULL DEFAULT 0,
   "motm" smallint NOT NULL DEFAULT 0,
   "red_cards" smallint NOT NULL DEFAULT 0,
-  "yellow_cards" smallint NOT NULL DEFAULT 0
+  "yellow_cards" smallint NOT NULL DEFAULT 0,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "booking" (
@@ -178,14 +197,17 @@ CREATE TABLE "booking" (
   "sport_category" varchar(15) NOT NULL,
   "start_time" timestamp NOT NULL,
   "finish_time" timestamp NOT NULL,
-  "booking_type" varchar(15) NOT NULL
+  "booking_type" varchar(15) NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "private_booking" (
   "id" int PRIMARY KEY,
   "player_id" int NOT NULL,
   "cost" numeric(10,2) NOT NULL,
-  "created_at" timestamp NOT NULL DEFAULT NOW()
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "lobby_booking" (
@@ -193,7 +215,9 @@ CREATE TABLE "lobby_booking" (
   "owner_player_id" int NOT NULL,
   "players_to_find" smallint NOT NULL,
   "total_players" smallint NOT NULL,
-  "fee_per_player" numeric(10,2) NOT NULL
+  "fee_per_player" numeric(10,2) NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "lobby_booking_participate" (
@@ -202,7 +226,9 @@ CREATE TABLE "lobby_booking_participate" (
   "lobby_booking_id" int NOT NULL,
   "players_paid" smallint NOT NULL DEFAULT 1,
   "cost" numeric(10,2) NOT NULL,
-  "joined_at" timestamp NOT NULL DEFAULT NOW()
+  "joined_at" timestamp NOT NULL DEFAULT NOW(),
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "match_booking" (
@@ -235,12 +261,16 @@ CREATE TABLE "tournament" (
   "paid_teams" smallint NOT NULL DEFAULT '0',
   "atl_event" bool NOT NULL DEFAULT false,
   "photo_url" varchar(255),
-  "start_date" date
+  "start_date" date,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "favorite_tournament" (
   "account_id" int NOT NULL,
   "tournament_id" int NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp,
   PRIMARY KEY ("account_id", "tournament_id")
 );
 
@@ -248,29 +278,37 @@ CREATE TABLE "tournament_participation" (
   "tournament_id" int,
   "team_id" int,
   "to_pay" numeric(10,2) NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp,
   PRIMARY KEY ("tournament_id", "team_id")
 );
 
 CREATE TABLE "failed_tournament_participation" (
   "id" INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   "tournament_id" int,
-  "team_id" int
+  "team_id" int,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "callup" (
   "tournament_id" int NOT NULL,
   "team_id" int NOT NULL,
   "player_id" int NOT NULL,
-  "prize_to_redeem" numeric(10,2)
+  "prize_to_redeem" numeric(10,2),
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "palmares" (
   "tournament_id" int NOT NULL,
   "team_id" int NOT NULL,
-  "position" varchar(31) NOT NULL DEFAULT 'GROUP_STAGE'
+  "position" varchar(31) NOT NULL DEFAULT 'GROUP_STAGE',
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
-CREATE TABLE "football_tournament_stats" (
+CREATE TABLE "football_tournament_stat" (
   "player_id" int NOT NULL,
   "tournament_id" int NOT NULL,
   "team_id" int NOT NULL,
@@ -293,6 +331,8 @@ CREATE TABLE "football_standing" (
   "goals_conceded" smallint NOT NULL DEFAULT 0,
   "rank_pos" smallint NOT NULL DEFAULT 1,
   "qualified" bool NOT NULL DEFAULT false,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp,
   PRIMARY KEY ("tournament_id", "team_id")
 );
 
@@ -307,7 +347,9 @@ CREATE TABLE "match" (
   "coordinator_status" text NOT NULL DEFAULT 'ASSIGNED',
   "sport_category" varchar(15) NOT NULL,
   "final_stage_bracket_id" int,
-  "leg_order" varchar(15) DEFAULT 'FIRST_LEG'
+  "leg_order" varchar(15) DEFAULT 'FIRST_LEG',
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "final_stage_bracket"(
@@ -317,7 +359,9 @@ CREATE TABLE "final_stage_bracket"(
   "aggregate_score_home" smallint NOT NULL DEFAULT 0,
   "aggregate_score_away" smallint NOT NULL DEFAULT 0,
   "next_final_stage_bracket_id" int,
-  "next_final_stage_bracket_slot" varchar(15) DEFAULT 'HOME'
+  "next_final_stage_bracket_slot" varchar(15) DEFAULT 'HOME',
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "referee_assignment" (
@@ -325,7 +369,9 @@ CREATE TABLE "referee_assignment" (
   "referee_id" int NOT NULL,
   "role" varchar(15) NOT NULL,
   "pay" numeric(10,2) NOT NULL,
-  "status" varchar(15) NOT NULL DEFAULT 'ASSIGNED'
+  "status" varchar(15) NOT NULL DEFAULT 'ASSIGNED',
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "football_match" (
@@ -340,7 +386,9 @@ CREATE TABLE "football_match" (
   "missed_penalty_away" smallint,
   "halftime" timestamp,
   "start_half" timestamp,
-  "status" varchar(31) NOT NULL DEFAULT 'NOT_SCHEDULED'
+  "status" varchar(31) NOT NULL DEFAULT 'NOT_SCHEDULED',
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "football_match_event" (
@@ -351,7 +399,9 @@ CREATE TABLE "football_match_event" (
   "type" varchar(31) NOT NULL,
   "minute" smallint NOT NULL,
   "additional_minute" smallint NOT NULL,
-  "modified_table" JSONB
+  "modified_table" JSONB,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "review" (
@@ -368,6 +418,7 @@ CREATE TABLE "review" (
   "sport_category" varchar(15) NOT NULL,
   "linked_transaction_id" int,
   "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp,
   "committed_at" timestamp
 );
 
@@ -378,17 +429,20 @@ CREATE TABLE "wallet" (
   "personal_balance" numeric(10,2) NOT NULL DEFAULT 0,
   "invite_balance" numeric(10,2) NOT NULL DEFAULT 0,
   "prize_last_withdraw" timestamp,
-  "personal_last_withdraw" timestamp
+  "personal_last_withdraw" timestamp,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "checkout_session" (
   "id" INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   "account_id" int,
   "type" varchar(31) NOT NULL,
-  "status" varchar(15) NOT NULL,
+  "status" varchar(15) NOT NULL DEFAULT 'PENDING',
   "payload" JSONB NOT NULL,
   "amount" numeric(10,2) NOT NULL,
-  "created_at" timestamp NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp,
   "expires_at" timestamp NOT NULL
 );
 
@@ -400,7 +454,8 @@ CREATE TABLE "purchase" (
   "detail" JSONB NOT NULL,
   "status" varchar(15) NOT NULL DEFAULT 'CONFIRMED',
   "transaction_group_id" int NOT NULL,
-  "created_at" timestamp NOT NULL DEFAULT NOW()
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "transaction" (
@@ -421,14 +476,16 @@ CREATE TABLE "transaction" (
   "related_transaction_id" int,
   "refundable" bool NOT NULL DEFAULT true,
   "visible" bool NOT NULL DEFAULT true,
+  "processed_at" timestamp,
   "created_at" timestamp NOT NULL DEFAULT NOW(),
-  "processed_at" timestamp
+  "updated_at" timestamp
 );
 
 CREATE TABLE "transaction_group" (
   "id" INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
   "status" varchar(15) NOT NULL DEFAULT 'PENDING',
-  "created_at" timestamp NOT NULL DEFAULT NOW()
+  "created_at" timestamp NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp
 );
 
 CREATE UNIQUE INDEX ON "plays_at" ("player_id", "sport_category");
@@ -444,6 +501,8 @@ CREATE UNIQUE INDEX ON "team" ("captain_player_id", "sport_category");
 CREATE UNIQUE INDEX ON "team" ("name", "sport_category");
 
 CREATE UNIQUE INDEX ON "failed_tournament_participation" ("tournament_id", "team_id");
+
+CREATE UNIQUE INDEX ON "match_booking" ("match_id");
 
 COMMENT ON TABLE "cities" IS 'Utile per avere le città di ATL';
 

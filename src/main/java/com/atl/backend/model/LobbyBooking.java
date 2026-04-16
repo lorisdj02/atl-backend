@@ -1,6 +1,8 @@
 package com.atl.backend.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -37,4 +39,10 @@ public class LobbyBooking {
     public short getCurrentPlayers() {
         return (short) (totalPlayers - playersToFind);
     }
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

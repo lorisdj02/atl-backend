@@ -14,4 +14,6 @@ public interface RefereeRoleRepository extends JpaRepository<RefereeRole, Refere
     List<RefereeRole> findBySport_Id(Integer sportId);
 
     List<RefereeRole> findBySport_IdAndLevel(Integer sportId, Short level);
+
+    List<RefereeRole> findBySport_IdAndName(Integer sportId, String name);
 }

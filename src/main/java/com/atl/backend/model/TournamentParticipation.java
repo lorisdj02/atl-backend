@@ -3,6 +3,7 @@ package com.atl.backend.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -21,4 +22,10 @@ public class TournamentParticipation {
 
     @Column(name = "to_pay", nullable = false)
     private BigDecimal toPay;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

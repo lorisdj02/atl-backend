@@ -34,8 +34,8 @@ public class SportDTO {
     private Short minutesPerPause;
 
     @NotNull
-    @JsonProperty("minReferee")
-    private Short minReferee;
+    @JsonProperty("numRefereesPerMatch")
+    private Short numRefereesPerMatch;
 
     public static SportDTO fromSport(Sport sport) {
         if (sport == null) {
@@ -49,7 +49,7 @@ public class SportDTO {
         dto.setMaxPlayersPerTeam(sport.getMaxPlayersPerTeam());
         dto.setMinutesPerRound(sport.getMinutesPerRound());
         dto.setMinutesPerPause(sport.getMinutesPerPause());
-        dto.setMinReferee(sport.getMinReferee());
+        dto.setNumRefereesPerMatch(sport.getNumRefereesPerMatch());
         return dto;
     }
 }

@@ -43,4 +43,10 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     @Column(name = "booking_type", nullable = false, length = 15)
     private BookingType bookingType;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

@@ -1,6 +1,8 @@
 package com.atl.backend.service.screen;
 
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.accountServices.CoordinatorService;
+import com.atl.backend.service.accountServices.PlayerService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
@@ -45,13 +47,12 @@ import com.atl.backend.response.CallupsResponse;
 import com.atl.backend.response.FootballTournamentResponse;
 import com.atl.backend.response.TournamentDetailsResponse;
 import com.atl.backend.response.TournamentSummaryResponse;
-import com.atl.backend.service.AccountService;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.model.Field;
 import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballStanding;
-import com.atl.backend.model.FootballTournamentStats;
+import com.atl.backend.model.FootballTournamentStat;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Team;
 
@@ -71,11 +72,13 @@ public class TournamentScreenService {
     private TeamService teamService;
 
     @Autowired
-    private AccountService accountService;
+    private CoordinatorService coordinatorService;
     @Autowired
     private FieldService fieldService;
     @Autowired
     private MatchService matchService;
+    @Autowired
+    private PlayerService playerService;
 
     @Transactional(readOnly = true)
     public AllTournamentsResponse getAllTournamentsScreen(SportCategory sportCategory) {
@@ -103,7 +106,7 @@ public class TournamentScreenService {
 
         for (TournamentDTO tournament : tournamentDTOs) {
             if (!coordinatorCache.containsKey(tournament.getCoordinatorId())) {
-                Optional<Coordinator> optionalCoordinator = accountService
+                Optional<Coordinator> optionalCoordinator = coordinatorService
                         .getCoordinatorByCoordinatorId(tournament.getCoordinatorId());
                 if (optionalCoordinator.isEmpty()) {
                     throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND); // This should never happen, but
@@ -260,7 +263,7 @@ public class TournamentScreenService {
                 tournamentId,
                 team.getId());
         for (Integer playerId : calluppedPlayerIds) {
-            Optional<Player> optionalPlayer = accountService.getPlayerByPlayerId(playerId);
+            Optional<Player> optionalPlayer = playerService.getPlayerByPlayerId(playerId);
             if (optionalPlayer.isEmpty()) {
                 throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
             }
@@ -347,11 +350,11 @@ public class TournamentScreenService {
         }
 
         Map<Integer, FootballTeamStatDTO> footballPlayerStatsCache = new HashMap<>();
-        List<FootballTournamentStats> footballTournamentStats = tournamentStatService
+        List<FootballTournamentStat> footballTournamentStats = tournamentStatService
                 .getFootballTournamentStatsByTournamentId(tournamentId);
 
         List<Player> players = new ArrayList<>();
-        for (FootballTournamentStats stat : footballTournamentStats) {
+        for (FootballTournamentStat stat : footballTournamentStats) {
             if (stat.getGoals() == 0 && stat.getMotm() == 0) {
                 continue; // Non ha senso inviare statistiche vuote, e così evitiamo di popolare la cache
                           // con dati inutili

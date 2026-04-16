@@ -31,6 +31,6 @@ public class Sport {
     @Column(name = "minutes_per_pause", nullable = false)
     private Short minutesPerPause;
 
-    @Column(name = "min_referee", nullable = false)
-    private Short minReferee;
+    @Column(name = "num_referees_per_match", nullable = false)
+    private Short numRefereesPerMatch;
 }

@@ -1,6 +1,8 @@
 package com.atl.backend.dto;
 
 
+import java.math.BigDecimal;
+
 import com.fasterxml.jackson.annotation.*;
 import lombok.Data;
 
@@ -38,6 +40,13 @@ public class CheckoutPayload {
 
     @JsonProperty("sportCategory")
     private String sportCategory;
+
+    @JsonProperty("amount")
+    private BigDecimal amount;
+
+    @JsonProperty("checkoutType")
+    private String checkoutType;
+
 
 
     /*

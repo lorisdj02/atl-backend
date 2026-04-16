@@ -12,7 +12,11 @@ import com.atl.backend.model.Organization;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Referee;
 import com.atl.backend.model.enums.AccountRole;
-import com.atl.backend.service.AccountService;
+import com.atl.backend.service.accountServices.AccountService;
+import com.atl.backend.service.accountServices.CoordinatorService;
+import com.atl.backend.service.accountServices.OrganizationService;
+import com.atl.backend.service.accountServices.PlayerService;
+import com.atl.backend.service.accountServices.RefereeService;
 
 import lombok.Data;
 
@@ -35,13 +39,21 @@ public class AccountContextData {
 
     @Autowired
     private AccountService accountService;
+    @Autowired
+    private PlayerService playerService;
+    @Autowired
+    private CoordinatorService coordinatorService;
+    @Autowired
+    private RefereeService refereeService;
+    @Autowired
+    private OrganizationService organizationService;
 
     public Player getActivePlayer() {
         if (accountRole != AccountRole.PLAYER) {
             throw new ForbiddenException(ErrorsString.PLAYER_ROLE_REQUIRED);
         }
         if (activePlayer == null) {
-            Optional<Player> playerOpt = accountService.getPlayerByPlayerId(playerId);
+            Optional<Player> playerOpt = playerService.getPlayerByPlayerId(playerId);
             if (playerOpt.isEmpty()) {
                 throw new ForbiddenException(ErrorsString.PLAYER_NOT_FOUND);
             }
@@ -55,7 +67,7 @@ public class AccountContextData {
             throw new ForbiddenException(ErrorsString.REFEREE_ROLE_REQUIRED);
         }
         if (activeReferee == null) {
-            Optional<Referee> refereeOpt = accountService.getRefereeByRefereeId(refereeId);
+            Optional<Referee> refereeOpt = refereeService.getRefereeByRefereeId(refereeId);
             if (refereeOpt.isEmpty()) {
                 throw new ForbiddenException(ErrorsString.REFEREE_NOT_FOUND);
             }
@@ -70,7 +82,7 @@ public class AccountContextData {
             throw new ForbiddenException(ErrorsString.COORDINATOR_ROLE_REQUIRED);
         }
         if (activeCoordinator == null) {
-            Optional<Coordinator> coordinatorOpt = accountService.getCoordinatorByCoordinatorId(coordinatorId);
+            Optional<Coordinator> coordinatorOpt = coordinatorService.getCoordinatorByCoordinatorId(coordinatorId);
             if (coordinatorOpt.isEmpty()) {
                 throw new ForbiddenException(ErrorsString.COORDINATOR_NOT_FOUND);
             }
@@ -84,7 +96,7 @@ public class AccountContextData {
             throw new ForbiddenException(ErrorsString.ORGANIZATION_ROLE_REQUIRED);
         }
         if (activeOrganization == null) {
-            Optional<Organization> organizationOpt = accountService.getOrganizationByOrganizationId(organizationId);
+            Optional<Organization> organizationOpt = organizationService.getOrganizationByOrganizationId(organizationId);
             if (organizationOpt.isEmpty()) {
                 throw new ForbiddenException(ErrorsString.ORGANIZATION_NOT_FOUND);
             }

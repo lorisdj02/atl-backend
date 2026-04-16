@@ -79,6 +79,9 @@ public class Review {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @Column(name = "committed_at")
     private LocalDateTime committedAt;
 }

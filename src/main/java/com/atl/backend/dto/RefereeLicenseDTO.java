@@ -1,6 +1,7 @@
 package com.atl.backend.dto;
 
 import com.atl.backend.model.RefereeLicense;
+import com.atl.backend.model.Sport;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;

@@ -66,8 +66,7 @@ public class Account {
     @JoinColumn(name = "preferred_city_id")
     private City preferredCity;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
@@ -77,6 +76,12 @@ public class Account {
 
     @Column(name = "birthdate")
     private LocalDate birthdate;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "favorite_sport_category", length = 15)
     @Enumerated(EnumType.STRING)

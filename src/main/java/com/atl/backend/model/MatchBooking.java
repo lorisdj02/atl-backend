@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "match_booking")
+@Table(name = "match_booking", uniqueConstraints = @UniqueConstraint(columnNames = "match_id"))
 public class MatchBooking {
     @Id
     private Integer id;
