@@ -196,17 +196,19 @@ public class TournamentService {
     @Transactional(rollbackFor = Exception.class)
     public void startTournament(Integer tournamentId) {
         checkTournamentExists(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId).get();
 
-        if (!AccountContext.getActiveCoordinator()
-                .equals(tournamentRepository.findById(tournamentId).get().getCoordinator())) {
+        if (!AccountContext.getCoordinatorId()
+                .equals(tournament.getCoordinator().getCoordinatorId())) {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
         }
 
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
         if (tournament.getStatus() != TournamentStatus.CREATED) {
             throw new IllegalStateException(ErrorsString.TOURNAMENT_NOT_IN_CREATED_STATUS);
         }
 
+        System.out.println("\n\n[DEBUG - TournamentService] - Starting tournament " + tournamentId + " with " + tournament.getNumTeams()
+                + " teams, of which " + tournament.getPaidTeams() + " have paid");
         if (tournament.getNumTeams() != tournament.getPaidTeams()) {
             throw new IllegalStateException(ErrorsString.NUM_TEAMS_DIFFERS_FROM_PAID_TEAMS);
         }

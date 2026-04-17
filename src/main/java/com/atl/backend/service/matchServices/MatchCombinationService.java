@@ -64,23 +64,24 @@ public class MatchCombinationService {
     @Transactional(rollbackFor = Exception.class)
     public void generateMatchesForTournament(Tournament tournament, List<Integer> teamIds) {
 
-        if (!tournament.getCoordinator().equals(AccountContext.getActiveCoordinator())) {
+        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
         }
 
         System.out
                 .println("[DEBUG - MatchService] - Retrieved team IDs for tournament " + tournament.getId() + ": " + teamIds);
 
-        Collections.shuffle(teamIds);
+        List<Integer> shuffledTeamIds = new ArrayList<>(teamIds);
+        Collections.shuffle(shuffledTeamIds);
 
         System.out
-                .println("[DEBUG - MatchService] - Teams participating in tournament " + tournament.getId() + ": " + teamIds);
+                .println("[DEBUG - MatchService] - Teams participating in tournament " + tournament.getId() + ": " + shuffledTeamIds);
 
         final SportCategory sportCategory = tournament.getSport().getSportCategory();
 
         System.out.println("[DEBUG - MatchService] - Generating matches for group stage of tournament " + tournament.getId());
 
-        generateMatchesForGroupStage(tournament, teamIds, sportCategory);
+        generateMatchesForGroupStage(tournament, shuffledTeamIds, sportCategory);
 
         System.out.println("[DEBUG - MatchService] - Generating matches for final stage of tournament " + tournament.getId());
 
@@ -94,6 +95,7 @@ public class MatchCombinationService {
 
         System.out.println("[DEBUG - MatchService] - Number of teams per group: " + numTeamsPerGroup);
 
+        
         for (int i = 0; i < tournament.getNumGroups(); i++) {
             String groupName = "" + (char) ('A' + i);
             List<Integer> groupTeams = new ArrayList<>(

@@ -83,6 +83,9 @@ public class ErrorsString {
 
     static final public String INVALID_CHECKOUT_AMOUNT = "INVALID_CHECKOUT_AMOUNT";
 
+    static final public String INVALID_REVIEW_RATING = "INVALID_REVIEW_RATING";
+
+
 
     // Conflict errors
 

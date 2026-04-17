@@ -193,18 +193,21 @@ public class TournamentParticipantService {
     public void checkValidCallups(Integer teamId, List<Integer> playerIds) {
         teamService.checkTeamExists(teamId);
 
-        teamService.needToBeCaptainOrViceCaptain(teamId, AccountContext.getActivePlayer().getPlayerId());
         Boolean areCallupsValid = false;
+        System.out.println("[DEBUG - TournamentService] - Checking callups for team " + teamId + " and playerIds "
+                + playerIds);
         for (Integer playerId : playerIds) {
             if (!teamService.isPlayerInTeam(teamId, playerId)) {
                 throw new ConflictException(ErrorsString.PLAYER_NOT_IN_TEAM);
             }
-            areCallupsValid = teamService.isPlayerCaptainOrViceCaptain(playerId, teamId);
+            areCallupsValid = teamService.isPlayerCaptainOrViceCaptain(teamId, playerId);
+            if (areCallupsValid) {
+                return;
+            }
         }
 
-        if (!areCallupsValid) {
-            throw new ConflictException(ErrorsString.CAPTAIN_OR_ONE_VICE_CAPTAIN_MUST_BE_CALLED_UP);
-        }
+        throw new ConflictException(ErrorsString.CAPTAIN_OR_ONE_VICE_CAPTAIN_MUST_BE_CALLED_UP);
+
     }
 
     public List<Integer> getTeamIdsParticipatingInTournament(Integer tournamentId) {
@@ -275,27 +278,23 @@ public class TournamentParticipantService {
 
     @Transactional(rollbackFor = Exception.class)
     public void decreseTournamentParticipation_ToPay(Integer tournamentId, Integer accountId, BigDecimal amount) {
-        Optional<Tournament> tournamentOptional = tournamentRepository.findById(tournamentId);
-        if (tournamentOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
-        }
-        Tournament tournament = tournamentOptional.get();
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
 
         Player player = getExistingPlayerByAccountId(accountId);
 
-        Optional<Team> teamOptional = teamService.getTeamByPlayerIdAndSportCategory(player.getPlayerId(),
-                tournament.getSport().getSportCategory());
-        if (teamOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
-        }
-        Team team = teamOptional.get();
+        Team team = teamService.getTeamByPlayerIdAndSportCategory(player.getPlayerId(),
+                tournament.getSport().getSportCategory())
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
 
-        Optional<TournamentParticipation> tournamentParticipationOptional = getTournamentParticipationByTeamIdAndTournamentId(
-                team.getId(), tournamentId);
-        if (tournamentParticipationOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TOURNAMENT_PARTICIPATION_NOT_FOUND);
+        TournamentParticipation tournamentParticipation = getTournamentParticipationByTeamIdAndTournamentId(
+                team.getId(), tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_PARTICIPATION_NOT_FOUND));
+
+        if (tournamentParticipation.getToPay().compareTo(BigDecimal.ZERO) == 0) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_PARTICIPATION_ALREADY_PAID);
         }
-        TournamentParticipation tournamentParticipation = tournamentParticipationOptional.get();
+
         if (tournamentParticipation.getToPay().compareTo(amount) < 0) {
             throw new BadRequestException(ErrorsString.PAYMENT_AMOUNT_EXCEEDS_TO_PAY);
         }
@@ -316,7 +315,7 @@ public class TournamentParticipantService {
     @Transactional(rollbackFor = Exception.class)
     public void refundAllExcludedTeamsInTournament(Tournament tournament) {
 
-        if (!tournament.getCoordinator().equals(AccountContext.getActiveCoordinator())) {
+        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
         }
 

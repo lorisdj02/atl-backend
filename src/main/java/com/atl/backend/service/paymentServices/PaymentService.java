@@ -27,6 +27,7 @@ import com.atl.backend.model.Tournament;
 import com.atl.backend.model.Transaction;
 import com.atl.backend.model.TransactionGroup;
 import com.atl.backend.model.Wallet;
+import com.atl.backend.model.WalletBalance;
 import com.atl.backend.model.enums.CheckoutStatus;
 import com.atl.backend.model.enums.CheckoutType;
 import com.atl.backend.model.enums.PurchaseStatus;
@@ -40,6 +41,7 @@ import com.atl.backend.repository.PurchaseRepository;
 import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.repository.TransactionGroupRepository;
 import com.atl.backend.repository.TransactionRepository;
+import com.atl.backend.repository.WalletBalanceRepository;
 import com.atl.backend.repository.WalletRepository;
 import com.atl.backend.response.CheckoutResponse;
 import com.atl.backend.service.BookingService;
@@ -48,8 +50,6 @@ import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.atl.backend.model.Field;
-
-import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class PaymentService {
@@ -76,6 +76,8 @@ public class PaymentService {
     private PlayerRepository playerRepository;
     @Autowired
     private TournamentParticipantService tournamentParticipantService;
+    @Autowired
+    private WalletBalanceRepository walletBalanceRepository;
 
     private Player getExistingPlayerByPlayerId(Integer playerId) {
         Optional<Player> optPlayer = playerRepository.findById(playerId);
@@ -107,13 +109,19 @@ public class PaymentService {
 
     public BigDecimal getInviteBalanceByAccountId(Integer accountId) {
         Optional<Wallet> walletOpt = walletRepository.findByAccount_Id(accountId);
+        WalletBalance walletBalance = getWalletBalanceByAccountId(accountId);
         if (walletOpt.isPresent()) {
-            return walletOpt.get().getInviteBalance();
+            return walletBalance.getInviteBalance();
         } else {
             // Handle case where wallet is not found, e.g., return zero or throw an
             // exception
             return BigDecimal.ZERO;
         }
+    }
+
+    public WalletBalance getWalletBalanceByAccountId(Integer accountId) {
+        return walletBalanceRepository.findByAccount_Id(accountId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.WALLET_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
@@ -218,9 +226,13 @@ public class PaymentService {
             default:
                 throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
         }
+
+        WalletBalance walletBalance = getWalletBalanceByAccountId(sessionId);
+
         return CheckoutResponse.builder()
                 .checkoutSession(CheckoutSessionDTO.fromCheckoutSession(session))
-                .wallet(WalletDTO.fromWallet(wallet))
+                .wallet(WalletDTO.fromWallet(wallet, walletBalance.getPrizeBalance(),
+                        walletBalance.getPersonalBalance(), walletBalance.getInviteBalance()))
                 .tournamentName(tournamentName)
                 .bookingUsername(bookingUsername)
                 .cityName(cityName)
@@ -270,14 +282,23 @@ public class PaymentService {
         return transactionRepository.save(transaction);
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public Purchase payCheckout(Integer sessionId, Boolean useWallet) {
-        // TODO: verificare le fee e le tasse da applicare
-        Optional<CheckoutSession> optSession = getCheckoutSessionById(sessionId);
-        if (optSession.isEmpty()) {
-            throw new NotFoundException(ErrorsString.CHECKOUT_SESSION_NOT_FOUND);
+    public TransactionGroup updateTransactionGroupStatus(Integer transactionGroupId, TransactionStatus status) {
+        TransactionGroup transactionGroup = transactionGroupRepository.findById(transactionGroupId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TRANSACTION_GROUP_NOT_FOUND));
+        transactionGroup.setStatus(status);
+        transactionGroup.setUpdatedAt(LocalDateTime.now());
+        List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroupId);
+        for (Transaction transaction : transactions) {
+            transaction.setStatus(status);
+            transactionRepository.save(transaction);
         }
-        CheckoutSession session = optSession.get();
+        return transactionGroupRepository.save(transactionGroup);
+    }
+
+
+    @Transactional(rollbackFor = Exception.class)
+    public Purchase payCheckout(CheckoutSession session, Boolean useWallet) {
+        // TODO: verificare le fee e le tasse da applicare
         if (session.getStatus() != CheckoutStatus.PENDING) {
             throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
         }
@@ -308,50 +329,67 @@ public class PaymentService {
 
         TransactionGroup transactionGroup = new TransactionGroup();
         saveTransactionGroup(transactionGroup);
-
-        if (useWallet) {
+        WalletBalance walletBalance = getWalletBalanceByAccountId(account.getId());
+        if (useWallet && walletBalance.hasSomeBalance()) {
             // ORDINE DEI WALLET:
             // 1. Invite balance
             // 2. Prize balance
             // 3. Personal balance
-            BigDecimal inviteBalance = wallet.getInviteBalance();
-            BigDecimal prizeBalance = wallet.getPrizeBalance();
-            BigDecimal personalBalance = wallet.getPersonalBalance();
+
+            BigDecimal inviteBalance = walletBalance.getInviteBalance();
+            BigDecimal prizeBalance = walletBalance.getPrizeBalance();
+            BigDecimal personalBalance = walletBalance.getPersonalBalance();
+            Transaction inviteTransaction;
+            Transaction prizeTransaction;
+            Transaction personalTransaction;
 
             if (inviteBalance.compareTo(amountToPay) >= 0) {
-                wallet.setInviteBalance(inviteBalance.subtract(amountToPay));
-                amountToPay = BigDecimal.ZERO;
-            } else if (inviteBalance.compareTo(BigDecimal.ZERO) > 0) {
-                wallet.setInviteBalance(BigDecimal.ZERO);
-                amountToPay = amountToPay.subtract(inviteBalance);
-                Transaction inviteTransaction = createTransaction(account, inviteBalance, inviteBalance,
+                inviteTransaction = createTransaction(account, inviteBalance,
+                        inviteBalance,
                         BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
                         TransactionSource.INVITE_WALLET,
-                        TransactionStatus.CONFIRMED);
+                        TransactionStatus.PENDING);
+                amountToPay = BigDecimal.ZERO;
+
+            } else if (inviteBalance.compareTo(BigDecimal.ZERO) > 0) {
+                inviteTransaction = createTransaction(account, inviteBalance,
+                        inviteBalance,
+                        BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
+                        TransactionSource.INVITE_WALLET,
+                        TransactionStatus.PENDING);
+                amountToPay = amountToPay.subtract(inviteBalance);
             }
 
             if (prizeBalance.compareTo(amountToPay) >= 0) {
-                wallet.setPrizeBalance(prizeBalance.subtract(amountToPay));
-                amountToPay = BigDecimal.ZERO;
-            } else {
-                wallet.setPrizeBalance(BigDecimal.ZERO);
-                amountToPay = amountToPay.subtract(prizeBalance);
-                Transaction prizeTransaction = createTransaction(account, prizeBalance, prizeBalance,
+                prizeTransaction = createTransaction(account, prizeBalance,
+                        prizeBalance,
                         BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
                         TransactionSource.PRIZE_WALLET,
-                        TransactionStatus.CONFIRMED);
+                        TransactionStatus.PENDING);
+                amountToPay = BigDecimal.ZERO;
+            } else {
+                prizeTransaction = createTransaction(account, prizeBalance,
+                        prizeBalance,
+                        BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
+                        TransactionSource.PRIZE_WALLET,
+                        TransactionStatus.PENDING);
+                amountToPay = amountToPay.subtract(prizeBalance);
             }
 
             if (personalBalance.compareTo(amountToPay) >= 0) {
-                wallet.setPersonalBalance(personalBalance.subtract(amountToPay));
-                amountToPay = BigDecimal.ZERO;
-            } else {
-                wallet.setPersonalBalance(BigDecimal.ZERO);
-                amountToPay = amountToPay.subtract(personalBalance);
-                Transaction personalTransaction = createTransaction(account, personalBalance, personalBalance,
+                personalTransaction = createTransaction(account, personalBalance,
+                        personalBalance,
                         BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
                         TransactionSource.PERSONAL_WALLET,
-                        TransactionStatus.CONFIRMED);
+                        TransactionStatus.PENDING);
+                amountToPay = BigDecimal.ZERO;
+            } else {
+                personalTransaction = createTransaction(account, personalBalance,
+                        personalBalance,
+                        BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
+                        TransactionSource.PERSONAL_WALLET,
+                        TransactionStatus.PENDING);
+                amountToPay = amountToPay.subtract(personalBalance);
             }
             walletRepository.save(wallet);
         }
@@ -365,64 +403,40 @@ public class PaymentService {
             // modo da poter comunque creare l'acquisto e i transaction group, che saranno
             // poi confermati o rimborsati a seconda dell'esito del pagamento.
             amountToPay = BigDecimal.ZERO; // Rimuovere questa riga quando si integra Stripe
+
+            if(false){ //TODO: Sostituire questa condizione con il controllo dell'esito del pagamento tramite Stripe
+                transactionGroup.setStatus(TransactionStatus.FAILED);
+                saveTransactionGroup(transactionGroup);
+                return null;
+            }
         }
+
+        transactionGroup.setStatus(TransactionStatus.CONFIRMED);
 
         Purchase purchase = new Purchase();
         purchase.setAccount(account);
         purchase.setAmount(originalAmountToPay);
         CheckoutPayload payload = session.getPayload();
-        //TODO: controlla i dettagli da inserire in base al tipo di checkout, solo da visualizzare
+        // TODO: controlla i dettagli da inserire in base al tipo di checkout, solo da
+        // visualizzare
         purchase.setDetail(" ");
         purchase.setTransactionGroup(transactionGroup);
         purchase.setType(session.getType());
-        switch (session.getType()) {
-            // TODO: da rivedere... tournament_fee e lobby_booking_partecipate forse non
-            // funzionano
-            case TOURNAMENT_FEE:
-                tournamentParticipantService.decreseTournamentParticipation_ToPay(payload.getTournamentId(),
-                        account.getId(),
-                        amountToPay);
-                purchase.setObjectId(payload.getTournamentId());
-                break;
-            case LOBBY_BOOKING_PARTICIPATE:
-                bookingService.createLobbyBookingParticipate(payload.getLobbyId(), payload.getPlayersPaid());
-                purchase.setObjectId(payload.getLobbyId());
-                break;
-            case LOBBY_BOOKING_CREATE:
-                Integer lobbyId = bookingService
-                        .createLobbyBookingFromCheckoutPayload(payload);
-                purchase.setObjectId(lobbyId);
-                break;
-            case PRIVATE_BOOKING:
-                Integer privateBookingId = bookingService
-                        .createPrivateBookingFromCheckoutPayload(payload);
-                purchase.setObjectId(privateBookingId);
-                break;
-            default:
-                throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
-        }
-
         return purchaseRepository.save(purchase);
     }
 
     @Transactional(readOnly = true)
     public Boolean isWalletEmptyByAccountId(Integer accountId) {
-        Optional<Wallet> walletOpt = walletRepository.findByAccount_Id(accountId);
-        if (walletOpt.isEmpty()) {
-            throw new NotFoundException(ErrorsString.WALLET_NOT_FOUND);
-        }
-        Wallet wallet = walletOpt.get();
+        WalletBalance walletBalance = getWalletBalanceByAccountId(accountId);
         // Il wallet invite non viene considerato, dato che non è possibile prelevarlo o
         // trasferirlo, e quindi non è rilevante ai fini del controllo se il wallet è
         // vuoto o meno
-        return wallet.getPrizeBalance().compareTo(BigDecimal.ZERO) == 0
-                && wallet.getPersonalBalance().compareTo(BigDecimal.ZERO) == 0;
+        return !walletBalance.hasSomeBalance();
     }
 
     @Transactional(rollbackFor = Exception.class)
     public CheckoutSession createCheckoutSession(CheckoutPayload payload, CheckoutType checkoutType) {
         Account account = AccountContext.getActiveAccount();
-
 
         CheckoutSession session = new CheckoutSession();
         session.setAccount(account);

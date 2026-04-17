@@ -12,10 +12,12 @@ import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.CheckoutPayload;
 import com.atl.backend.exception.BadRequestException;
+import com.atl.backend.model.Account;
 import com.atl.backend.model.CheckoutSession;
 import com.atl.backend.model.Field;
 import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.model.Player;
+import com.atl.backend.model.Purchase;
 import com.atl.backend.model.enums.CheckoutType;
 import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
@@ -222,5 +224,46 @@ public class PurchasesOrchestrator {
                 throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_TYPE);
         }
         return paymentService.createCheckoutSession(payload, checkoutType);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Purchase payCheckoutSession(Integer sessionId, Boolean useWallet) {
+        CheckoutSession session = paymentService.getCheckoutSessionById(sessionId)
+                .orElseThrow(() -> new BadRequestException(ErrorsString.CHECKOUT_SESSION_NOT_FOUND));
+
+        Purchase purchase = paymentService.payCheckout(session, useWallet);
+        if (purchase == null) {
+            return null;
+        }
+
+        CheckoutPayload payload = session.getPayload();
+        BigDecimal amountToPay = payload.getAmount();
+        Account account = session.getAccount();
+
+        switch (session.getType()) {
+            case TOURNAMENT_FEE:
+                tournamentParticipantService.decreseTournamentParticipation_ToPay(payload.getTournamentId(),
+                        account.getId(),
+                        amountToPay);
+                purchase.setObjectId(payload.getTournamentId());
+                break;
+            case LOBBY_BOOKING_PARTICIPATE:
+                bookingService.createLobbyBookingParticipate(payload.getLobbyId(), payload.getPlayersPaid());
+                purchase.setObjectId(payload.getLobbyId());
+                break;
+            case LOBBY_BOOKING_CREATE:
+                Integer lobbyId = bookingService
+                        .createLobbyBookingFromCheckoutPayload(payload);
+                purchase.setObjectId(lobbyId);
+                break;
+            case PRIVATE_BOOKING:
+                Integer privateBookingId = bookingService
+                        .createPrivateBookingFromCheckoutPayload(payload);
+                purchase.setObjectId(privateBookingId);
+                break;
+            default:
+                throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
+        }
+        return purchase;
     }
 }

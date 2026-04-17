@@ -31,6 +31,7 @@ import com.atl.backend.model.Review;
 import com.atl.backend.model.Sport;
 import com.atl.backend.model.Transaction;
 import com.atl.backend.model.Wallet;
+import com.atl.backend.model.WalletBalance;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.InviteFriendsResponse;
@@ -151,9 +152,11 @@ public class ProfileScreenService {
         if (wallet.isEmpty()) {
             throw new NotFoundException(ErrorsString.WALLET_NOT_FOUND);
         }
+        WalletBalance walletBalance = paymentService.getWalletBalanceByAccountId(accountId);
+
         return WalletResponse.builder()
                 .transactionsHistory(transactions.stream().map(TransactionDTO::fromTransaction).toList())
-                .wallet(WalletDTO.fromWallet(wallet.get())).build();
+                .wallet(WalletDTO.fromWallet(wallet.get(), walletBalance.getPrizeBalance(), walletBalance.getPersonalBalance(), walletBalance.getInviteBalance())).build();
     }
 
     @Transactional(readOnly = true)

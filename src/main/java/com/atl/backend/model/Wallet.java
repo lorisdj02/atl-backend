@@ -22,15 +22,6 @@ public class Wallet {
     @JoinColumn(name = "account_id", unique = true, nullable = false)
     private Account account;
 
-    @Column(name = "prize_balance", nullable = false)
-    private BigDecimal prizeBalance = BigDecimal.ZERO;
-
-    @Column(name = "personal_balance", nullable = false)
-    private BigDecimal personalBalance = BigDecimal.ZERO;
-
-    @Column(name = "invite_balance", nullable = false)
-    private BigDecimal inviteBalance = BigDecimal.ZERO;
-
     @Column(name = "prize_last_withdraw")
     private LocalDateTime prizeLastWithdraw;
 

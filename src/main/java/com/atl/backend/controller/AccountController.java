@@ -2,12 +2,14 @@ package com.atl.backend.controller;
 
 import com.atl.backend.dto.AccountDTO;
 import com.atl.backend.dto.RefereeLicenseDTO;
+import com.atl.backend.dto.ReviewDTO;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.RefereeLicense;
 import com.atl.backend.request.UpdateAccountInfosRequest;
 import com.atl.backend.response.LoginResponse;
 import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.RefereeService;
+import com.atl.backend.service.accountServices.ReviewService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,9 @@ public class AccountController {
     private AccountService accountService;
     @Autowired
     private RefereeService refereeService;
+    @Autowired
+    private ReviewService reviewService;
+
 
     @GetMapping("/account/level")
     public ResponseEntity<Short> getAccountLevel() {
@@ -66,6 +71,13 @@ public class AccountController {
     @DeleteMapping("/referee/delete-referee-license/{sportId}")
     public ResponseEntity<Void> deleteRefereeLicense(@PathVariable Integer sportId) {
         refereeService.deleteRefereeLicense(sportId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/review/commit")
+    public ResponseEntity<Void> commitReview(@RequestBody ReviewDTO reviewDTO) {
+        
+        reviewService.commitReview(reviewDTO);
         return ResponseEntity.ok().build();
     }
 

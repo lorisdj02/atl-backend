@@ -37,15 +37,14 @@ public class AccountContextData {
     private Coordinator activeCoordinator;
     private Organization activeOrganization;
 
-    @Autowired
     private AccountService accountService;
-    @Autowired
+
     private PlayerService playerService;
-    @Autowired
+
     private CoordinatorService coordinatorService;
-    @Autowired
+
     private RefereeService refereeService;
-    @Autowired
+
     private OrganizationService organizationService;
 
     public Player getActivePlayer() {
@@ -96,7 +95,8 @@ public class AccountContextData {
             throw new ForbiddenException(ErrorsString.ORGANIZATION_ROLE_REQUIRED);
         }
         if (activeOrganization == null) {
-            Optional<Organization> organizationOpt = organizationService.getOrganizationByOrganizationId(organizationId);
+            Optional<Organization> organizationOpt = organizationService
+                    .getOrganizationByOrganizationId(organizationId);
             if (organizationOpt.isEmpty()) {
                 throw new ForbiddenException(ErrorsString.ORGANIZATION_NOT_FOUND);
             }
@@ -107,7 +107,7 @@ public class AccountContextData {
     }
 
     public Account getActiveAccount() {
-        if(accountRole == AccountRole.GUEST){
+        if (accountRole == AccountRole.GUEST) {
             throw new ForbiddenException(ErrorsString.AUTHENTICATION_REQUIRED);
         }
 

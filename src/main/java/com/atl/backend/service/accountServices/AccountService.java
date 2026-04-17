@@ -10,6 +10,7 @@ import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.GrowthStep;
 import com.atl.backend.model.Review;
+import com.atl.backend.model.Wallet;
 import com.atl.backend.model.enums.AccountStatus;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.ReviewStatus;
@@ -17,6 +18,7 @@ import com.atl.backend.repository.AccountRepository;
 import com.atl.backend.repository.FriendInviteRepository;
 import com.atl.backend.repository.GrowthStepRepository;
 import com.atl.backend.repository.ReviewRepository;
+import com.atl.backend.repository.WalletRepository;
 import com.atl.backend.request.UpdateAccountInfosRequest;
 import com.atl.backend.response.LoginResponse;
 import com.atl.backend.service.matchServices.MatchRefereeService;
@@ -54,6 +56,8 @@ public class AccountService {
     private RefereeService refereeService;
     @Autowired
     private OrganizationService organizationService;
+    @Autowired
+    private WalletRepository walletRepository;
 
 
     public Account registerAccount(Account account, Optional<String> OrgName) {
@@ -73,6 +77,9 @@ public class AccountService {
             }
             default -> throw new BadRequestException(ErrorsString.INVALID_ACCOUNT_ROLE);
         }
+        Wallet wallet = new Wallet();
+        wallet.setAccount(account);
+        walletRepository.save(wallet);
         return account;
     }
 
@@ -274,4 +281,4 @@ public class AccountService {
         softDeleteAccount(accountId);
     }
 
-   }
+}

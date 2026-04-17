@@ -49,6 +49,10 @@ public class AuthFilter extends OncePerRequestFilter {
             String authHeader = request.getHeader("Authorization");
             AccountContextData contextData = new AccountContextData();
             contextData.setAccountService(accountService);
+            contextData.setPlayerService(playerService);
+            contextData.setCoordinatorService(coordinatorService);
+            contextData.setRefereeService(refereeService);
+            contextData.setOrganizationService(organizationService);
 
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);

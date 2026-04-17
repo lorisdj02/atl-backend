@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,17 +86,6 @@ public class PaymentRefundService {
                     throw new ConflictException(ErrorsString.NEGATIVE_AMOUNT_TRANSACTION);
                 }
 
-                switch (transaction.getSource()) {
-                    case INVITE_WALLET:
-                        wallet.setInviteBalance(wallet.getInviteBalance().add(transaction.getNetAmount()));
-                        break;
-                    case PRIZE_WALLET:
-                        wallet.setPrizeBalance(wallet.getPrizeBalance().add(transaction.getNetAmount()));
-                        break;
-                    default:
-                        wallet.setPersonalBalance(wallet.getPersonalBalance().add(transaction.getNetAmount()));
-                        break;
-                }
                 Transaction refundTransaction = craftRefundTransaction(transaction);
                 transactionRepository.save(refundTransaction);
 

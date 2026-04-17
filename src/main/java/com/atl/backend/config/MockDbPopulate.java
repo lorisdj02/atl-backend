@@ -24,6 +24,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import com.atl.backend.auth.AccountContext;
+import com.atl.backend.auth.AccountContextData;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.City;
 import com.atl.backend.model.Coordinator;
@@ -120,8 +122,13 @@ public class MockDbPopulate {
             team.setAlias(alias);
             Team savedTeam = teamService.saveTeam(team);
             teams.add(savedTeam);
-            for (int j = 1; j <= 10; j++) {
-                teamService.joinTeam(playerIds.get((i - 1) * 10 + j - 1), savedTeam.getId());
+            teamService.joinTeam(playerIds.get(i - 1), savedTeam.getId());
+        }
+
+        for (int i = 0; i < teams.size(); i++) {
+            Team team = teams.get(i);
+            for (int j = 0; j < 9; j++) {
+                teamService.joinTeam(playerIds.get(j + 20 + 9 * i), team.getId());
             }
         }
 
@@ -517,23 +524,30 @@ public class MockDbPopulate {
         tournament.setNumTeamsQualified((short) 4);
         tournament.setDescription("Viva la cacca");
         tournament.setPhase(TournamentPhase.GROUP);
-        tournament.setPaidTeams((short) 8);
+        tournament.setPaidTeams((short) 0);
         Tournament savedTournament1 = tournamentService.saveTournament(tournament);
 
         System.out.println("[DEBUG] - Created tournament 'Torneo in corso' with 8 teams, all paid");
 
         for (int i = 1; i <= 8; i++) {
+            System.out
+                    .println("[DEBUG] - Participating team " + teamIds.get(i - 1) + " to tournament 'Torneo in corso'");
             List<Player> players = teamService.getPlayersByTeamId(teamIds.get(i - 1));
             List<Integer> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
-            tournamentParticipantService.participateToTournament(savedTournament1.getId(), teamIds.get(i - 1), playerIds);
-            TournamentParticipation tp = tournamentParticipationRepository.findByTeam_IdAndTournament_Id(teamIds.get(i - 1), savedTournament1.getId()).get();
+            tournamentParticipantService.participateToTournament(savedTournament1.getId(), teamIds.get(i - 1),
+                    playerIds);
+            TournamentParticipation tp = tournamentParticipationRepository
+                    .findByTeam_IdAndTournament_Id(teamIds.get(i - 1), savedTournament1.getId()).get();
             tp.setToPay(BigDecimal.ZERO);
             tournamentParticipationRepository.save(tp);
+            savedTournament1.setPaidTeams((short) (savedTournament1.getPaidTeams() + 1));
+            savedTournament1 = tournamentService.saveTournament(savedTournament1);
         }
 
+        final Tournament finalSavedTournament1 = savedTournament1;
         System.out.println("[DEBUG] - All 8 teams participated to 'Torneo in corso'");
 
-        tournamentService.startTournament(savedTournament1.getId());
+        runAsCoordinator(coordinators.get(0), () -> tournamentService.startTournament(finalSavedTournament1.getId()));
 
         System.out.println("[DEBUG] - Started tournament 'Torneo in corso'");
 
@@ -553,17 +567,40 @@ public class MockDbPopulate {
         tournament2.setNumTeamsQualified((short) 8);
         tournament2.setDescription("Viva la cacca da cominciare");
         tournament2.setPhase(TournamentPhase.GROUP);
-        tournament2.setPaidTeams((short) 9);
+        tournament2.setPaidTeams((short) 0);
         Tournament savedTournament2 = tournamentService.saveTournament(tournament2);
 
         System.out.println("[DEBUG] - Created tournament 'Torneo da cominciare' with 9 teams, all paid");
 
         for (int i = 1; i <= 8; i++) {
+            System.out.println(
+                    "[DEBUG] - Participating team " + teamIds.get(i + 8 - 1) + " to tournament 'Torneo da cominciare'");
             List<Player> players = teamService.getPlayersByTeamId(teamIds.get(i + 8 - 1));
             List<Integer> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
-            tournamentParticipantService.participateToTournament(savedTournament2.getId(), teamIds.get(i + 8 - 1), playerIds);
+            tournamentParticipantService.participateToTournament(savedTournament2.getId(), teamIds.get(i + 8 - 1),
+                    playerIds);
+            TournamentParticipation tp = tournamentParticipationRepository
+                    .findByTeam_IdAndTournament_Id(teamIds.get(i + 8 - 1), savedTournament2.getId()).get();
+            tp.setToPay(BigDecimal.ZERO);
+            tournamentParticipationRepository.save(tp);
+            savedTournament2.setPaidTeams((short) (savedTournament2.getPaidTeams() + 1));
+            savedTournament2 = tournamentService.saveTournament(savedTournament2);
         }
         System.out.println("[DEBUG] - Created tournament 'Torneo da cominciare' with 9 teams, all paid");
+    }
+
+    private void runAsCoordinator(Coordinator coordinator, Runnable action) {
+        AccountContextData ctx = new AccountContextData();
+        ctx.setAccountRole(AccountRole.COORDINATOR);
+        ctx.setCoordinatorId(coordinator.getCoordinatorId());
+        ctx.setAccountId(coordinator.getAccount().getId());
+
+        AccountContext.set(ctx);
+        try {
+            action.run();
+        } finally {
+            AccountContext.clear();
+        }
     }
 
     @Transactional

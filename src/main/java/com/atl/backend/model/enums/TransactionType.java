@@ -1,10 +1,10 @@
 package com.atl.backend.model.enums;
 public enum TransactionType {
-    DEPOSIT,
-    PAYMENT,
-    PRIZE,
-    WITHDRAW,
-    REFUND,
-    FEE,
-    INVITE
+    DEPOSIT, // NOT USED
+    PAYMENT, // OUT PERSONAL, PRIZE, INVITE WALLET
+    PRIZE, // IN PRIZE WALLET
+    WITHDRAW, // OUT PRIZE, PERSONAL WALLET
+    REFUND, // IN PRIZE, PERSONAL, INVITE WALLET
+    FEE, // IN PERSONAL WALLET
+    INVITE // IN INVITE WALLET
 }

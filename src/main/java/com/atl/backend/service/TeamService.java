@@ -226,17 +226,15 @@ public class TeamService {
     }
 
     public boolean isPlayerCaptainOrViceCaptain(Integer teamId, Integer playerId) {
-        Optional<Team> teamOptional = teamRepository.findById(teamId);
-        if (teamOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
-        }
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
 
-        Optional<Player> playerOptional = playerRepository.findById(playerId);
-        if (playerOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
-        }
-        Player player = playerOptional.get();
-        Team team = teamOptional.get();
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.PLAYER_NOT_FOUND));
+
+        System.out
+                .println("[DEBUG] - Checking if player " + playerId + " is captain or vice-captain of team " + teamId);
+        System.out.println("[DEBUG] - Team captain: " + team.getCaptainPlayer().getPlayerId());
 
         return (team.getCaptainPlayer().getPlayerId().equals(playerId))
                 || (team.getViceCaptainPlayers().contains(player));

@@ -2,6 +2,7 @@ package com.atl.backend.model;
 
 import com.atl.backend.dto.CheckoutPayload;
 import com.atl.backend.model.enums.*;
+import com.atl.backend.util.CheckoutPayloadConverter;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -34,6 +35,7 @@ public class CheckoutSession {
     private CheckoutStatus status = CheckoutStatus.PENDING;
 
     @Column(nullable = false, columnDefinition = "jsonb")
+    @Convert(converter = CheckoutPayloadConverter.class)
     private CheckoutPayload payload;
 
     @Column(nullable = false)

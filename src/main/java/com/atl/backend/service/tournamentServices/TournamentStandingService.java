@@ -81,7 +81,7 @@ public class TournamentStandingService {
     @Transactional(rollbackFor = Exception.class)
     public void generateStandingsForTournament(Tournament tournament) {
 
-        if (!tournament.getCoordinator().equals(AccountContext.getActiveCoordinator())) {
+        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
         }
 
@@ -111,7 +111,7 @@ public class TournamentStandingService {
 
     @Transactional(rollbackFor = Exception.class)
     public void updateTeamsQualifiedInTournament(Tournament tournament, Boolean needToOrder) {
-        if (!tournament.getCoordinator().equals(AccountContext.getActiveCoordinator())) {
+        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
         }
 

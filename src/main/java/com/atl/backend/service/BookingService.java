@@ -1,7 +1,6 @@
 package com.atl.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -359,6 +358,7 @@ public class BookingService {
         if (existingParticipation.isPresent() && !isLobbyParticipationRefundedByBookingIdAndAccountId(lobbyBookingId,
                 AccountContext.getActivePlayer().getAccount().getId())) {
             LobbyBookingParticipate participation = existingParticipation.get();
+            // Verificare se aggiunge un player in più
             participation.setPlayersPaid((short) (participation.getPlayersPaid() + playersPaid));
             participation.setUpdatedAt(LocalDateTime.now());
 

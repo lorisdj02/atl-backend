@@ -34,14 +34,16 @@ public class WalletDTO {
     @JsonProperty("personalLastWithdraw")
     private String personalLastWithdraw;
 
-    static public WalletDTO fromWallet(Wallet wallet) {
+    static public WalletDTO fromWallet(Wallet wallet, BigDecimal prizeBalance, BigDecimal personalBalance, BigDecimal inviteBalance) {
         WalletDTO dto = new WalletDTO();
         dto.setAccountId(wallet.getAccount().getId());
-        dto.setPrizeBalance(wallet.getPrizeBalance());
-        dto.setPersonalBalance(wallet.getPersonalBalance());
-        dto.setInviteBalance(wallet.getInviteBalance());
-        dto.setPrizeLastWithdraw(wallet.getPrizeLastWithdraw() != null ? wallet.getPrizeLastWithdraw().toString() : null);
-        dto.setPersonalLastWithdraw(wallet.getPersonalLastWithdraw() != null ? wallet.getPersonalLastWithdraw().toString() : null);
+        dto.setPrizeBalance(prizeBalance);
+        dto.setPersonalBalance(personalBalance);
+        dto.setInviteBalance(inviteBalance);
+        dto.setPrizeLastWithdraw(
+                wallet.getPrizeLastWithdraw() != null ? wallet.getPrizeLastWithdraw().toString() : null);
+        dto.setPersonalLastWithdraw(
+                wallet.getPersonalLastWithdraw() != null ? wallet.getPersonalLastWithdraw().toString() : null);
         return dto;
     }
 }
