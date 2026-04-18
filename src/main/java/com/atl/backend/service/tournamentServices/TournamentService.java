@@ -102,6 +102,7 @@ public class TournamentService {
     private GrowthStepRepository growthStepRepository;
 
 
+
     public void deleteAllTournaments() {
         tournamentRepository.deleteAll();
         tournamentStandingService.deleteAllFootballStandings();
@@ -194,7 +195,7 @@ public class TournamentService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void startTournament(Integer tournamentId) {
+    public Tournament startTournament(Integer tournamentId) {
         checkTournamentExists(tournamentId);
         Tournament tournament = tournamentRepository.findById(tournamentId).get();
 
@@ -236,7 +237,7 @@ public class TournamentService {
         System.out.println("[DEBUG - TournamentService] - Tournament stats generated for tournament " + tournamentId);
         tournament.setStatus(TournamentStatus.SCHEDULED);
 
-        tournamentRepository.save(tournament);
+        return tournamentRepository.save(tournament);
     }
 
     public List<TournamentDTO> getMyTournaments(SportCategory sportCategory) {

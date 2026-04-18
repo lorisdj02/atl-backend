@@ -1,6 +1,8 @@
 package com.atl.backend.model;
 
+import com.atl.backend.dto.PurchaseDetail;
 import com.atl.backend.model.enums.*;
+import com.atl.backend.util.PurchaseDetailConverter;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -33,7 +35,8 @@ public class Purchase {
     private CheckoutType type;
 
     @Column(columnDefinition = "jsonb")
-    private String detail;
+    @Convert(converter = PurchaseDetailConverter.class)
+    private PurchaseDetail detail;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)

@@ -5,6 +5,7 @@ import com.atl.backend.dto.RefereeLicenseDTO;
 import com.atl.backend.dto.ReviewDTO;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.RefereeLicense;
+import com.atl.backend.request.RegisterAccountRequest;
 import com.atl.backend.request.UpdateAccountInfosRequest;
 import com.atl.backend.response.LoginResponse;
 import com.atl.backend.service.accountServices.AccountService;
@@ -76,9 +77,14 @@ public class AccountController {
 
     @PatchMapping("/review/commit")
     public ResponseEntity<Void> commitReview(@RequestBody ReviewDTO reviewDTO) {
-        
         reviewService.commitReview(reviewDTO);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/account/register")
+    public ResponseEntity<AccountDTO> registerAccount(@RequestBody RegisterAccountRequest accountDTO) {
+        Account createdAccount = accountService.registerAccount(accountDTO);
+        return ResponseEntity.ok(AccountDTO.fromAccount(createdAccount));
     }
 
 }

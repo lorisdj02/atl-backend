@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +13,12 @@ import com.atl.backend.dto.ReviewDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.exception.UnauthorizedException;
+import com.atl.backend.model.Account;
+import com.atl.backend.model.Match;
 import com.atl.backend.model.Review;
+import com.atl.backend.model.Tournament;
+import com.atl.backend.model.Transaction;
+import com.atl.backend.model.enums.ReviewStatus;
 import com.atl.backend.model.enums.ReviewType;
 import com.atl.backend.repository.AccountRepository;
 import com.atl.backend.repository.ReviewRepository;
@@ -28,7 +32,7 @@ public class ReviewService {
     private ReviewRepository reviewRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public void commitReview(ReviewDTO reviewDTO) {
+    public Review commitReview(ReviewDTO reviewDTO) {
         if (reviewDTO == null || reviewDTO.getId() == null) {
             throw new NotFoundException(ErrorsString.REVIEW_NOT_FOUND);
         }
@@ -71,16 +75,42 @@ public class ReviewService {
          *
          * 1) Alla fine di un percorso di una squadra per un torneo, quando si è sicuri
          * che non ci saranno più partite per quella squadra per i player.
-         * 2) Alla fine di un match per i referee.
-         * 3) A metà e fine torneo per i coordinatori.
+         * 2) Alla fine di un match per i referee e coordinatori.
          *
-         * C) Passaggio in stato COMMITTED. Questo DEVE sbloccare la/le transazione/i di pagamento.
+         * C) Passaggio in stato COMMITTED. Questo DEVE sbloccare la/le transazione/i di
+         * pagamento.
          *
          */
 
         review.setComment(reviewDTO.getComment());
         review.setRating(reviewDTO.getRating());
         review.setUpdatedAt(LocalDateTime.now());
-        reviewRepository.save(review);
+        return reviewRepository.save(review);
+    }
+
+    public Review createReview(Account reviewerAccount, Account reviewedAccount, Tournament tournament, Match match,
+            ReviewType reviewType, BigDecimal weight, Transaction linkedTransaction) {
+        Review review = new Review();
+        review.setReviewerAccount(reviewerAccount);
+        review.setReviewedAccount(reviewedAccount);
+        review.setTournament(tournament);
+        review.setMatch(match);
+        review.setReviewType(reviewType);
+        review.setWeight(weight);
+        review.setLinkedTransaction(linkedTransaction);
+        review.setStatus(ReviewStatus.WAITING);
+        return reviewRepository.save(review);
+    }
+
+    public Review getReviewByReviewerAccountIdAndReviewedAccountIdAndTournamentIdAndMatchId(Integer reviewerAccountId,
+            Integer reviewedAccountId, Integer tournamentId, Integer matchId) {
+        return reviewRepository
+                .findByReviewerAccount_IdAndReviewedAccount_IdAndTournament_IdAndMatch_Id(reviewerAccountId,
+                        reviewedAccountId, tournamentId, matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.REVIEW_NOT_FOUND));
+    }
+
+    public Review saveReview(Review review) {
+        return reviewRepository.save(review);
     }
 }

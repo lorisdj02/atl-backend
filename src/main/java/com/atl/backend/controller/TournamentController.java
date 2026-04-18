@@ -34,6 +34,7 @@ import com.atl.backend.response.TournamentParametersResponse;
 import com.atl.backend.response.TournamentSummaryResponse;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.orchestrator.PurchasesOrchestrator;
+import com.atl.backend.service.orchestrator.ReviewsOrchestrator;
 import com.atl.backend.service.screen.TournamentScreenService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentPhaseService;
@@ -54,6 +55,8 @@ public class TournamentController {
     private TournamentParticipantService tournamentParticipantService;
     @Autowired
     private TournamentPhaseService tournamentPhaseService;
+    @Autowired
+    private ReviewsOrchestrator reviewsOrchestrator;
 
     @GetMapping("{sportCategory}/all-tournaments")
     public ResponseEntity<AllTournamentsResponse> getAllTournamentsScreen(@PathVariable String sportCategory) {
@@ -173,7 +176,7 @@ public class TournamentController {
 
     @PatchMapping("/tournament/{tournamentId}/start")
     public ResponseEntity<Void> startTournament(@PathVariable Integer tournamentId) {
-        tournamentService.startTournament(tournamentId);
+        reviewsOrchestrator.startTournament(tournamentId);
         return ResponseEntity.ok().build();
     }
 

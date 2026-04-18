@@ -8,9 +8,11 @@ import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
+import com.atl.backend.model.FriendInvite;
 import com.atl.backend.model.GrowthStep;
 import com.atl.backend.model.Review;
 import com.atl.backend.model.Wallet;
+import com.atl.backend.model.enums.AccountRole;
 import com.atl.backend.model.enums.AccountStatus;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.ReviewStatus;
@@ -19,6 +21,7 @@ import com.atl.backend.repository.FriendInviteRepository;
 import com.atl.backend.repository.GrowthStepRepository;
 import com.atl.backend.repository.ReviewRepository;
 import com.atl.backend.repository.WalletRepository;
+import com.atl.backend.request.RegisterAccountRequest;
 import com.atl.backend.request.UpdateAccountInfosRequest;
 import com.atl.backend.response.LoginResponse;
 import com.atl.backend.service.matchServices.MatchRefereeService;
@@ -59,8 +62,83 @@ public class AccountService {
     @Autowired
     private WalletRepository walletRepository;
 
+    public Optional<FriendInvite> addInvite(String inviteCode, Account invitedAccount) {
+        // Adesso invite code = username, quindi cerco l'account con quel username
+        Optional<Account> accountOptional = accountRepository.findByUsername(inviteCode);
+        if (accountOptional.isEmpty()) {
+            return Optional.empty();
+        }
+        FriendInvite friendInvite = new FriendInvite();
+        friendInvite.setInvitedAccount(invitedAccount);
+        friendInvite.setInviterAccount(accountOptional.get());
+        friendInvite.setRedeemed(false);
+        return Optional.of(friendInviteRepository.save(friendInvite));
+    }
 
-    public Account registerAccount(Account account, Optional<String> OrgName) {
+    public Optional<Account> redeemInvite(Account InvitedAccount){
+        Optional<FriendInvite> friendInviteOptional = friendInviteRepository.findByInvitedAccount_IdAndRedeemedFalse(InvitedAccount.getId());
+        if (friendInviteOptional.isEmpty()) {
+            return Optional.empty();
+        }
+        FriendInvite friendInvite = friendInviteOptional.get();
+        friendInvite.setRedeemed(true);
+        friendInviteRepository.save(friendInvite);
+        return Optional.of(friendInvite.getInviterAccount());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Account registerAccount(RegisterAccountRequest request) {
+        // TODO: aggiungere una sorta di controllo contro parole offensive
+
+        if (request.getUsername() == null || request.getEmail() == null || request.getRole() == null) {
+            throw new BadRequestException(ErrorsString.MISSING_REQUIRED_FIELDS);
+        }
+        if (accountRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new ConflictException(ErrorsString.USERNAME_ALREADY_EXISTS);
+        }
+        if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new ConflictException(ErrorsString.EMAIL_ALREADY_EXISTS);
+        }
+
+        AccountRole role;
+        try {
+            role = AccountRole.valueOf(request.getRole());
+        } catch (Exception e) {
+            throw new BadRequestException(ErrorsString.INVALID_ACCOUNT_ROLE);
+        }
+
+        if (role == AccountRole.ORGANIZATION || role == AccountRole.ADMIN) {
+            throw new BadRequestException(ErrorsString.INVALID_ACCOUNT_ROLE);
+        }
+
+        Account account = new Account();
+        account.setUsername(request.getUsername());
+        account.setEmail(request.getEmail());
+        account.setRole(role);
+        account.setPhone(request.getPhone());
+        try {
+            account.setBirthdate(LocalDate.parse(request.getBirthdate()));
+        } catch (Exception e) {
+            throw new BadRequestException(ErrorsString.INVALID_BIRTHDATE_FORMAT);
+        }
+        account.setImageUrl(request.getProfilePictureUrl());
+        Account savedAccount = saveAccount(account);
+        switch (role) {
+            case PLAYER -> {
+                playerService.registerPlayer(savedAccount);
+            }
+            case REFEREE -> {
+                refereeService.registerReferee(savedAccount);
+            }
+            case COORDINATOR -> {
+                coordinatorService.registerCoordinator(savedAccount);
+            }
+            default -> throw new BadRequestException(ErrorsString.INVALID_ACCOUNT_ROLE);
+        }
+        return savedAccount;
+    }
+
+    public Account registerMockAccount(Account account, Optional<String> OrgName) {
         saveAccount(account);
         switch (account.getRole()) {
             case PLAYER -> {

@@ -85,7 +85,7 @@ public class ErrorsString {
 
     static final public String INVALID_REVIEW_RATING = "INVALID_REVIEW_RATING";
 
-
+    static final public String MISSING_REQUIRED_FIELDS = "MISSING_REQUIRED_FIELDS";
 
     // Conflict errors
 
@@ -182,6 +182,16 @@ public class ErrorsString {
     static final public String CAPTAIN_CANNOT_BE_EXPELLED = "CAPTAIN_CANNOT_BE_EXPELLED";
 
     static final public String NO_AVAILABLE_SPOTS = "NO_AVAILABLE_SPOTS";
+
+    static final public String TRANSACTION_FAILED = "TRANSACTION_FAILED";
+
+    static final public String CANNOT_FINISH_MATCH = "CANNOT_FINISH_MATCH";
+
+    static final public String CANNOT_START_MATCH = "CANNOT_START_MATCH";
+
+    static final public String USERNAME_ALREADY_EXISTS = "USERNAME_ALREADY_EXISTS";
+
+    static final public String EMAIL_ALREADY_EXISTS = "EMAIL_ALREADY_EXISTS";
 
     // Authentication errors
 

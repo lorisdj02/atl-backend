@@ -7,6 +7,7 @@ import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.CoordinatorService;
 import com.atl.backend.service.accountServices.OrganizationService;
 import com.atl.backend.service.accountServices.PlayerService;
+import com.atl.backend.service.orchestrator.ReviewsOrchestrator;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 
@@ -73,6 +74,8 @@ public class MockDbPopulate {
     private OrganizationService organizationService;
     @Autowired
     private CoordinatorService coordinatorService;
+    @Autowired
+    private ReviewsOrchestrator reviewsOrchestrator;
 
     @Autowired
     private TournamentParticipationRepository tournamentParticipationRepository;
@@ -89,19 +92,19 @@ public class MockDbPopulate {
             if (i <= 200) {
                 account.setUsername("player" + i.toString());
                 account.setRole(AccountRole.PLAYER);
-                accountService.registerAccount(account, null);
+                accountService.registerMockAccount(account, null);
             } else if (i <= 250) {
                 account.setUsername("coordinator" + i.toString());
                 account.setRole(AccountRole.COORDINATOR);
-                accountService.registerAccount(account, null);
+                accountService.registerMockAccount(account, null);
             } else if (i <= 275) {
                 account.setUsername("referee" + i.toString());
                 account.setRole(AccountRole.REFEREE);
-                accountService.registerAccount(account, null);
+                accountService.registerMockAccount(account, null);
             } else {
                 account.setUsername("organization" + i.toString());
                 account.setRole(AccountRole.ORGANIZATION);
-                accountService.registerAccount(account, Optional.of("orgName" + i.toString()));
+                accountService.registerMockAccount(account, Optional.of("orgName" + i.toString()));
             }
         }
         System.out.println("[DEBUG] - Created 200 players, 50 coordinators, 25 referees, 25 organizations");

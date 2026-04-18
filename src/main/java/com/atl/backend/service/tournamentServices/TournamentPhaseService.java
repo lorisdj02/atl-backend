@@ -50,6 +50,9 @@ public class TournamentPhaseService {
     @Transactional(readOnly = true)
     public Boolean canGoToNextPhase(Integer tournamentId) {
         Tournament tournament = getExistingTournament(tournamentId);
+        if(tournament.getStatus() != TournamentStatus.SCHEDULED){
+            throw new ConflictException(ErrorsString.TOURNAMENT_NOT_ACTIVE);
+        }
         switch (tournament.getPhase()) {
             case GROUP:
                 return matchService.areMatchesFinishedByTournamentIdAndGroupName(tournamentId, null);
@@ -97,9 +100,6 @@ public class TournamentPhaseService {
                 tournament.setPhase(TournamentPhase.RO16);
                 break;
             case RO16:
-                if (!canGoToNextPhase(tournamentId)) {
-                    throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
-                }
                 tournament.setPhase(TournamentPhase.QUARTER);
                 break;
             case QUARTER:
@@ -109,8 +109,7 @@ public class TournamentPhaseService {
                 tournament.setPhase(TournamentPhase.FINAL);
                 break;
             case FINAL:
-                giveTournamentPrizes(tournamentId);
-                break;
+                throw new ConflictException(ErrorsString.WRONG_TOURNAMENT_PHASE);
         }
         tournament.setUpdatedAt(LocalDateTime.now());
         tournamentRepository.save(tournament);
@@ -167,17 +166,4 @@ public class TournamentPhaseService {
         return qualifiedTeamsPerRank;
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    private void giveTournamentPrizes(Integer tournamentId) {
-
-        Tournament tournament = getExistingTournament(tournamentId);
-
-        if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
-
-        tournament.setStatus(TournamentStatus.PENDING_PAYMENTS);
-
-        // TODO: Devi continuare la logica di assegnazione premi
-    }
 }

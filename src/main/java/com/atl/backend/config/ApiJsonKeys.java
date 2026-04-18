@@ -320,4 +320,21 @@ public class ApiJsonKeys {
     // ConfirmCallupsRequest
     public static final String tournamentId = "tournamentId"; // int
 
+    // RegisterAccountRequest
+    public static final String email = "email"; // String
+    // RegisterAccountRequest
+    public static final String fireBaseUid = "fireBaseUid"; // String
+    // RegisterAccountRequest
+    public static final String name = "name"; // String
+    // RegisterAccountRequest
+    public static final String surname = "surname"; // String
+    // RegisterAccountRequest
+    public static final String role = "role"; // String
+    // RegisterAccountRequest
+    public static final String inviteCode = "inviteCode"; // String?
+    // RegisterAccountRequest
+    public static final String profilePictureUrl = "profilePictureUrl"; // String?
+    // RegisterAccountRequest
+    public static final String organizationName = "organizationName"; // String?
+
 }

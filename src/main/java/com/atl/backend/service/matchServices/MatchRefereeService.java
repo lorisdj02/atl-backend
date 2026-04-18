@@ -24,6 +24,8 @@ import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.RefereeAssignmentRepository;
 import com.atl.backend.repository.RefereeRoleRepository;
 
+import jakarta.persistence.criteria.CriteriaBuilder.In;
+
 @Service
 public class MatchRefereeService {
     @Autowired
@@ -71,6 +73,15 @@ public class MatchRefereeService {
         }
 
         return maxPayPerMatch;
+    }
+
+    public List<Integer> getRefereeIdsByMatchId(Integer matchId) {
+        List<RefereeAssignment> refereeAssignments = refereeAssignmentRepository.findByMatch_Id(matchId);
+        List<Integer> refereeIds = new ArrayList<>();
+        for (RefereeAssignment refereeAssignment : refereeAssignments) {
+            refereeIds.add(refereeAssignment.getReferee().getRefereeId());
+        }
+        return refereeIds;
     }
 
     public void insertRefereeAssignment(Integer matchId, String refereeRoleName) {

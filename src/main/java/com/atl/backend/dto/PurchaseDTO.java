@@ -52,7 +52,7 @@ public class PurchaseDTO {
         dto.setAccountId(purchase.getAccount().getId());
         dto.setObjectId(purchase.getObjectId());
         dto.setType(purchase.getType().toString());
-        dto.setDetail(purchase.getDetail());
+        dto.setDetail(purchase.getDetail().toString());
         dto.setStatus(purchase.getStatus().toString());
         dto.setAmount(purchase.getAmount());
         dto.setCreatedAt(purchase.getCreatedAt().toString());

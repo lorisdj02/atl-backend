@@ -512,4 +512,23 @@ public class MatchService {
         footballMatch.setUpdatedAt(LocalDateTime.now());
         footballMatchRepository.save(footballMatch);
     }
+
+    public Match startMatch(Integer matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        if (match.getScheduledStart() == null) {
+            throw new ConflictException(ErrorsString.MATCH_NOT_SCHEDULED);
+        }
+        // TODO: completa
+        return match;
+    }
+
+    public Match finishMatch(Integer matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        if (!canMatchFinish(matchId)) {
+            throw new ConflictException(ErrorsString.CANNOT_FINISH_MATCH);
+        } // TODO: completa
+        return match;
+    }
 }

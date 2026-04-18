@@ -42,4 +42,16 @@ public class WalletBalance {
     public boolean hasSomeBalance() {
         return prizeBalance.add(personalBalance).add(inviteBalance).add(inviteBalance).compareTo(BigDecimal.ZERO) > 0;
     }
+
+    public boolean hasInviteBalance() {
+        return inviteBalance.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    public boolean hasPrizeBalance() {
+        return prizeBalance.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    public boolean hasPersonalBalance() {
+        return personalBalance.compareTo(BigDecimal.ZERO) > 0;
+    }
 }
