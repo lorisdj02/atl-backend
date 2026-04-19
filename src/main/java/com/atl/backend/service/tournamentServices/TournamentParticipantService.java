@@ -3,8 +3,12 @@ package com.atl.backend.service.tournamentServices;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,14 +23,20 @@ import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Callup;
 import com.atl.backend.model.FailedTournamentParticipation;
+import com.atl.backend.model.FinalStageBracket;
+import com.atl.backend.model.FootballMatch;
+import com.atl.backend.model.Match;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.model.enums.TournamentPhase;
 import com.atl.backend.model.enums.TournamentStatus;
 import com.atl.backend.repository.CallupRepository;
 import com.atl.backend.repository.FailedTournamentParticipationRepository;
+import com.atl.backend.repository.FootballMatchRepository;
+import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.repository.TournamentRepository;
@@ -52,6 +62,11 @@ public class TournamentParticipantService {
     private PaymentRefundService paymentRefundService;
     @Autowired
     private FailedTournamentParticipationRepository failedTournamentParticipationRepository;
+
+    @Autowired
+    private FootballMatchRepository footballMatchRepository;
+    @Autowired
+    private MatchRepository matchRepository;
 
     private Player getExistingPlayerByPlayerId(Integer playerId) {
         Optional<Player> playerOpt = playerRepository.findByPlayerId(playerId);
@@ -382,4 +397,79 @@ public class TournamentParticipantService {
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_PARTICIPATION_NOT_FOUND));
         return tournamentParticipation.getToPay();
     }
+
+    public Optional<Team> getWinningTeamInTournament(Integer tournamentId) {
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
+
+        if (tournament.getStatus() != TournamentStatus.PENDING_PAYMENTS
+                && tournament.getStatus() != TournamentStatus.FINISHED) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_NOT_FINISHED);
+        }
+
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL:
+                List<Match> finalMatches = matchRepository.findByTournament_IdAndGroupName(tournamentId, "FI");
+                if (finalMatches.isEmpty() || finalMatches.size() > 1) {
+                    throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+                }
+                Match finalMatch = finalMatches.get(0);
+                FinalStageBracket finalStageBracket = finalMatch.getFinalStageBracket();
+                if (finalStageBracket == null) {
+                    throw new NotFoundException(ErrorsString.FINAL_STAGE_BRACKET_NOT_FOUND);
+                }
+                FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(finalMatch.getId())
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+
+                if (finalStageBracket.isHomeWinner()) {
+                    return Optional.of(footballMatch.getHomeTeam());
+                } else if (finalStageBracket.isAwayWinner()) {
+                    return Optional.of(footballMatch.getAwayTeam());
+                } else {
+                    return Optional.empty();
+                }
+            default:
+                throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+    }
+
+    public Map<TournamentPhase, Set<Team>> getTeamsInEachPhaseOfTournament(Integer tournamentId) {
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
+
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL:
+                List<FootballMatch> footballMatches = footballMatchRepository.findByMatch_Tournament_Id(tournamentId);
+                Map<TournamentPhase, Set<Team>> teamsInEachPhase = new HashMap<>();
+                for (FootballMatch footballMatch : footballMatches) {
+                    Match match = footballMatch.getMatch();
+                    TournamentPhase phase = getTournamentPhaseByGroupName(match.getGroupName());
+                    teamsInEachPhase.putIfAbsent(phase, new HashSet<>());
+                    if (footballMatch.getHomeTeam() != null) {
+                        teamsInEachPhase.get(phase).add(footballMatch.getHomeTeam());
+                    }
+                    if (footballMatch.getAwayTeam() != null) {
+                        teamsInEachPhase.get(phase).add(footballMatch.getAwayTeam());
+                    }
+                }
+                return teamsInEachPhase;
+            default:
+                throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+    }
+
+    private TournamentPhase getTournamentPhaseByGroupName(String groupName) {
+        if (groupName.startsWith("FI")) {
+            return TournamentPhase.FINAL;
+        } else if (groupName.startsWith("SF")) {
+            return TournamentPhase.SEMI;
+        } else if (groupName.startsWith("QF")) {
+            return TournamentPhase.QUARTER;
+        } else if (groupName.startsWith("OF")) {
+            return TournamentPhase.RO16;
+        } else if (groupName.startsWith("32")) {
+            return TournamentPhase.RO32;
+        } else {
+            return TournamentPhase.GROUP;
+        }
+    }
+
 }

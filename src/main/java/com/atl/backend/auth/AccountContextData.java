@@ -2,8 +2,6 @@ package com.atl.backend.auth;
 
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.model.Account;

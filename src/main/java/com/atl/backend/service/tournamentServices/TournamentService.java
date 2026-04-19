@@ -7,10 +7,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -36,12 +40,14 @@ import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.Match;
+import com.atl.backend.model.Palmares;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Sport;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.FootballMatchStatus;
+import com.atl.backend.model.enums.PalmaresEnum;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.model.enums.TournamentPhase;
 import com.atl.backend.model.enums.TournamentStatus;
@@ -50,15 +56,16 @@ import com.atl.backend.repository.CoordinatorRepository;
 import com.atl.backend.repository.FavoriteTournamentRepository;
 import com.atl.backend.repository.FinalStageBracketRepository;
 import com.atl.backend.repository.GrowthStepRepository;
+import com.atl.backend.repository.PalmaresRepository;
 import com.atl.backend.repository.RefereeRepository;
 import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.response.ApplyTournamentFiltersResponse;
 import com.atl.backend.response.ScheduleMatchResponse;
 import com.atl.backend.response.TournamentParametersResponse;
-import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.bookingServices.BookingService;
 import com.atl.backend.service.matchServices.MatchCombinationService;
 import com.atl.backend.service.matchServices.MatchService;
 
@@ -101,7 +108,8 @@ public class TournamentService {
     @Autowired
     private GrowthStepRepository growthStepRepository;
 
-
+    @Autowired
+    private PalmaresRepository palmaresRepository;
 
     public void deleteAllTournaments() {
         tournamentRepository.deleteAll();
@@ -208,7 +216,8 @@ public class TournamentService {
             throw new IllegalStateException(ErrorsString.TOURNAMENT_NOT_IN_CREATED_STATUS);
         }
 
-        System.out.println("\n\n[DEBUG - TournamentService] - Starting tournament " + tournamentId + " with " + tournament.getNumTeams()
+        System.out.println("\n\n[DEBUG - TournamentService] - Starting tournament " + tournamentId + " with "
+                + tournament.getNumTeams()
                 + " teams, of which " + tournament.getPaidTeams() + " have paid");
         if (tournament.getNumTeams() != tournament.getPaidTeams()) {
             throw new IllegalStateException(ErrorsString.NUM_TEAMS_DIFFERS_FROM_PAID_TEAMS);
@@ -625,12 +634,13 @@ public class TournamentService {
         return levels.get(index);
     }
 
-    public void toggleTournamentFavoriteStatus(Integer tournamentId){
+    public void toggleTournamentFavoriteStatus(Integer tournamentId) {
         Account account = AccountContext.getActiveAccount();
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
 
-        Optional<FavoriteTournament> favoriteOpt = favoriteTournamentRepository.findByAccount_IdAndTournament_Id(account.getId(), tournamentId);
+        Optional<FavoriteTournament> favoriteOpt = favoriteTournamentRepository
+                .findByAccount_IdAndTournament_Id(account.getId(), tournamentId);
         if (favoriteOpt.isPresent()) {
             favoriteTournamentRepository.delete(favoriteOpt.get());
         } else {
@@ -640,4 +650,89 @@ public class TournamentService {
             favoriteTournamentRepository.save(favoriteTournament);
         }
     }
+
+    public Tournament closeTournament(Integer tournamentId) {
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+
+        if (tournament.getStatus() != TournamentStatus.PENDING_PAYMENTS) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_NOT_PENDING_PAYMENTS);
+        }
+
+        tournament.setStatus(TournamentStatus.FINISHED);
+        return tournamentRepository.save(tournament);
+    }
+
+    public Tournament finishTournament(Integer tournamentId) {
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+        if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
+            throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
+        }
+        if (tournament.getStatus() != TournamentStatus.SCHEDULED) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_NOT_ACTIVE);
+        }
+
+        if (tournament.getPhase() != TournamentPhase.FINAL) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_NOT_IN_FINAL_STAGE);
+        }
+
+        if (matchService.hasUnfinishedMatchesInTournament(tournamentId)) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_HAS_UNFINISHED_MATCHES);
+        }
+
+        tournament.setStatus(TournamentStatus.PENDING_PAYMENTS);
+
+        // TODO: Crea palmares
+
+        Map<TournamentPhase, Set<Team>> teamPerPhase = tournamentParticipantService.getTeamsInEachPhaseOfTournament(tournamentId);
+
+        Map<TournamentPhase, Set<Team>> sortedByPhaseDesc = teamPerPhase.entrySet().stream()
+                .sorted(Map.Entry.<TournamentPhase, Set<Team>>comparingByKey(Comparator.reverseOrder()))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new));
+        Team winnerTeam = tournamentParticipantService.getWinningTeamInTournament(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.WINNING_TEAM_NOT_FOUND));
+        Set<Team> processedTeams = new HashSet<>();
+        for (TournamentPhase phase : sortedByPhaseDesc.keySet()) {
+            Set<Team> teams = sortedByPhaseDesc.get(phase);
+            PalmaresEnum palmaresEnum = PalmaresEnum.GROUP_STAGE;
+
+            switch (phase) {
+                case RO16:
+                    palmaresEnum = PalmaresEnum.ROUND16;
+                    break;
+                case QUARTER:
+                    palmaresEnum = PalmaresEnum.ROUND8;
+                    break;
+                case SEMI:
+                    palmaresEnum = PalmaresEnum.SEMI;
+                    break;
+                default:
+                    palmaresEnum = PalmaresEnum.GROUP_STAGE;
+            }
+            for (Team team : teams) {
+                if (processedTeams.contains(team)) {
+                    continue;
+                }
+                processedTeams.add(team);
+                if (phase == TournamentPhase.FINAL && !team.getId().equals(winnerTeam.getId())) {
+                    palmaresEnum = PalmaresEnum.FINALIST;
+                } else if (phase == TournamentPhase.FINAL && team.getId().equals(winnerTeam.getId())) {
+                    palmaresEnum = PalmaresEnum.WINNER;
+                }
+                Palmares palmares = new Palmares();
+                palmares.setTournament(tournament);
+                palmares.setTeam(team);
+                palmares.setPosition(palmaresEnum);
+                palmaresRepository.save(palmares);
+            }
+        }
+        return tournamentRepository.save(tournament);
+
+    }
+
 }

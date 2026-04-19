@@ -2,21 +2,28 @@ package com.atl.backend.service.orchestrator;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.ReviewDTO;
+import com.atl.backend.exception.BadRequestException;
+import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Callup;
 import com.atl.backend.model.Coordinator;
+import com.atl.backend.model.FriendInvite;
 import com.atl.backend.model.Match;
 import com.atl.backend.model.Player;
 import com.atl.backend.model.Referee;
 import com.atl.backend.model.RefereeAssignment;
 import com.atl.backend.model.Review;
+import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.Transaction;
 import com.atl.backend.model.TransactionGroup;
@@ -26,8 +33,11 @@ import com.atl.backend.model.enums.TransactionPendingReason;
 import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.model.enums.TransactionType;
+import com.atl.backend.request.AssignPrizesTournamentRequest;
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.CoordinatorService;
+import com.atl.backend.service.accountServices.PlayerService;
 import com.atl.backend.service.accountServices.ReviewService;
 import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.matchServices.MatchService;
@@ -53,6 +63,10 @@ public class ReviewsOrchestrator {
     private MatchService matchService;
     @Autowired
     private MatchRefereeService matchRefereeService;
+    @Autowired
+    private PlayerService playerService;
+    @Autowired
+    private AccountService accountService;
 
     @Transactional(rollbackFor = Exception.class)
     public void commitReview(ReviewDTO reviewDTO) {
@@ -85,7 +99,78 @@ public class ReviewsOrchestrator {
                     null);
         }
 
-        // TODO: devi fare anche finishTournament per creare le transazioni per i vincitori
+        Set<Integer> playerIds = paymentService.getAccountIdsByTournamentId(tournamentId);
+
+        for (Integer playerId : playerIds) {
+            Player player = playerService.getPlayerByPlayerId(playerId)
+                    .orElseThrow(() -> new BadRequestException(ErrorsString.PLAYER_NOT_FOUND));
+            Optional<FriendInvite> friendInvite = accountService.redeemInvite(player.getAccount());
+            if (friendInvite.isPresent()) {
+                paymentService.updateTransactionGroupStatus(
+                        friendInvite.get().getInviterTransaction().getTransactionGroup().getId(),
+                        TransactionStatus.CONFIRMED);
+            }
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void finishTournament(Integer tournamentId) {
+        Tournament tournament = tournamentService.finishTournament(tournamentId);
+        Team winningTeam = tournamentParticipantService.getWinningTeamInTournament(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.WINNING_TEAM_NOT_FOUND));
+
+        List<Integer> winningPlayerIds = tournamentParticipantService
+                .getCalluppedPlayerIdsByTournamentIdAndTeamId(tournamentId, winningTeam.getId());
+
+        List<Integer> callups = tournamentParticipantService.getCalluppedPlayerIdsByTournamentId(tournamentId);
+
+        for (Integer playerId : callups) {
+            if (!winningPlayerIds.contains(playerId)) {
+                Player reviewerPlayer = playerService.getPlayerByPlayerId(playerId)
+                        .orElseThrow(() -> new BadRequestException(ErrorsString.PLAYER_NOT_FOUND));
+                Review review = reviewService.getReviewByReviewerAccount_IdAndReviewedAccount_IdAndTournament_Id(
+                        reviewerPlayer.getAccount().getId(), tournament.getCoordinator().getAccount().getId(),
+                        tournamentId)
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.REVIEW_NOT_FOUND));
+                review.setStatus(ReviewStatus.PENDING);
+                reviewService.saveReview(review);
+            }
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void closeTournament(AssignPrizesTournamentRequest request) {
+        Tournament tournament = tournamentService.closeTournament(request.getTournamentId());
+        Team winningTeam = tournamentParticipantService.getWinningTeamInTournament(request.getTournamentId())
+                .orElseThrow(() -> new NotFoundException(ErrorsString.WINNING_TEAM_NOT_FOUND));
+        Player requestingPlayer = AccountContext.getActivePlayer();
+
+        teamService.needToBeCaptainOrViceCaptain(winningTeam.getId(), requestingPlayer.getPlayerId());
+
+        List<Integer> winningPlayerIds = tournamentParticipantService
+                .getCalluppedPlayerIdsByTournamentIdAndTeamId(request.getTournamentId(), winningTeam.getId());
+
+        if (!winningPlayerIds.contains(requestingPlayer.getPlayerId())) {
+            throw new ConflictException(ErrorsString.PLAYER_NOT_CALLED_UP_IN_TOURNAMENT);
+        }
+
+        for (Integer winningPlayerId : winningPlayerIds) {
+            BigDecimal prize = request.getPrizePerPlayer().get(winningPlayerId);
+            // Create transaction for the winning player
+            TransactionGroup transactionGroup = new TransactionGroup();
+            paymentService.saveTransactionGroup(transactionGroup);
+            Transaction linkedTransaction = paymentService.createTransaction(requestingPlayer.getAccount(), prize,
+                    prize, BigDecimal.ZERO, BigDecimal.ZERO,
+                    transactionGroup, TransactionType.PRIZE, TransactionSource.PERSONAL_WALLET,
+                    TransactionStatus.PENDING, TransactionPendingReason.REVIEW_REQUIRED);
+            Review review = reviewService.getReviewByReviewerAccount_IdAndReviewedAccount_IdAndTournament_Id(
+                    requestingPlayer.getAccount().getId(), tournament.getCoordinator().getAccount().getId(),
+                    request.getTournamentId())
+                    .orElseThrow(() -> new NotFoundException(ErrorsString.REVIEW_NOT_FOUND));
+            review.setStatus(ReviewStatus.PENDING);
+            review.setLinkedTransaction(linkedTransaction);
+            reviewService.saveReview(review);
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -114,6 +199,7 @@ public class ReviewsOrchestrator {
                     ReviewType.REFEREE_TO_COORDINATOR, BigDecimal.ONE,
                     linkedTransaction);
 
+            // COORDINATOR TO REFEREE REVIEW CREATION AND PAYMENT TRANSACTION CREATION
             amount = coordinatorService
                     .getCoordinatorPayPerMatchByCoordinatorId(tournamentCoordinator.getCoordinatorId());
             transactionGroup = new TransactionGroup();

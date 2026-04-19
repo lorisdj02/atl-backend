@@ -32,6 +32,10 @@ public class FriendInvite {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inviter_transaction_id", nullable = false)
+    private Transaction inviterTransaction;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

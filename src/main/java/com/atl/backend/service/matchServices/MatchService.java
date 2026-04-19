@@ -157,29 +157,78 @@ public class MatchService {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
         }
         Match match = optionalMatch.get();
+
+        if (match.getStartMatch() == null) {
+            return false;
+        }
+
         switch (match.getSportCategory()) {
-            case FOOTBALL -> {
-                Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(matchId);
-                if (footballMatchOptional.isEmpty()) {
-                    throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
-                }
-                FootballMatch footballMatch = footballMatchOptional.get();
-                if (footballMatch.getStatus() != FootballMatchStatus.START_HALF
+            case FOOTBALL:
+                FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+                if (footballMatch
+                        .getStatus() != FootballMatchStatus.START_HALF
                         && footballMatch.getStatus() != FootballMatchStatus.PENALTY_SHOOT_OUT) {
                     return false;
                 }
-            }
+
+                if (footballMatch.getStatus() == FootballMatchStatus.PENALTY_SHOOT_OUT) {
+                    if (footballMatch.getPenaltyScoreHome() == null || footballMatch.getPenaltyScoreAway() == null
+                            || footballMatch.getMissedPenaltyHome() == null
+                            || footballMatch.getMissedPenaltyAway() == null) {
+                        return false;
+                    }
+                    // Il match può finire se una delle due squadre ha raggiunto un numero di rigori
+                    // realizzati che non può più essere raggiunto dall'altra squadra, considerando
+                    // anche i rigori mancati
+                    final Short totalPenalties = (short) 5;
+                    Short totalHomeAttempts = (short) (footballMatch.getPenaltyScoreHome()
+                            + footballMatch.getMissedPenaltyHome());
+                    Short totalAwayAttempts = (short) (footballMatch.getPenaltyScoreAway()
+                            + footballMatch.getMissedPenaltyAway());
+
+                    Integer homeScore = footballMatch.getPenaltyScoreHome().intValue();
+                    Integer awayScore = footballMatch.getPenaltyScoreAway().intValue();
+                    Integer homeAttempts = totalHomeAttempts.intValue();
+                    Integer awayAttempts = totalAwayAttempts.intValue();
+
+                    // Prima dei 5 rigori a testa controlliamo se chi è sotto può ancora raggiungere.
+                    if (homeAttempts < totalPenalties || awayAttempts < totalPenalties) {
+                        Integer homeRemaining = Math.max(0, totalPenalties - homeAttempts);
+                        Integer awayRemaining = Math.max(0, totalPenalties - awayAttempts);
+
+                        if (homeScore > awayScore && awayScore + awayRemaining >= homeScore) {
+                            return false;
+                        }
+                        if (awayScore > homeScore && homeScore + homeRemaining >= awayScore) {
+                            return false;
+                        }
+                        if (homeScore.equals(awayScore)) {
+                            return false;
+                        }
+                    }
+
+                    // In oltranza si può finire solo dopo lo stesso numero di tiri e punteggio diverso.
+                    if (homeAttempts >= totalPenalties && awayAttempts >= totalPenalties) {
+                        if (!homeAttempts.equals(awayAttempts)) {
+                            return false;
+                        }
+                        if (homeScore.equals(awayScore)) {
+                            return false;
+                        }
+                    }
+                }
+
+                break;
+            default:
+                throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
         if (match.getFinalStageBracket() == null) {
             return true;
         }
         FinalStageBracket finalStageBracket = match.getFinalStageBracket();
-        Short aggregateScoreHome = finalStageBracket.getAggregateScoreHome();
-        Short aggregateScoreAway = finalStageBracket.getAggregateScoreAway();
-        if (aggregateScoreHome == null || aggregateScoreAway == null) {
-            throw new NotFoundException(ErrorsString.FINAL_STAGE_BRACKET_NOT_FOUND);
-        }
-        return aggregateScoreHome != aggregateScoreAway;
+
+        return !finalStageBracket.isDraw();
     }
 
     public List<FootballMatchEvent> getFootballMatchEventsByMatchId(Integer matchId) {
@@ -341,6 +390,9 @@ public class MatchService {
         }
         if (prefixGroupName == null) {
             for (Match match : matches) {
+                if (match.getGroupName().length() != 1) {
+                    continue;
+                }
                 switch (match.getSportCategory()) {
                     case FOOTBALL -> {
                         Optional<FootballMatch> footballMatchOptional = footballMatchRepository
@@ -447,6 +499,25 @@ public class MatchService {
         return saveFootballMatch(footballMatch);
     }
 
+    public FootballMatch getFirstLegFootballMatch(Integer matchId) {
+        FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        if (footballMatch.getMatch().getFinalStageBracket() == null) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        FinalStageBracket finalStageBracket = footballMatch.getMatch().getFinalStageBracket();
+        List<FootballMatch> matchesInBracket = footballMatchRepository
+                .findByMatch_FinalStageBracket_Id(finalStageBracket.getId());
+        if (matchesInBracket.size() != 2) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        FootballMatch firstLegMatch = matchesInBracket.stream()
+                .filter(match -> match.getMatch().getLegOrder() == LegOrderType.FIRST_LEG)
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        return firstLegMatch;
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void handleTeamRetireInKnockoutPhaseMatch(Integer matchId, Integer teamId) {
         Match match = matchRepository.findById(matchId)
@@ -519,8 +590,40 @@ public class MatchService {
         if (match.getScheduledStart() == null) {
             throw new ConflictException(ErrorsString.MATCH_NOT_SCHEDULED);
         }
-        // TODO: completa
-        return match;
+        if (match.getStartMatch() != null) {
+            throw new ConflictException(ErrorsString.MATCH_ALREADY_STARTED);
+        }
+
+        if (LocalDateTime.now().isBefore(match.getScheduledStart())) {
+            throw new ConflictException(ErrorsString.CANNOT_START_MATCH_BEFORE_SCHEDULED_TIME);
+        }
+
+        match.setStartMatch(LocalDateTime.now());
+        return matchRepository.save(match);
+    }
+
+    public FootballMatch startFootballHalftime(Integer matchId) {
+        FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        if (footballMatch.getStatus() != FootballMatchStatus.START_HALF) {
+            throw new ConflictException(ErrorsString.CANNOT_GO_HALFTIME);
+        }
+        footballMatch.setStatus(FootballMatchStatus.HALFTIME);
+        footballMatch.setHalftime(LocalDateTime.now());
+        footballMatch.setUpdatedAt(LocalDateTime.now());
+        return footballMatchRepository.save(footballMatch);
+    }
+
+    public FootballMatch startFootballSecondHalf(Integer matchId) {
+        FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        if (footballMatch.getStatus() != FootballMatchStatus.HALFTIME) {
+            throw new ConflictException(ErrorsString.CANNOT_START_HALF);
+        }
+        footballMatch.setStatus(FootballMatchStatus.START_HALF);
+        footballMatch.setStartHalf(LocalDateTime.now());
+        footballMatch.setUpdatedAt(LocalDateTime.now());
+        return footballMatchRepository.save(footballMatch);
     }
 
     public Match finishMatch(Integer matchId) {
@@ -528,7 +631,30 @@ public class MatchService {
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         if (!canMatchFinish(matchId)) {
             throw new ConflictException(ErrorsString.CANNOT_FINISH_MATCH);
-        } // TODO: completa
-        return match;
+        }
+        if (match.getFinishMatch() != null) {
+            throw new ConflictException(ErrorsString.MATCH_ALREADY_FINISHED);
+        }
+        match.setFinishMatch(LocalDateTime.now());
+        return matchRepository.save(match);
+    }
+
+    public Boolean hasUnfinishedMatchesInTournament(Integer tournamentId) {
+        List<Match> matches = matchRepository.findByTournament_Id(tournamentId);
+        if (matches.isEmpty()) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        for (Match match : matches) {
+            if (match.getFinishMatch() == null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Boolean isMatchInGroupStage(Integer matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        return match.getGroupName() != null && match.getGroupName().length() == 1;
     }
 }

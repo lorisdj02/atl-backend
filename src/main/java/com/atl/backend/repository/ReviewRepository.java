@@ -17,4 +17,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
     Optional<Review> findByReviewerAccount_IdAndReviewedAccount_IdAndTournament_IdAndMatch_Id(Integer reviewerAccountId,
             Integer reviewedAccountId, Integer tournamentId, Integer matchId);
+
+    Optional<Review> findByReviewerAccount_IdAndReviewedAccount_IdAndTournament_Id(Integer reviewerAccountId,
+            Integer reviewedAccountId, Integer tournamentId);
 }

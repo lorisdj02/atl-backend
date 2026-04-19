@@ -87,6 +87,8 @@ public class ErrorsString {
 
     static final public String MISSING_REQUIRED_FIELDS = "MISSING_REQUIRED_FIELDS";
 
+    static final public String INVALID_FOOTBALL_EVENT_TYPE = "INVALID_FOOTBALL_EVENT_TYPE";
+
     // Conflict errors
 
     static final public String PLAYER_IS_IN_ACTIVE_TOURNAMENTS = "PLAYER_IS_IN_ACTIVE_TOURNAMENTS";
@@ -178,7 +180,7 @@ public class ErrorsString {
     static final public String REFEREE_LICENSE_MISMATCH = "REFEREE_LICENSE_MISMATCH";
 
     static final public String VICE_CAPTAIN_CANNOT_EXPEL_VICE_CAPTAIN = "VICE_CAPTAIN_CANNOT_EXPEL_VICE_CAPTAIN";
-    
+
     static final public String CAPTAIN_CANNOT_BE_EXPELLED = "CAPTAIN_CANNOT_BE_EXPELLED";
 
     static final public String NO_AVAILABLE_SPOTS = "NO_AVAILABLE_SPOTS";
@@ -192,6 +194,34 @@ public class ErrorsString {
     static final public String USERNAME_ALREADY_EXISTS = "USERNAME_ALREADY_EXISTS";
 
     static final public String EMAIL_ALREADY_EXISTS = "EMAIL_ALREADY_EXISTS";
+
+    static final public String BOOKING_NOT_IN_BOOKED_STATUS = "BOOKING_NOT_IN_BOOKED_STATUS";
+
+    static final public String TOURNAMENT_NOT_IN_FINAL_STAGE = "TOURNAMENT_NOT_IN_FINAL_STAGE";
+
+    static final public String TOURNAMENT_HAS_UNFINISHED_MATCHES = "TOURNAMENT_HAS_UNFINISHED_MATCHES";
+
+    static final public String TOURNAMENT_NOT_FINISHED = "TOURNAMENT_NOT_FINISHED";
+
+    static final public String WINNING_TEAM_NOT_FOUND = "WINNING_TEAM_NOT_FOUND";
+
+    static final public String TOURNAMENT_NOT_PENDING_PAYMENTS = "TOURNAMENT_NOT_PENDING_PAYMENTS";
+
+    static final public String MATCH_ALREADY_FINISHED = "MATCH_ALREADY_FINISHED";
+
+    static final public String MATCH_ALREADY_STARTED = "MATCH_ALREADY_STARTED";
+
+    static final public String CANNOT_SCHEDULE_MATCH = "CANNOT_SCHEDULE_MATCH";
+
+    static final public String CANNOT_START_MATCH_BEFORE_SCHEDULED_TIME = "CANNOT_START_MATCH_BEFORE_SCHEDULED_TIME";
+
+    static final public String CANNOT_ADD_EVENT_TO_MATCH = "CANNOT_ADD_EVENT_TO_MATCH";
+
+    static final public String PLAYER_HAS_RED_CARD = "PLAYER_HAS_RED_CARD";
+
+    static final public String CANNOT_START_HALF = "CANNOT_START_HALF";
+
+    static final public String CANNOT_GO_HALFTIME = "CANNOT_GO_HALFTIME";
 
     // Authentication errors
 

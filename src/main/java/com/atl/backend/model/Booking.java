@@ -4,6 +4,9 @@ import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Data
@@ -49,4 +52,17 @@ public class Booking {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public BigDecimal calculatePrice() {
+
+        switch (this.bookingType) {
+            case LOBBY, PRIVATE:
+                return field.calculatePrivateCost(startTime, finishTime);
+            case MATCH:
+                BigDecimal durationHours = BigDecimal.valueOf(Duration.between(startTime, finishTime).toHours());
+                return field.calculateTournamentCost(durationHours);
+            default:
+                return BigDecimal.ZERO;
+        }
+    }
 }

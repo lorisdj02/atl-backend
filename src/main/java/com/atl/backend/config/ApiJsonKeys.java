@@ -337,4 +337,7 @@ public class ApiJsonKeys {
     // RegisterAccountRequest
     public static final String organizationName = "organizationName"; // String?
 
+    // AssignPrizesTournamentRequest
+    public static final String prizePerPlayer = "prizePerPlayer"; // Map<Integer, BigDecimal>
+
 }

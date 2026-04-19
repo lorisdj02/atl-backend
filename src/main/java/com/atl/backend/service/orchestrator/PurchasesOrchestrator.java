@@ -3,8 +3,8 @@ package com.atl.backend.service.orchestrator;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,11 +31,14 @@ import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionType;
 import com.atl.backend.request.RegisterAccountRequest;
 import com.atl.backend.model.enums.TransactionStatus;
-import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.TeamService;
 import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.PlayerService;
+import com.atl.backend.service.bookingServices.BookingService;
+import com.atl.backend.service.bookingServices.BookingUtilitiesService;
+import com.atl.backend.service.bookingServices.LobbyBookingService;
+import com.atl.backend.service.bookingServices.PrivateBookingService;
 import com.atl.backend.service.paymentServices.PaymentRedeemService;
 import com.atl.backend.service.paymentServices.PaymentRefundService;
 import com.atl.backend.service.paymentServices.PaymentService;
@@ -68,6 +71,13 @@ public class PurchasesOrchestrator {
     @Autowired
     private AccountService accountService;
 
+    @Autowired
+    private LobbyBookingService lobbyBookingService;
+    @Autowired
+    private PrivateBookingService privateBookingService;
+    @Autowired
+    private BookingUtilitiesService bookingUtilitiesService;
+
     @Transactional(rollbackFor = Exception.class)
     public void deleteCallups(Integer tournamentId, Integer teamId) {
         tournamentParticipantService.deleteCallupsCheck(tournamentId, teamId);
@@ -86,18 +96,32 @@ public class PurchasesOrchestrator {
     public void startBooking(Integer bookingId) {
         bookingService.startBooking(bookingId);
         paymentRedeemService.redeemBookingPurchasesByBookingId(bookingId);
+        paymentService.payOrganizationByBookingId(bookingId);
+        Set<Integer> playerIds = bookingService.getPlayerIdsByBookingId(bookingId);
+
+        for (Integer playerId : playerIds) {
+            Player player = playerService.getPlayerByPlayerId(playerId)
+                    .orElseThrow(() -> new BadRequestException(ErrorsString.PLAYER_NOT_FOUND));
+            Optional<FriendInvite> friendInvite = accountService.redeemInvite(player.getAccount());
+            if (friendInvite.isPresent()) {
+                paymentService.updateTransactionGroupStatus(
+                        friendInvite.get().getInviterTransaction().getTransactionGroup().getId(),
+                        TransactionStatus.CONFIRMED);
+            }
+        }
+
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void refundLobbyBooking(Integer bookingId) {
-        bookingService.refundLobbyBooking(bookingId);
+        lobbyBookingService.refundLobbyBooking(bookingId);
         paymentRefundService.refundLobbyCreationByBookingId(bookingId);
         bookingService.setBookingRefunded(bookingId);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void refundPrivateBooking(Integer bookingId) {
-        bookingService.refundPrivateBooking(bookingId);
+        privateBookingService.refundPrivateBooking(bookingId);
         paymentRefundService.refundPrivateBookingByBookingId(bookingId);
         bookingService.setBookingRefunded(bookingId);
     }
@@ -105,7 +129,7 @@ public class PurchasesOrchestrator {
     @Transactional(rollbackFor = Exception.class)
     public void leaveLobbyBooking(Integer bookingId) {
         Player activePlayer = AccountContext.getActivePlayer();
-        bookingService.leaveLobbyBooking(bookingId);
+        lobbyBookingService.leaveLobbyBooking(bookingId);
         // paymentRefundService.refundLobbyCreationByBookingId(bookingId);
         paymentRefundService.refundLobbyParticipationByBookingIdAndAccountId(bookingId,
                 activePlayer.getAccount().getId());
@@ -129,6 +153,7 @@ public class PurchasesOrchestrator {
         Field field;
         BigDecimal totalLobbyCost;
         BigDecimal playerCost;
+        BigDecimal atlFee;
 
         switch (checkoutType) {
             case TOURNAMENT_FEE:
@@ -143,6 +168,7 @@ public class PurchasesOrchestrator {
                 if (payload.getAmount().compareTo(remainingAmount) != 0) {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_AMOUNT);
                 }
+
                 break;
             case PRIVATE_BOOKING:
                 if (payload.getFieldId() == null || payload.getStartTime() == null || payload.getFinishTime() == null
@@ -164,13 +190,14 @@ public class PurchasesOrchestrator {
                 field = fieldService.getFieldById(payload.getFieldId())
                         .orElseThrow(() -> new BadRequestException(ErrorsString.FIELD_NOT_FOUND));
 
-                if (!bookingService.isFieldFree(payload.getFieldId(), startTime, finishTime)) {
+                if (!bookingUtilitiesService.isFieldFree(payload.getFieldId(), startTime, finishTime)) {
                     throw new BadRequestException(ErrorsString.FIELD_NOT_AVAILABLE);
                 }
 
                 if (payload.getAmount().compareTo(field.calculatePrivateCost(startTime, finishTime)) != 0) {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_AMOUNT);
                 }
+
                 break;
 
             case LOBBY_BOOKING_CREATE:
@@ -195,7 +222,7 @@ public class PurchasesOrchestrator {
                 field = fieldService.getFieldById(payload.getFieldId())
                         .orElseThrow(() -> new BadRequestException(ErrorsString.FIELD_NOT_FOUND));
 
-                if (!bookingService.isFieldFree(payload.getFieldId(), startTime, finishTime)) {
+                if (!bookingUtilitiesService.isFieldFree(payload.getFieldId(), startTime, finishTime)) {
                     throw new BadRequestException(ErrorsString.FIELD_NOT_AVAILABLE);
                 }
 
@@ -223,7 +250,7 @@ public class PurchasesOrchestrator {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
                 }
 
-                LobbyBooking lobbyBooking = bookingService.getLobbyBookingByBookingId(payload.getLobbyId())
+                LobbyBooking lobbyBooking = lobbyBookingService.getLobbyBookingByBookingId(payload.getLobbyId())
                         .orElseThrow(() -> new BadRequestException(ErrorsString.BOOKING_NOT_FOUND));
 
                 if (lobbyBooking.getPlayersToFind() <= 0) {
@@ -240,11 +267,26 @@ public class PurchasesOrchestrator {
                         .compareTo(playerCost.multiply(BigDecimal.valueOf(payload.getPlayersPaid()))) < 0) {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_AMOUNT);
                 }
-
                 break;
             default:
                 throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_TYPE);
         }
+
+        switch (checkoutType) {
+            case TOURNAMENT_FEE:
+                atlFee = BigDecimal.ONE;
+                break;
+            case LOBBY_BOOKING_PARTICIPATE:
+            case LOBBY_BOOKING_CREATE:
+            case PRIVATE_BOOKING:
+                atlFee = BigDecimal.valueOf(1.3); // TODO: configurare
+                break;
+            default:
+                throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_TYPE);
+        }
+
+        payload.setAmount(payload.getAmount().multiply(atlFee));
+
         return paymentService.createCheckoutSession(payload, checkoutType);
     }
 
@@ -295,16 +337,16 @@ public class PurchasesOrchestrator {
                 purchase.setObjectId(payload.getTournamentId());
                 break;
             case LOBBY_BOOKING_PARTICIPATE:
-                bookingService.createLobbyBookingParticipate(payload.getLobbyId(), payload.getPlayersPaid());
+                lobbyBookingService.createLobbyBookingParticipate(payload.getLobbyId(), payload.getPlayersPaid());
                 purchase.setObjectId(payload.getLobbyId());
                 break;
             case LOBBY_BOOKING_CREATE:
-                Integer lobbyId = bookingService
+                Integer lobbyId = lobbyBookingService
                         .createLobbyBookingFromCheckoutPayload(payload);
                 purchase.setObjectId(lobbyId);
                 break;
             case PRIVATE_BOOKING:
-                Integer privateBookingId = bookingService
+                Integer privateBookingId = privateBookingService
                         .createPrivateBookingFromCheckoutPayload(payload);
                 purchase.setObjectId(privateBookingId);
                 break;
@@ -312,20 +354,6 @@ public class PurchasesOrchestrator {
                 throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
         }
 
-        Optional<Account> inviterAccount = accountService.redeemInvite(session.getAccount());
-        if (inviterAccount.isPresent()) {
-            // Non so quanto potrebbe funzionare
-            Transaction invitedTransaction = paymentService.getTransactionsByAccountId(session.getAccount().getId())
-                    .stream()
-                    .filter(t -> t.getPendingReason() == TransactionPendingReason.INVITE_REWARD)
-                    .sorted((t1, t2) -> t2.getCreatedAt().compareTo(t1.getCreatedAt()))
-                    .findFirst()
-                    .orElse(null);
-            if (invitedTransaction != null) {
-                paymentService.updateTransactionGroupStatus(invitedTransaction.getTransactionGroup().getId(),
-                        TransactionStatus.CONFIRMED);
-            }
-        }
         return purchase;
     }
 
@@ -336,20 +364,33 @@ public class PurchasesOrchestrator {
             return null;
         }
 
-        Optional<FriendInvite> friendInviteOptional = accountService.addInvite(request.getInviteCode(), account);
-        if (friendInviteOptional.isPresent()) {
-            FriendInvite friendInvite = friendInviteOptional.get();
-            TransactionGroup group = new TransactionGroup();
-            paymentService.saveTransactionGroup(group);
-            BigDecimal reward = BigDecimal.valueOf(2.5); // TODO: configurare
-            paymentService.createTransaction(friendInvite.getInviterAccount(), reward, reward, BigDecimal.ZERO,
-                    BigDecimal.ZERO, group, TransactionType.INVITE, TransactionSource.INVITE_WALLET,
-                    TransactionStatus.PENDING, TransactionPendingReason.INVITE_REWARD);
+        paymentService.createWalletForAccount(account);
 
-            paymentService.createTransaction(account, reward, reward, BigDecimal.ZERO, BigDecimal.ZERO, group,
-                    TransactionType.INVITE, TransactionSource.INVITE_WALLET, TransactionStatus.CONFIRMED,
-                    TransactionPendingReason.INVITE_REWARD);
+        Optional<Account> inviterAccountOptional = accountService.getInviterAccount(request.getInviteCode());
+        if (inviterAccountOptional.isEmpty()) {
+            return account;
         }
+
+        Account inviterAccount = inviterAccountOptional.get();
+
+        TransactionGroup inviterGroup = new TransactionGroup();
+        TransactionGroup invitedGroup = new TransactionGroup();
+
+        paymentService.saveTransactionGroup(inviterGroup);
+        paymentService.saveTransactionGroup(invitedGroup);
+
+        BigDecimal reward = BigDecimal.valueOf(2.5); // TODO: configurare
+
+        Transaction inviterTransaction = paymentService.createTransaction(inviterAccount, reward, reward,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO, inviterGroup, TransactionType.INVITE, TransactionSource.INVITE_WALLET,
+                TransactionStatus.PENDING, TransactionPendingReason.INVITE_REWARD);
+
+        paymentService.createTransaction(account, reward, reward, BigDecimal.ZERO, BigDecimal.ZERO, invitedGroup,
+                TransactionType.INVITE, TransactionSource.INVITE_WALLET, TransactionStatus.CONFIRMED,
+                TransactionPendingReason.INVITE_REWARD);
+
+        accountService.addInvite(request.getInviteCode(), account, inviterTransaction);
 
         return account;
     }

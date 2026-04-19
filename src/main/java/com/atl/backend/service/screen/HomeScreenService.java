@@ -20,9 +20,12 @@ import com.atl.backend.model.*;
 import com.atl.backend.model.enums.*;
 
 import com.atl.backend.response.*;
-import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.bookingServices.BookingService;
+import com.atl.backend.service.bookingServices.LobbyBookingService;
+import com.atl.backend.service.bookingServices.MatchBookingService;
+import com.atl.backend.service.bookingServices.PrivateBookingService;
 import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
@@ -49,6 +52,12 @@ public class HomeScreenService {
 
         @Autowired
         private BookingService bookingService;
+        @Autowired
+        private LobbyBookingService lobbyBookingService;
+        @Autowired
+        private PrivateBookingService privateBookingService;
+        @Autowired
+        private MatchBookingService matchBookingService;
 
         @Transactional(readOnly = true)
         public PlayerHomeResponse getPlayerHomeScreen(SportCategory sportCategory) {
@@ -70,8 +79,8 @@ public class HomeScreenService {
 
                 accountTeam = teamService.getTeamByPlayerIdAndSportCategory(playerId, sportCategory);
 
-                final List<PrivateBooking> finalBookings = bookingService.getActivePrivateBookingsByPlayerId(playerId);
-                final List<LobbyBooking> finalLobbyBookings = bookingService.getActiveLobbyBookingsByPlayerId(playerId);
+                final List<PrivateBooking> finalBookings = privateBookingService.getActivePrivateBookingsByPlayerId(playerId);
+                final List<LobbyBooking> finalLobbyBookings = lobbyBookingService.getActiveLobbyBookingsByPlayerId(playerId);
 
                 for (PrivateBooking booking : finalBookings) {
                         fieldsCache.put(booking.getBooking().getField().getId(), booking.getBooking().getField());
@@ -90,7 +99,7 @@ public class HomeScreenService {
                                         (lobbyBooking.getBooking().getField().getAddress() + " - "
                                                         + (lobbyBooking.getBooking().getField().getCity().getName())));
                         playersPaidPerBooking.put(lobbyBooking.getId(),
-                                        bookingService.getPlayersPaidInLobbyBookingPerPlayerId(lobbyBooking.getId(),
+                                        lobbyBookingService.getPlayersPaidInLobbyBookingPerPlayerId(lobbyBooking.getId(),
                                                         playerId));
                         currentPlayersPerLobby.put(lobbyBooking.getId(),
                                         Short.valueOf((short) lobbyBooking.getCurrentPlayers()));
@@ -304,7 +313,7 @@ public class HomeScreenService {
                         for (Booking booking : fieldBookings) {
                                 switch (booking.getBookingType()) {
                                         case LOBBY:
-                                                Optional<LobbyBooking> optionalLobbyBooking = bookingService
+                                                Optional<LobbyBooking> optionalLobbyBooking = lobbyBookingService
                                                                 .getLobbyBookingByBookingId(booking.getId());
                                                 if (optionalLobbyBooking.isEmpty()) {
                                                         throw new NotFoundException(ErrorsString.BOOKING_NOT_FOUND);
@@ -323,7 +332,7 @@ public class HomeScreenService {
                                                 usernamePerBooking.put(booking.getId(), username);
                                                 break;
                                         case PRIVATE:
-                                                Optional<PrivateBooking> optionalPrivateBooking = bookingService
+                                                Optional<PrivateBooking> optionalPrivateBooking = privateBookingService
                                                                 .getPrivateBookingByBookingId(booking.getId());
                                                 if (optionalPrivateBooking.isEmpty()) {
                                                         throw new NotFoundException(ErrorsString.BOOKING_NOT_FOUND);
@@ -338,7 +347,7 @@ public class HomeScreenService {
                                                 usernamePerBooking.put(booking.getId(), username);
                                                 break;
                                         case MATCH:
-                                                Optional<MatchBooking> optionalMatchBooking = bookingService
+                                                Optional<MatchBooking> optionalMatchBooking = matchBookingService
                                                                 .getMatchBookingByBookingId(booking.getId());
                                                 if (optionalMatchBooking.isEmpty()) {
                                                         throw new NotFoundException(ErrorsString.BOOKING_NOT_FOUND);

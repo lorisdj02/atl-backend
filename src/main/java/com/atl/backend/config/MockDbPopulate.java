@@ -550,7 +550,7 @@ public class MockDbPopulate {
         final Tournament finalSavedTournament1 = savedTournament1;
         System.out.println("[DEBUG] - All 8 teams participated to 'Torneo in corso'");
 
-        runAsCoordinator(coordinators.get(0), () -> tournamentService.startTournament(finalSavedTournament1.getId()));
+        runAsCoordinator(coordinators.get(0), () -> reviewsOrchestrator.startTournament(finalSavedTournament1.getId()));
 
         System.out.println("[DEBUG] - Started tournament 'Torneo in corso'");
 

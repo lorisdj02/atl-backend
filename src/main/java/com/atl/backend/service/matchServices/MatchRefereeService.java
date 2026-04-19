@@ -24,8 +24,6 @@ import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.RefereeAssignmentRepository;
 import com.atl.backend.repository.RefereeRoleRepository;
 
-import jakarta.persistence.criteria.CriteriaBuilder.In;
-
 @Service
 public class MatchRefereeService {
     @Autowired

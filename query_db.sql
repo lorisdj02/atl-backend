@@ -87,6 +87,7 @@ CREATE TABLE
     "invited_account_id" int PRIMARY KEY,
     "inviter_account_id" int NOT NULL,
     "redeemed" bool NOT NULL DEFAULT false,
+    "inviter_transaction_id" int NOT NULL,
     "created_at" timestamp NOT NULL DEFAULT NOW (),
     "updated_at" timestamp
   );
@@ -634,6 +635,8 @@ ALTER TABLE "account_restriction" ADD FOREIGN KEY ("account_id") REFERENCES "acc
 ALTER TABLE "friend_invite" ADD FOREIGN KEY ("invited") REFERENCES "account" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "friend_invite" ADD FOREIGN KEY ("inviter") REFERENCES "account" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "friend_invite" ADD FOREIGN KEY ("inviter_transaction_id") REFERENCES "transaction" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "field" ADD FOREIGN KEY ("organization_id") REFERENCES "organization" ("organization_id") DEFERRABLE INITIALLY IMMEDIATE;
 

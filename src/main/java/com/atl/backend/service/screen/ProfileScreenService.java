@@ -40,12 +40,13 @@ import com.atl.backend.response.PersonalPlayerStatsResponse;
 import com.atl.backend.response.RefereeLicensesResponse;
 import com.atl.backend.response.ReviewsResponse;
 import com.atl.backend.response.WalletResponse;
-import com.atl.backend.service.BookingService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.TeamService;
 import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.CoordinatorService;
 import com.atl.backend.service.accountServices.RefereeService;
+import com.atl.backend.service.bookingServices.LobbyBookingService;
+import com.atl.backend.service.bookingServices.PrivateBookingService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.paymentServices.PaymentService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
@@ -73,11 +74,13 @@ public class ProfileScreenService {
     @Autowired
     private TeamService teamService;
     @Autowired
-    private BookingService bookingService;
-    @Autowired
     private MatchService matchService;
     @Autowired
     private TournamentParticipantService tournamentParticipantService;
+    @Autowired
+    private PrivateBookingService privateBookingService;
+    @Autowired
+    private LobbyBookingService lobbyBookingService;
 
     @Transactional(readOnly = true)
     public MyGrowthResponse getMyGrowthScreen() {
@@ -156,7 +159,9 @@ public class ProfileScreenService {
 
         return WalletResponse.builder()
                 .transactionsHistory(transactions.stream().map(TransactionDTO::fromTransaction).toList())
-                .wallet(WalletDTO.fromWallet(wallet.get(), walletBalance.getPrizeBalance(), walletBalance.getPersonalBalance(), walletBalance.getInviteBalance())).build();
+                .wallet(WalletDTO.fromWallet(wallet.get(), walletBalance.getPrizeBalance(),
+                        walletBalance.getPersonalBalance(), walletBalance.getInviteBalance()))
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -179,11 +184,12 @@ public class ProfileScreenService {
         Map<String, Integer> numLobbyJoinedPerCategory = new HashMap<>();
         for (SportCategory sportCategory : SportCategory.values()) {
             numTournamentPerCategory.put(sportCategory.name(),
-                    tournamentParticipantService.countTournamentsByPlayerIdAndSportCategory(player.getPlayerId(), sportCategory));
+                    tournamentParticipantService.countTournamentsByPlayerIdAndSportCategory(player.getPlayerId(),
+                            sportCategory));
             numPrivateBookingPerCategory.put(sportCategory.name(),
-                    bookingService.countPrivateBookingsByPlayerIdAndSportCategory(player.getPlayerId(), sportCategory));
+                    privateBookingService.countPrivateBookingsByPlayerIdAndSportCategory(player.getPlayerId(), sportCategory));
             numLobbyJoinedPerCategory.put(sportCategory.name(),
-                    bookingService.countLobbyParticipationByPlayerIdAndSportCategory(player.getPlayerId(),
+                    lobbyBookingService.countLobbyParticipationByPlayerIdAndSportCategory(player.getPlayerId(),
                             sportCategory));
         }
         return PersonalPlayerStatsResponse.builder()

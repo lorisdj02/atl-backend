@@ -9,15 +9,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.FootballMatchEventDTO;
 import com.atl.backend.exception.BadRequestException;
+import com.atl.backend.model.FootballMatch;
+import com.atl.backend.model.FootballMatchEvent;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
 import com.atl.backend.service.SportService;
+import com.atl.backend.service.matchServices.FootballMatchEventService;
 import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.orchestrator.TournamentTeamMatchOrchestrator;
@@ -35,6 +40,8 @@ public class MatchController {
     private SportService sportService;
     @Autowired
     private MatchService matchService;
+    @Autowired
+    private FootballMatchEventService footballMatchEventService;
     @Autowired
     private MatchRefereeService matchRefereeService;
     @Autowired
@@ -102,5 +109,11 @@ public class MatchController {
     public ResponseEntity<Void> startPenaltyShootout(@PathVariable Integer matchId) {
         matchService.startFootballPenaltyShootout(matchId);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/match/{matchId}/insert-football-event")
+    public ResponseEntity<FootballMatchEventDTO> insertFootballMatchEvent(@PathVariable Integer matchId, @RequestBody FootballMatchEventDTO footballMatchEventDTO) {
+        FootballMatchEvent event = footballMatchEventService.insertFootballMatchEvent(matchId, footballMatchEventDTO);
+        return ResponseEntity.ok(FootballMatchEventDTO.fromFootballMatchEvent(event));
     }
 }

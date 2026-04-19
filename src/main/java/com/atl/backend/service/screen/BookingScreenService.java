@@ -20,9 +20,9 @@ import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.response.JoinLobbyResponse;
 import com.atl.backend.response.LobbyInfoResponse;
 import com.atl.backend.response.BookFieldResponse;
-import com.atl.backend.service.BookingService;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.accountServices.PlayerService;
+import com.atl.backend.service.bookingServices.LobbyBookingService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BookingScreenService {
         @Autowired
-        private BookingService bookingService;
+        private LobbyBookingService lobbyBookingService;
         @Autowired
         private FieldService fieldService;
         @Autowired
@@ -73,11 +73,11 @@ public class BookingScreenService {
                 Map<Integer, String> completeAddressPerField = new HashMap<>();
                 List<CityDTO> cities = fieldService.getAllCities().stream().map(CityDTO::fromCity).toList();
 
-                List<LobbyBooking> lobbies = bookingService.getBookedLobbyBookings(sportCategory, totalPlayers,
+                List<LobbyBooking> lobbies = lobbyBookingService.getBookedLobbyBookings(sportCategory, totalPlayers,
                                 selectedCityId,
                                 startTime, finishTime);
                 for (LobbyBooking lobbyBooking : lobbies) {
-                        LobbyInfoResponse lobbyInfoResponse = bookingService.getLobbyInfo(
+                        LobbyInfoResponse lobbyInfoResponse = lobbyBookingService.getLobbyInfo(
                                         lobbyBooking.getBooking().getId(),
                                         playerId);
                         usernamePerBooking.put(lobbyBooking.getBooking().getId(),

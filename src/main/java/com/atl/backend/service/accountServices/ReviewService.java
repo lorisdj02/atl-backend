@@ -2,6 +2,7 @@ package com.atl.backend.service.accountServices;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,14 +21,11 @@ import com.atl.backend.model.Tournament;
 import com.atl.backend.model.Transaction;
 import com.atl.backend.model.enums.ReviewStatus;
 import com.atl.backend.model.enums.ReviewType;
-import com.atl.backend.repository.AccountRepository;
 import com.atl.backend.repository.ReviewRepository;
 
 @Service
 public class ReviewService {
 
-    @Autowired
-    private AccountRepository accountRepository;
     @Autowired
     private ReviewRepository reviewRepository;
 
@@ -100,6 +98,13 @@ public class ReviewService {
         review.setLinkedTransaction(linkedTransaction);
         review.setStatus(ReviewStatus.WAITING);
         return reviewRepository.save(review);
+    }
+
+    public Optional<Review> getReviewByReviewerAccount_IdAndReviewedAccount_IdAndTournament_Id(Integer reviewerAccountId,
+            Integer reviewedAccountId, Integer tournamentId) {
+        return reviewRepository
+                .findByReviewerAccount_IdAndReviewedAccount_IdAndTournament_Id(reviewerAccountId,
+                        reviewedAccountId, tournamentId);
     }
 
     public Review getReviewByReviewerAccountIdAndReviewedAccountIdAndTournamentIdAndMatchId(Integer reviewerAccountId,

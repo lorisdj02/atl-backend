@@ -11,6 +11,7 @@ import com.atl.backend.model.Account;
 import com.atl.backend.model.FriendInvite;
 import com.atl.backend.model.GrowthStep;
 import com.atl.backend.model.Review;
+import com.atl.backend.model.Transaction;
 import com.atl.backend.model.Wallet;
 import com.atl.backend.model.enums.AccountRole;
 import com.atl.backend.model.enums.AccountStatus;
@@ -62,28 +63,39 @@ public class AccountService {
     @Autowired
     private WalletRepository walletRepository;
 
-    public Optional<FriendInvite> addInvite(String inviteCode, Account invitedAccount) {
+    public Optional<Account> getInviterAccount(String inviteCode) {
         // Adesso invite code = username, quindi cerco l'account con quel username
         Optional<Account> accountOptional = accountRepository.findByUsername(inviteCode);
-        if (accountOptional.isEmpty()) {
+        return accountOptional;
+    }
+
+    public Optional<FriendInvite> addInvite(String inviteCode, Account invitedAccount, Transaction inviterTransaction) {
+        // Adesso invite code = username, quindi cerco l'account con quel username
+        Optional<Account> inviterAccountOptional = getInviterAccount(inviteCode);
+        if (inviterAccountOptional.isEmpty()) {
             return Optional.empty();
         }
         FriendInvite friendInvite = new FriendInvite();
         friendInvite.setInvitedAccount(invitedAccount);
-        friendInvite.setInviterAccount(accountOptional.get());
+        friendInvite.setInviterAccount(inviterAccountOptional.get());
+        friendInvite.setInviterTransaction(inviterTransaction);
         friendInvite.setRedeemed(false);
         return Optional.of(friendInviteRepository.save(friendInvite));
     }
 
-    public Optional<Account> redeemInvite(Account InvitedAccount){
+    public Optional<FriendInvite> redeemInvite(Account InvitedAccount){
         Optional<FriendInvite> friendInviteOptional = friendInviteRepository.findByInvitedAccount_IdAndRedeemedFalse(InvitedAccount.getId());
         if (friendInviteOptional.isEmpty()) {
             return Optional.empty();
         }
         FriendInvite friendInvite = friendInviteOptional.get();
+        // Se l'invito è già stato riscattato, non facciamo nulla
+        if(friendInvite.getRedeemed() == true){
+            return Optional.empty();
+        }
         friendInvite.setRedeemed(true);
         friendInviteRepository.save(friendInvite);
-        return Optional.of(friendInvite.getInviterAccount());
+        return Optional.of(friendInvite);
     }
 
     @Transactional(rollbackFor = Exception.class)

@@ -16,7 +16,7 @@ import com.atl.backend.model.enums.BookingStatus;
 import com.atl.backend.model.enums.CheckoutType;
 import com.atl.backend.model.enums.PurchaseStatus;
 import com.atl.backend.repository.PurchaseRepository;
-import com.atl.backend.service.BookingService;
+import com.atl.backend.service.bookingServices.BookingService;
 
 @Service
 public class PaymentRedeemService {
@@ -81,6 +81,8 @@ public class PaymentRedeemService {
         for (Purchase purchase : purchases) {
             redeemPurchase(purchase.getId());
         }
+
+        
     }
 
     public void redeemTournamentFeePurchasesByTournamentId(Integer tournamentId) {

@@ -13,8 +13,8 @@ import com.atl.backend.model.Player;
 import com.atl.backend.model.Team;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.response.LoginResponse;
-import com.atl.backend.service.BookingService;
 import com.atl.backend.service.TeamService;
+import com.atl.backend.service.bookingServices.BookingService;
 import com.atl.backend.service.orchestrator.TournamentTeamMatchOrchestrator;
 
 @Service

@@ -10,8 +10,9 @@ import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.BookFieldResponse;
 import com.atl.backend.response.FieldsAndMaxPlayersPerFieldResponse;
 import com.atl.backend.response.JoinLobbyResponse;
-import com.atl.backend.service.BookingService;
 import com.atl.backend.service.SportService;
+import com.atl.backend.service.bookingServices.BookingService;
+import com.atl.backend.service.bookingServices.MatchBookingService;
 import com.atl.backend.service.orchestrator.PurchasesOrchestrator;
 import com.atl.backend.service.screen.BookingScreenService;
 
@@ -36,6 +37,8 @@ public class BookingController {
     private SportService sportService;
     @Autowired
     private BookingService bookingService;
+    @Autowired
+    private MatchBookingService matchBookingService;
 
     @GetMapping("/book-a-field/{sportCategory}")
     public ResponseEntity<BookFieldResponse> getBookFieldResponse(@PathVariable String sportCategory) {
@@ -168,7 +171,7 @@ public class BookingController {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }
 
-        MatchBookingDTO matchBookingDTO = bookingService.scheduleMatch(matchId, scheduledStartTime);
+        MatchBookingDTO matchBookingDTO = matchBookingService.scheduleMatch(matchId, scheduledStartTime);
         return ResponseEntity.ok(matchBookingDTO);
     }
 }

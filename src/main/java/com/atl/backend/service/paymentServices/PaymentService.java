@@ -3,8 +3,10 @@ package com.atl.backend.service.paymentServices;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.exception.PaymentRequiredException;
 import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Account;
+import com.atl.backend.model.Booking;
 import com.atl.backend.model.CheckoutSession;
 import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.model.Player;
@@ -30,6 +33,7 @@ import com.atl.backend.model.Transaction;
 import com.atl.backend.model.TransactionGroup;
 import com.atl.backend.model.Wallet;
 import com.atl.backend.model.WalletBalance;
+import com.atl.backend.model.enums.BookingStatus;
 import com.atl.backend.model.enums.CheckoutStatus;
 import com.atl.backend.model.enums.CheckoutType;
 import com.atl.backend.model.enums.PurchaseStatus;
@@ -37,6 +41,7 @@ import com.atl.backend.model.enums.TransactionPendingReason;
 import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.model.enums.TransactionType;
+import com.atl.backend.repository.BookingRepository;
 import com.atl.backend.repository.CheckoutSessionRepository;
 import com.atl.backend.repository.FieldRepository;
 import com.atl.backend.repository.LobbyBookingRepository;
@@ -79,6 +84,14 @@ public class PaymentService {
 
     @Autowired
     private LobbyBookingRepository lobbyBookingRepository;
+    @Autowired
+    private BookingRepository bookingRepository;
+
+    public Wallet createWalletForAccount(Account account) {
+        Wallet wallet = new Wallet();
+        wallet.setAccount(account);
+        return walletRepository.save(wallet);
+    }
 
     private Player getExistingPlayerByPlayerId(Integer playerId) {
         Optional<Player> optPlayer = playerRepository.findById(playerId);
@@ -266,9 +279,13 @@ public class PaymentService {
     @Transactional(rollbackFor = Exception.class)
     public Transaction createTransaction(Account account, BigDecimal amount, BigDecimal netAmount, BigDecimal tax,
             BigDecimal fee, TransactionGroup transactionGroup,
-            TransactionType type, TransactionSource source, TransactionStatus status, TransactionPendingReason pendingReason) {
+            TransactionType type, TransactionSource source, TransactionStatus status,
+            TransactionPendingReason pendingReason) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             return null;
+        }
+        if (netAmount.add(tax).add(fee).compareTo(amount) != 0) {
+            throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_AMOUNT);
         }
         Transaction transaction = new Transaction();
         transaction.setAccount(account);
@@ -288,7 +305,7 @@ public class PaymentService {
         TransactionGroup transactionGroup = transactionGroupRepository.findById(transactionGroupId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TRANSACTION_GROUP_NOT_FOUND));
 
-        if(transactionGroup.getStatus() == TransactionStatus.FAILED){
+        if (transactionGroup.getStatus() == TransactionStatus.FAILED) {
             throw new ConflictException(ErrorsString.TRANSACTION_FAILED);
         }
         transactionGroup.setStatus(status);
@@ -424,5 +441,37 @@ public class PaymentService {
         session.setAmount(payload.getAmount());
         return checkoutSessionRepository.save(session);
 
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void payOrganizationByBookingId(Integer bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
+        if (booking.getStatus() == BookingStatus.IN_PROGRESS) {
+            Field field = booking.getField();
+            Account organizationAccount = field.getOrganization().getAccount();
+            BigDecimal amount = booking.calculatePrice();
+            BigDecimal atlFee = BigDecimal.valueOf(0.3); // TODO: configurare
+            if (organizationAccount.getVip() != null && organizationAccount.getVip()) {
+                amount = amount.multiply(BigDecimal.valueOf(1).subtract(atlFee));
+            }
+            TransactionGroup transactionGroup = new TransactionGroup();
+            saveTransactionGroup(transactionGroup);
+            createTransaction(organizationAccount, amount, amount, BigDecimal.ZERO, BigDecimal.ZERO,
+                    transactionGroup, TransactionType.FEE, TransactionSource.PERSONAL_WALLET,
+                    TransactionStatus.PENDING, TransactionPendingReason.BOOKING_NOT_STARTED);
+            updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.CONFIRMED);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Set<Integer> getAccountIdsByTournamentId(Integer tournamentId) {
+        List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndStatus(CheckoutType.TOURNAMENT_FEE,
+                tournamentId, PurchaseStatus.CONFIRMED);
+        Set<Integer> accountIds = new HashSet<>();
+        for (Purchase purchase : purchases) {
+            accountIds.add(purchase.getAccount().getId());
+        }
+        return accountIds;
     }
 }
