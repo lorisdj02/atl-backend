@@ -192,7 +192,8 @@ public class MatchService {
                     Integer homeAttempts = totalHomeAttempts.intValue();
                     Integer awayAttempts = totalAwayAttempts.intValue();
 
-                    // Prima dei 5 rigori a testa controlliamo se chi è sotto può ancora raggiungere.
+                    // Prima dei 5 rigori a testa controlliamo se chi è sotto può ancora
+                    // raggiungere.
                     if (homeAttempts < totalPenalties || awayAttempts < totalPenalties) {
                         Integer homeRemaining = Math.max(0, totalPenalties - homeAttempts);
                         Integer awayRemaining = Math.max(0, totalPenalties - awayAttempts);
@@ -208,7 +209,8 @@ public class MatchService {
                         }
                     }
 
-                    // In oltranza si può finire solo dopo lo stesso numero di tiri e punteggio diverso.
+                    // In oltranza si può finire solo dopo lo stesso numero di tiri e punteggio
+                    // diverso.
                     if (homeAttempts >= totalPenalties && awayAttempts >= totalPenalties) {
                         if (!homeAttempts.equals(awayAttempts)) {
                             return false;
@@ -227,6 +229,13 @@ public class MatchService {
             return true;
         }
         FinalStageBracket finalStageBracket = match.getFinalStageBracket();
+        List<Match> matchesInBracket = matchRepository.findByFinalStageBracket_Id(finalStageBracket.getId());
+        if (matchesInBracket.size() == 2 && match.getLegOrder() == LegOrderType.FIRST_LEG) {
+            // Se è la prima partita di un bracket andata e ritorno, può finire il first leg
+            // anche con un pareggio, perché si aspetta il ritorno per decidere chi passa il
+            // turno
+            return true;
+        }
 
         return !finalStageBracket.isDraw();
     }
@@ -468,24 +477,36 @@ public class MatchService {
             footballMatch.setScoreAway((short) (currentScoreAway + scoreAwayDelta));
         }
         if (penaltyScoreHomeDelta != null) {
+            if (canMatchFinish(matchId)) {
+                throw new ConflictException(ErrorsString.PENALTY_SHOOTOUT_FINISHED);
+            }
             Short currentPenaltyScoreHome = footballMatch.getPenaltyScoreHome() != null
                     ? footballMatch.getPenaltyScoreHome()
                     : 0;
             footballMatch.setPenaltyScoreHome((short) (currentPenaltyScoreHome + penaltyScoreHomeDelta));
         }
         if (penaltyScoreAwayDelta != null) {
+            if (canMatchFinish(matchId)) {
+                throw new ConflictException(ErrorsString.PENALTY_SHOOTOUT_FINISHED);
+            }
             Short currentPenaltyScoreAway = footballMatch.getPenaltyScoreAway() != null
                     ? footballMatch.getPenaltyScoreAway()
                     : 0;
             footballMatch.setPenaltyScoreAway((short) (currentPenaltyScoreAway + penaltyScoreAwayDelta));
         }
         if (missedPenaltyHomeDelta != null) {
+            if (canMatchFinish(matchId)) {
+                throw new ConflictException(ErrorsString.PENALTY_SHOOTOUT_FINISHED);
+            }
             Short currentMissedPenaltyHome = footballMatch.getMissedPenaltyHome() != null
                     ? footballMatch.getMissedPenaltyHome()
                     : 0;
             footballMatch.setMissedPenaltyHome((short) (currentMissedPenaltyHome + missedPenaltyHomeDelta));
         }
         if (missedPenaltyAwayDelta != null) {
+            if (canMatchFinish(matchId)) {
+                throw new ConflictException(ErrorsString.PENALTY_SHOOTOUT_FINISHED);
+            }
             Short currentMissedPenaltyAway = footballMatch.getMissedPenaltyAway() != null
                     ? footballMatch.getMissedPenaltyAway()
                     : 0;
@@ -495,6 +516,23 @@ public class MatchService {
         if (newStatus != null) {
             footballMatch.setStatus(newStatus);
         }
+
+        if (footballMatch.getMatch().getFinalStageBracket() != null) {
+            Short bracketScoreHomeDelta = (short) (scoreHomeDelta != null ? scoreHomeDelta
+                    : 0 + (short) (penaltyScoreHomeDelta != null ? penaltyScoreHomeDelta : 0));
+            Short bracketScoreAwayDelta = (short) (scoreAwayDelta != null ? scoreAwayDelta
+                    : 0 + (short) (penaltyScoreAwayDelta != null ? penaltyScoreAwayDelta : 0));
+            Short swapDelta = 0;
+            if (footballMatch.getMatch().getLegOrder() == LegOrderType.SECOND_LEG) {
+                swapDelta = bracketScoreHomeDelta;
+                bracketScoreHomeDelta = bracketScoreAwayDelta;
+                bracketScoreAwayDelta = swapDelta;
+            }
+
+            updateFinalStageBracket(footballMatch.getMatch().getFinalStageBracket().getId(), bracketScoreHomeDelta,
+                    bracketScoreAwayDelta);
+        }
+
         footballMatch.setUpdatedAt(LocalDateTime.now());
         return saveFootballMatch(footballMatch);
     }
@@ -531,24 +569,23 @@ public class MatchService {
             case FOOTBALL -> {
                 FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
                         .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
-                Boolean isHomeTeam = footballMatch.getHomeTeam() != null
+                Boolean isHomeTeamRetiring = footballMatch.getHomeTeam() != null
                         && footballMatch.getHomeTeam().getId().equals(teamId);
 
                 if (match.getLegOrder() == LegOrderType.FIRST_LEG) {
-                    updateFinalStageBracket(match.getFinalStageBracket().getId(), isHomeTeam ? (short) 0 : (short) 3,
-                            isHomeTeam ? (short) 3 : (short) 0);
+                    updateFootballMatch(matchId, isHomeTeamRetiring ? (short) 0 : 3, isHomeTeamRetiring ? (short) 3 : 0,
+                            null, null, null, null,
+                            isHomeTeamRetiring ? FootballMatchStatus.HOME_RETIRED : FootballMatchStatus.AWAY_RETIRED);
                 } else {
                     // Se siamo nella seconda partita, ritirarsi vuol dire perdere a prescindere,
                     // quindi settiamo il punteggio in modo che l'altra squadra vinca
                     // Con il +3
                     int winnerDelta = Math.abs((int) match.getFinalStageBracket().getAggregateScoreHome()
                             - (int) match.getFinalStageBracket().getAggregateScoreAway()) + 3;
-                    updateFinalStageBracket(match.getFinalStageBracket().getId(),
-                            isHomeTeam ? (short) winnerDelta : (short) 0,
-                            isHomeTeam ? (short) 0 : (short) winnerDelta);
-                    updateFootballMatch(matchId, isHomeTeam ? (short) 0 : null, isHomeTeam ? null : (short) winnerDelta,
+                    updateFootballMatch(matchId, isHomeTeamRetiring ? (short) 0 : (short) winnerDelta,
+                            isHomeTeamRetiring ? (short) winnerDelta : (short) 0,
                             null, null, null, null,
-                            isHomeTeam ? FootballMatchStatus.HOME_RETIRED : FootballMatchStatus.AWAY_RETIRED);
+                            isHomeTeamRetiring ? FootballMatchStatus.HOME_RETIRED : FootballMatchStatus.AWAY_RETIRED);
                 }
             }
             default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -596,6 +633,23 @@ public class MatchService {
 
         if (LocalDateTime.now().isBefore(match.getScheduledStart())) {
             throw new ConflictException(ErrorsString.CANNOT_START_MATCH_BEFORE_SCHEDULED_TIME);
+        }
+
+        if (match.getFinalStageBracket() != null) {
+            List<Match> matchesInBracket = match.getFinalStageBracket() != null
+                    ? matchRepository.findByFinalStageBracket_Id(match.getFinalStageBracket().getId())
+                    : List.of();
+            if (matchesInBracket.size() == 2 && match.getLegOrder() == LegOrderType.SECOND_LEG) {
+                // Se è la seconda partita di un bracket andata e ritorno, può iniziare solo se
+                // è finita la prima partita
+                Match firstLegMatch = matchesInBracket.stream()
+                        .filter(m -> m.getLegOrder() == LegOrderType.FIRST_LEG)
+                        .findFirst()
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+                if (firstLegMatch.getFinishMatch() == null) {
+                    throw new ConflictException(ErrorsString.CANNOT_START_SECOND_LEG_BEFORE_FIRST_LEG_FINISHED);
+                }
+            }
         }
 
         match.setStartMatch(LocalDateTime.now());

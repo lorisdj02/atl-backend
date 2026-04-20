@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.atl.backend.auth.AccountContext;
+import com.atl.backend.config.ATLCostants;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.BookingDTO;
 import com.atl.backend.dto.CoordinatorDTO;
@@ -439,7 +440,7 @@ public class TournamentService {
                     .add(refereeRolesPayPerMatch.get(role).multiply(BigDecimal.valueOf(numMatches)));
         }
         // TODO: Aggiungere la logica di calcolo dei premi in base ai parametri
-        BigDecimal atlFee = BigDecimal.valueOf(150);
+        BigDecimal atlFee = ATLCostants.TEAM_FEE_ATL;
         BigDecimal prize1 = fictitiousTournament.getPrize1().compareTo(BigDecimal.ZERO) > 0 ? BigDecimal.valueOf(150)
                 : BigDecimal.ZERO;
         BigDecimal prize2 = fictitiousTournament.getPrize2().compareTo(BigDecimal.ZERO) > 0 ? BigDecimal.valueOf(100)
@@ -546,14 +547,14 @@ public class TournamentService {
                 FootballMatch footballMatch = footballMatchOptional.get();
 
                 FootballMatchStatus nextStatus = null;
-                Boolean isHomeTeam = null;
+                Boolean isHomeTeamRetiring = null;
 
                 if (footballMatch.getHomeTeam().getId().equals(teamId)) {
                     nextStatus = FootballMatchStatus.HOME_RETIRED;
-                    isHomeTeam = true;
+                    isHomeTeamRetiring = true;
                 } else if (footballMatch.getAwayTeam().getId().equals(teamId)) {
                     nextStatus = FootballMatchStatus.AWAY_RETIRED;
-                    isHomeTeam = false;
+                    isHomeTeamRetiring = false;
                 } else {
                     throw new ConflictException(ErrorsString.TEAM_NOT_IN_MATCH);
                 }
@@ -562,18 +563,18 @@ public class TournamentService {
                     Team homeTeam = footballMatch.getHomeTeam();
                     Team awayTeam = footballMatch.getAwayTeam();
 
-                    FootballStanding winnerStanding = tournamentStandingService.updateFootballStanding(
-                            tournament.getId(),
-                            isHomeTeam ? homeTeam.getId()
-                                    : awayTeam.getId(),
-                            (short) 0, (short) 3, (short) 0,
-                            (short) 0, (short) 0, (short) 1);
-
                     FootballStanding loserStanding = tournamentStandingService.updateFootballStanding(
                             tournament.getId(),
-                            isHomeTeam ? awayTeam.getId()
+                            isHomeTeamRetiring ? homeTeam.getId()
+                                    : awayTeam.getId(),
+                            (short) 0, (short) 0, (short) 3,
+                            (short) 0, (short) 0, (short) 1);
+
+                    FootballStanding winnerStanding = tournamentStandingService.updateFootballStanding(
+                            tournament.getId(),
+                            isHomeTeamRetiring ? awayTeam.getId()
                                     : homeTeam.getId(),
-                            (short) 3, (short) 0, (short) 0,
+                            (short) 3, (short) 3, (short) 0,
                             (short) 1, (short) 0, (short) 0);
 
                     if (winnerStanding.getGroupName().equals(loserStanding.getGroupName())) {
@@ -582,8 +583,8 @@ public class TournamentService {
                         throw new ConflictException(ErrorsString.TEAM_NOT_IN_MATCH);
                     }
                     matchService.updateFootballMatch(matchId,
-                            isHomeTeam ? (short) 0 : (short) 3,
-                            isHomeTeam ? (short) 3 : (short) 0,
+                            isHomeTeamRetiring ? (short) 0 : (short) 3,
+                            isHomeTeamRetiring ? (short) 3 : (short) 0,
                             null, null, null, null,
                             nextStatus);
                 } else {
@@ -651,6 +652,38 @@ public class TournamentService {
         }
     }
 
+    public Tournament assignPrizeInTournament(Integer tournamentId, Boolean assignFirstPrize,
+            Boolean assignSecondPrize) {
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+
+        if (tournament.getStatus() != TournamentStatus.PENDING_PAYMENTS) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_NOT_PENDING_PAYMENTS);
+        }
+
+        // Imposta il premio a -1 per indicare che è stato assegnato e non è più
+        // disponibile
+        if (assignFirstPrize != null && assignFirstPrize) {
+            tournament.setPrize1(BigDecimal.valueOf(-1));
+        }
+        if (assignSecondPrize != null && assignSecondPrize) {
+            tournament.setPrize2(BigDecimal.valueOf(-1));
+        }
+        return tournamentRepository.save(tournament);
+    }
+
+    public Boolean arePrizesAsssignedInTournament(Integer tournamentId) {
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+
+        if (tournament.getStatus() != TournamentStatus.PENDING_PAYMENTS) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_NOT_PENDING_PAYMENTS);
+        }
+
+        return tournament.getPrize1().compareTo(BigDecimal.ZERO) < 0
+                && (tournament.getPrize2() == null || tournament.getPrize2().compareTo(BigDecimal.ZERO) < 0);
+    }
+
     public Tournament closeTournament(Integer tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
@@ -664,6 +697,7 @@ public class TournamentService {
     }
 
     public Tournament finishTournament(Integer tournamentId) {
+        // TODO: controllare secondo
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
         if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
@@ -685,7 +719,8 @@ public class TournamentService {
 
         // TODO: Crea palmares
 
-        Map<TournamentPhase, Set<Team>> teamPerPhase = tournamentParticipantService.getTeamsInEachPhaseOfTournament(tournamentId);
+        Map<TournamentPhase, Set<Team>> teamPerPhase = tournamentParticipantService
+                .getTeamsInEachPhaseOfTournament(tournamentId);
 
         Map<TournamentPhase, Set<Team>> sortedByPhaseDesc = teamPerPhase.entrySet().stream()
                 .sorted(Map.Entry.<TournamentPhase, Set<Team>>comparingByKey(Comparator.reverseOrder()))

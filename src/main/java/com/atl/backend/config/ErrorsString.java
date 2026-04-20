@@ -53,6 +53,10 @@ public class ErrorsString {
 
     static final public String REFEREE_LICENSE_NOT_FOUND = "REFEREE_LICENSE_NOT_FOUND";
 
+    static final public String WINNING_TEAM_NOT_FOUND = "WINNING_TEAM_NOT_FOUND";
+
+    static final public String FINALIST_TEAM_NOT_FOUND = "FINALIST_TEAM_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -203,8 +207,6 @@ public class ErrorsString {
 
     static final public String TOURNAMENT_NOT_FINISHED = "TOURNAMENT_NOT_FINISHED";
 
-    static final public String WINNING_TEAM_NOT_FOUND = "WINNING_TEAM_NOT_FOUND";
-
     static final public String TOURNAMENT_NOT_PENDING_PAYMENTS = "TOURNAMENT_NOT_PENDING_PAYMENTS";
 
     static final public String MATCH_ALREADY_FINISHED = "MATCH_ALREADY_FINISHED";
@@ -222,6 +224,14 @@ public class ErrorsString {
     static final public String CANNOT_START_HALF = "CANNOT_START_HALF";
 
     static final public String CANNOT_GO_HALFTIME = "CANNOT_GO_HALFTIME";
+
+    static final public String PLAYER_NOT_IN_WINNING_OR_FINALIST_TEAM = "PLAYER_NOT_IN_WINNING_OR_FINALIST_TEAM";
+
+    static final public String PRIZE_DISTRIBUTION_EXCEEDS_TOTAL_PRIZE = "PRIZE_DISTRIBUTION_EXCEEDS_TOTAL_PRIZE";
+
+    static final public String PENALTY_SHOOTOUT_FINISHED = "PENALTY_SHOOTOUT_FINISHED";
+
+    static final public String CANNOT_START_SECOND_LEG_BEFORE_FIRST_LEG_FINISHED = "CANNOT_START_SECOND_LEG_BEFORE_FIRST_LEG_FINISHED";
 
     // Authentication errors
 

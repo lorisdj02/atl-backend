@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.atl.backend.auth.AccountContext;
+import com.atl.backend.config.ATLCostants;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.CheckoutPayload;
 import com.atl.backend.dto.PurchaseDetail;
@@ -274,18 +275,18 @@ public class PurchasesOrchestrator {
 
         switch (checkoutType) {
             case TOURNAMENT_FEE:
-                atlFee = BigDecimal.ONE;
+                atlFee = BigDecimal.ZERO;
                 break;
             case LOBBY_BOOKING_PARTICIPATE:
             case LOBBY_BOOKING_CREATE:
             case PRIVATE_BOOKING:
-                atlFee = BigDecimal.valueOf(1.3); // TODO: configurare
+                atlFee = ATLCostants.USER_FEE_ATL;
                 break;
             default:
                 throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_TYPE);
         }
 
-        payload.setAmount(payload.getAmount().multiply(atlFee));
+        payload.setAmount(payload.getAmount().multiply(atlFee.add(BigDecimal.ONE)));
 
         return paymentService.createCheckoutSession(payload, checkoutType);
     }

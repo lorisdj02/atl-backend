@@ -74,4 +74,16 @@ public class FootballMatch {
     public List<Team> getTeams() {
         return List.of(homeTeam, awayTeam);
     }
+
+    public Boolean isHomeWinningByOneGoal() {
+        return scoreHome != null && scoreAway != null && scoreHome.equals((short) (scoreAway + 1));
+    }
+
+    public Boolean isAwayWinningByOneGoal() {
+        return scoreHome != null && scoreAway != null && scoreAway.equals((short) (scoreHome + 1));
+    }
+
+    public Boolean isDraw() {
+        return scoreHome != null && scoreAway != null && scoreHome.equals(scoreAway);
+    }
 }

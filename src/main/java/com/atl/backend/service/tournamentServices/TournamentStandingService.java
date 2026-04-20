@@ -50,7 +50,7 @@ public class TournamentStandingService {
 
     @Transactional(rollbackFor = Exception.class)
     public FootballStanding updateFootballStanding(Integer tournamentId, Integer teamId, Short ptsDelta,
-            Short goalsConcededDelta, Short goalsScoredDelta, Short wonDelta, Short drawnDelta, Short lostDelta) {
+            Short goalsScoredDelta, Short goalsConcededDelta, Short wonDelta, Short drawnDelta, Short lostDelta) {
 
         Optional<FootballStanding> footballStandingOptional = footballStandingRepository
                 .findByTournament_IdAndTeam_Id(tournamentId, teamId);
@@ -137,14 +137,16 @@ public class TournamentStandingService {
                 for (int groupIndex = 1; groupIndex <= tournament.getNumGroups(); groupIndex++) {
                     String groupName = "" + (char) ('A' + groupIndex - 1);
                     System.out.println(
-                            "[DEBUG - TournamentService] - Evaluating qualification for tournament " + tournament.getId()
+                            "[DEBUG - TournamentService] - Evaluating qualification for tournament "
+                                    + tournament.getId()
                                     + " and group " + groupName);
 
                     List<FootballStanding> footballStandings = footballStandingRepository
                             .findByTournament_IdAndGroupName(tournament.getId(), groupName);
 
-                    System.out.println("[DEBUG - TournamentService] - Football standings for tournament " + tournament.getId()
-                            + " and group " + groupName + ". " + footballStandings.size() + " teams");
+                    System.out.println(
+                            "[DEBUG - TournamentService] - Football standings for tournament " + tournament.getId()
+                                    + " and group " + groupName + ". " + footballStandings.size() + " teams");
                     for (int i = 0; i < footballStandings.size(); i++) {
                         if (i < qualifiedPerGroup) {
                             FootballStanding footballStanding = footballStandings.get(i);

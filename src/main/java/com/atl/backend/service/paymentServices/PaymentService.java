@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.atl.backend.auth.AccountContext;
+import com.atl.backend.config.ATLCostants;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.CheckoutPayload;
 import com.atl.backend.dto.CheckoutSessionDTO;
@@ -451,7 +452,7 @@ public class PaymentService {
             Field field = booking.getField();
             Account organizationAccount = field.getOrganization().getAccount();
             BigDecimal amount = booking.calculatePrice();
-            BigDecimal atlFee = BigDecimal.valueOf(0.3); // TODO: configurare
+            BigDecimal atlFee = ATLCostants.ORGANIZATION_FEE_ATL;
             if (organizationAccount.getVip() != null && organizationAccount.getVip()) {
                 amount = amount.multiply(BigDecimal.valueOf(1).subtract(atlFee));
             }

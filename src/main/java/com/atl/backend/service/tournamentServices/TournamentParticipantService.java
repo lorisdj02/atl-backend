@@ -432,6 +432,40 @@ public class TournamentParticipantService {
         }
     }
 
+    public Optional<Team> getFinalistTeamInTournament(Integer tournamentId) {
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
+
+        if (tournament.getStatus() != TournamentStatus.PENDING_PAYMENTS
+                && tournament.getStatus() != TournamentStatus.FINISHED) {
+            throw new ConflictException(ErrorsString.TOURNAMENT_NOT_FINISHED);
+        }
+
+        switch (tournament.getSport().getSportCategory()) {
+            case FOOTBALL:
+                List<Match> finalMatches = matchRepository.findByTournament_IdAndGroupName(tournamentId, "FI");
+                if (finalMatches.isEmpty() || finalMatches.size() > 1) {
+                    throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+                }
+                Match finalMatch = finalMatches.get(0);
+                FinalStageBracket finalStageBracket = finalMatch.getFinalStageBracket();
+                if (finalStageBracket == null) {
+                    throw new NotFoundException(ErrorsString.FINAL_STAGE_BRACKET_NOT_FOUND);
+                }
+                FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(finalMatch.getId())
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+
+                if (finalStageBracket.isHomeWinner()) {
+                    return Optional.of(footballMatch.getAwayTeam());
+                } else if (finalStageBracket.isAwayWinner()) {
+                    return Optional.of(footballMatch.getHomeTeam());
+                } else {
+                    return Optional.empty();
+                }
+            default:
+                throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+    }
+
     public Map<TournamentPhase, Set<Team>> getTeamsInEachPhaseOfTournament(Integer tournamentId) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 

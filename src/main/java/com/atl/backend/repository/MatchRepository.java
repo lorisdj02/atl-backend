@@ -12,4 +12,6 @@ public interface MatchRepository extends JpaRepository<Match, Integer> {
     List<Match> findByTournament_IdAndGroupName(Integer tournamentId, String groupName);
 
     List<Match> findByTournament_Id(Integer tournamentId);
+
+    List<Match> findByFinalStageBracket_Id(Integer finalStageBracketId);
 }
