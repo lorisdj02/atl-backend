@@ -32,7 +32,7 @@ public class Match {
     @JoinColumn(name = "motm_player_id")
     private Player motmPlayer;
 
-    @Column(name = "group_name", length = 3)
+    @Column(name = "group_name", length = 3, nullable = false)
     private String groupName;
 
     @Column(name = "scheduled_start")

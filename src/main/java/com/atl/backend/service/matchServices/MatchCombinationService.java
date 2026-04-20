@@ -69,21 +69,25 @@ public class MatchCombinationService {
         }
 
         System.out
-                .println("[DEBUG - MatchService] - Retrieved team IDs for tournament " + tournament.getId() + ": " + teamIds);
+                .println("[DEBUG - MatchService] - Retrieved team IDs for tournament " + tournament.getId() + ": "
+                        + teamIds);
 
         List<Integer> shuffledTeamIds = new ArrayList<>(teamIds);
         Collections.shuffle(shuffledTeamIds);
 
         System.out
-                .println("[DEBUG - MatchService] - Teams participating in tournament " + tournament.getId() + ": " + shuffledTeamIds);
+                .println("[DEBUG - MatchService] - Teams participating in tournament " + tournament.getId() + ": "
+                        + shuffledTeamIds);
 
         final SportCategory sportCategory = tournament.getSport().getSportCategory();
 
-        System.out.println("[DEBUG - MatchService] - Generating matches for group stage of tournament " + tournament.getId());
+        System.out.println(
+                "[DEBUG - MatchService] - Generating matches for group stage of tournament " + tournament.getId());
 
         generateMatchesForGroupStage(tournament, shuffledTeamIds, sportCategory);
 
-        System.out.println("[DEBUG - MatchService] - Generating matches for final stage of tournament " + tournament.getId());
+        System.out.println(
+                "[DEBUG - MatchService] - Generating matches for final stage of tournament " + tournament.getId());
 
         generateMatchesForFinalStage(tournament, sportCategory);
 
@@ -95,7 +99,6 @@ public class MatchCombinationService {
 
         System.out.println("[DEBUG - MatchService] - Number of teams per group: " + numTeamsPerGroup);
 
-        
         for (int i = 0; i < tournament.getNumGroups(); i++) {
             String groupName = "" + (char) ('A' + i);
             List<Integer> groupTeams = new ArrayList<>(

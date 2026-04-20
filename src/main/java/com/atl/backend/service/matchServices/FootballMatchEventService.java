@@ -13,6 +13,7 @@ import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Callup;
+import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballMatchEvent;
 import com.atl.backend.model.Player;
@@ -366,6 +367,8 @@ public class FootballMatchEventService {
                 isHomeTeamGoal ? (short) 0 : (short) 1, null, null, null,
                 null, null);
 
+        matchService.handleFinalStageBracketUpdate(footballMatch.getMatch().getId());
+
         if (isOwnGoal) {
             return;
         }
@@ -378,6 +381,5 @@ public class FootballMatchEventService {
         teamService.updateFootballTeamStat(player.getPlayerId(),
                 playerTeam.getId(), (short) 1, (short) 0, (short) 0,
                 (short) 0);
-
     }
 }

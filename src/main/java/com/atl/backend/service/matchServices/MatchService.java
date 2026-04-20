@@ -458,6 +458,92 @@ public class MatchService {
         return saveFinalStageBracket(finalStageBracket);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public void handleFinalStageBracketUpdate(Integer matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+
+        if (match.getFinalStageBracket() == null) {
+            return;
+        }
+        FinalStageBracket finalStageBracket = match.getFinalStageBracket();
+        FinalStageBracket nextFinalStageBracket = finalStageBracket.getNextFinalStageBracket();
+
+        if (nextFinalStageBracket == null || match.getGroupName().equals("FI")) {
+            return;
+        }
+
+        Tournament tournament = match.getTournament();
+
+        switch (match.getSportCategory()) {
+            case FOOTBALL:
+                FootballMatch footballMatch = getFirstLegFootballMatch(matchId);
+                List<FootballMatch> matchesInBracket = footballMatchRepository
+                        .findByMatch_FinalStageBracket_Id(nextFinalStageBracket.getId());
+                FootballMatch firstLeg = matchesInBracket.stream()
+                        .filter(m -> m.getMatch().getLegOrder() == LegOrderType.FIRST_LEG
+                                || (tournament.getRound2FinalStage() == false && m.getMatch().getLegOrder() == null)
+                                || m.getMatch().getGroupName().equals("FI"))
+                        .findFirst()
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+                FootballMatch secondLeg = getSecondLegFootballMatch(firstLeg.getMatch().getId()).orElse(null);
+
+                if (tournament.getRound2FinalStage() && secondLeg == null
+                        && !firstLeg.getMatch().getGroupName().equals("FI")) {
+                    throw new NotFoundException(ErrorsString.FINAL_STAGE_BRACKET_NOT_FOUND);
+                }
+
+                Boolean willBeHomeTeamInNextBracket = finalStageBracket
+                        .getNextFinalStageBracketSlot() == MatchSlotType.HOME;
+
+                if (finalStageBracket.isHomeWinner()) {
+                    if (willBeHomeTeamInNextBracket) {
+                        firstLeg.setHomeTeam(footballMatch.getHomeTeam());
+                        if (secondLeg != null) {
+                            secondLeg.setAwayTeam(footballMatch.getHomeTeam());
+                        }
+                    } else {
+                        firstLeg.setAwayTeam(footballMatch.getHomeTeam());
+                        if (secondLeg != null) {
+                            secondLeg.setHomeTeam(footballMatch.getHomeTeam());
+                        }
+                    }
+                } else if (finalStageBracket.isAwayWinner()) {
+                    if (willBeHomeTeamInNextBracket) {
+                        firstLeg.setHomeTeam(footballMatch.getAwayTeam());
+                        if (secondLeg != null) {
+                            secondLeg.setAwayTeam(footballMatch.getAwayTeam());
+                        }
+                    } else {
+                        firstLeg.setAwayTeam(footballMatch.getAwayTeam());
+                        if (secondLeg != null) {
+                            secondLeg.setHomeTeam(footballMatch.getAwayTeam());
+                        }
+                    }
+                } else {
+                    if (willBeHomeTeamInNextBracket) {
+                        firstLeg.setHomeTeam(null);
+                        if (secondLeg != null) {
+                            secondLeg.setAwayTeam(null);
+                        }
+                    } else {
+                        firstLeg.setAwayTeam(null);
+                        if (secondLeg != null) {
+                            secondLeg.setHomeTeam(null);
+                        }
+                    }
+                }
+                saveFootballMatch(firstLeg);
+                if (secondLeg != null) {
+                    saveFootballMatch(secondLeg);
+                }
+                break;
+            default:
+                throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+
+    }
+
     public FootballMatch updateFootballMatch(Integer matchId, Short scoreHomeDelta, Short scoreAwayDelta,
             Short penaltyScoreHomeDelta, Short penaltyScoreAwayDelta, Short missedPenaltyHomeDelta,
             Short missedPenaltyAwayDelta, FootballMatchStatus newStatus) {
@@ -543,17 +629,35 @@ public class MatchService {
         if (footballMatch.getMatch().getFinalStageBracket() == null) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
         }
+
+        Tournament tournament = footballMatch.getMatch().getTournament();
+
         FinalStageBracket finalStageBracket = footballMatch.getMatch().getFinalStageBracket();
         List<FootballMatch> matchesInBracket = footballMatchRepository
                 .findByMatch_FinalStageBracket_Id(finalStageBracket.getId());
-        if (matchesInBracket.size() != 2) {
-            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
-        }
+
         FootballMatch firstLegMatch = matchesInBracket.stream()
-                .filter(match -> match.getMatch().getLegOrder() == LegOrderType.FIRST_LEG)
+                .filter(match -> match.getMatch().getLegOrder() == LegOrderType.FIRST_LEG
+                        || (tournament.getRound2FinalStage() == false && match.getMatch().getLegOrder() == null))
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         return firstLegMatch;
+    }
+
+    public Optional<FootballMatch> getSecondLegFootballMatch(Integer matchId) {
+        FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+        if (footballMatch.getMatch().getFinalStageBracket() == null) {
+            throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
+        }
+        FinalStageBracket finalStageBracket = footballMatch.getMatch().getFinalStageBracket();
+        List<FootballMatch> matchesInBracket = footballMatchRepository
+                .findByMatch_FinalStageBracket_Id(finalStageBracket.getId());
+
+        Optional<FootballMatch> secondLegMatchOptional = matchesInBracket.stream()
+                .filter(match -> match.getMatch().getLegOrder() == LegOrderType.SECOND_LEG)
+                .findFirst();
+        return secondLegMatchOptional;
     }
 
     @Transactional(rollbackFor = Exception.class)

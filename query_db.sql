@@ -353,7 +353,7 @@ CREATE TABLE
   "football_standing" (
     "tournament_id" int NOT NULL,
     "team_id" int NOT NULL,
-    "group_name" varchar(3),
+    "group_name" varchar(3) NOT NULL,
     "won" smallint NOT NULL DEFAULT 0,
     "pts" smallint NOT NULL DEFAULT 0,
     "drawn" smallint NOT NULL DEFAULT 0,
