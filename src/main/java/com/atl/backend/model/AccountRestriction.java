@@ -13,11 +13,11 @@ import java.time.LocalDateTime;
 public class AccountRestriction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "account_id", nullable = false)
-     * private Integer accountId;
+     * private Long accountId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

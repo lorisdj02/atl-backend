@@ -39,20 +39,20 @@ public class TournamentTeamMatchOrchestrator {
     PaymentRefundService paymentRefundService;
 
     @Transactional(rollbackFor = Exception.class)
-    public void leaveTeam(Integer teamId) {
+    public void leaveTeam(Long teamId) {
         Integer activeTournamentsCount = tournamentService.countActiveTournamentsByTeamIdAndPlayerId(teamId,
                 AccountContext.getActivePlayer().getPlayerId());
-        List<Integer> notPaidTournamentIds = tournamentParticipantService.getNotPaidTournamentIdsByTeamId(teamId);
+        List<Long> notPaidTournamentIds = tournamentParticipantService.getNotPaidTournamentIdsByTeamId(teamId);
         teamService.leaveTeam(teamId, activeTournamentsCount);
 
-        Map<Integer, BigDecimal> refundPerTournament = new HashMap<>();
-        for (Integer tournamentId : notPaidTournamentIds) {
+        Map<Long, BigDecimal> refundPerTournament = new HashMap<>();
+        for (Long tournamentId : notPaidTournamentIds) {
             BigDecimal refundAmount = paymentRefundService.refundTournamentFeeByTournamentIdAndAccountId(tournamentId,
                     AccountContext.getActivePlayer().getAccount().getId());
             refundPerTournament.put(tournamentId, refundAmount);
         }
 
-        for (Map.Entry<Integer, BigDecimal> entry : refundPerTournament.entrySet()) {
+        for (Map.Entry<Long, BigDecimal> entry : refundPerTournament.entrySet()) {
             tournamentParticipantService.updateToPayTournamentParticipationByTournamentIdAndTeamId(entry.getKey(),
                     teamId, entry.getValue().negate());
         }
@@ -60,19 +60,19 @@ public class TournamentTeamMatchOrchestrator {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void expelPlayer(Integer teamId, Integer playerId) {
+    public void expelPlayer(Long teamId, Long playerId) {
         Integer activeTournamentsCount = tournamentService.countActiveTournamentsByTeamIdAndPlayerId(teamId, playerId);
         teamService.expelPlayer(teamId, playerId, activeTournamentsCount);
 
-        List<Integer> notPaidTournamentIds = tournamentParticipantService.getNotPaidTournamentIdsByTeamId(teamId);
-        Map<Integer, BigDecimal> refundPerTournament = new HashMap<>();
-        for (Integer tournamentId : notPaidTournamentIds) {
+        List<Long> notPaidTournamentIds = tournamentParticipantService.getNotPaidTournamentIdsByTeamId(teamId);
+        Map<Long, BigDecimal> refundPerTournament = new HashMap<>();
+        for (Long tournamentId : notPaidTournamentIds) {
             BigDecimal refundAmount = paymentRefundService.refundTournamentFeeByTournamentIdAndAccountId(tournamentId,
                     AccountContext.getActivePlayer().getAccount().getId());
             refundPerTournament.put(tournamentId, refundAmount);
         }
 
-        for (Map.Entry<Integer, BigDecimal> entry : refundPerTournament.entrySet()) {
+        for (Map.Entry<Long, BigDecimal> entry : refundPerTournament.entrySet()) {
             tournamentParticipantService.updateToPayTournamentParticipationByTournamentIdAndTeamId(entry.getKey(),
                     teamId, entry.getValue().negate());
         }
@@ -80,7 +80,7 @@ public class TournamentTeamMatchOrchestrator {
 
     @Transactional(rollbackFor = Exception.class)
     public void leaveAllTeams() {
-        Integer playerId = AccountContext.getPlayerId();
+        Long playerId = AccountContext.getPlayerId();
         List<PlaysAt> playsAts = teamService.getPlaysAtByPlayerId(playerId);
         for (PlaysAt playsAt : playsAts) {
             leaveTeam(playsAt.getTeam().getId());
@@ -88,7 +88,7 @@ public class TournamentTeamMatchOrchestrator {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Integer addMotmToMatch(Integer matchId, Integer playerId) {
+    public Long addMotmToMatch(Long matchId, Long playerId) {
         Match match = matchService.getMatchById(matchId)
                 .orElseThrow(() -> new BadRequestException(ErrorsString.MATCH_NOT_FOUND));
 

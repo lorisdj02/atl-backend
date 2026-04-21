@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TournamentRepository extends JpaRepository<Tournament, Integer> {
+public interface TournamentRepository extends JpaRepository<Tournament, Long> {
 
     public List<Tournament> findBySport_SportCategory(SportCategory sportCategory);
 
@@ -22,7 +22,7 @@ public interface TournamentRepository extends JpaRepository<Tournament, Integer>
     List<Tournament> findActiveTournamentsBySportCategory(@Param("sportCategory") SportCategory sportCategory);
 
     @Query("SELECT t FROM Tournament t WHERE t.status <> 'CANCELED' AND t.status <> 'FINISHED' AND t.status <> 'PENDING_PAYMENTS' AND t.coordinator.id = :coordinatorId AND t.sport.sportCategory = :sportCategory")
-    List<Tournament> findActiveTournamentsByCoordinator_CoordinatorIdAndSportCategory(@Param("coordinatorId") Integer coordinatorId, @Param("sportCategory") SportCategory sportCategory);
+    List<Tournament> findActiveTournamentsByCoordinator_CoordinatorIdAndSportCategory(@Param("coordinatorId") Long coordinatorId, @Param("sportCategory") SportCategory sportCategory);
 
-    List<Tournament> findByCoordinator_CoordinatorId(Integer coordinatorId);
+    List<Tournament> findByCoordinator_CoordinatorId(Long coordinatorId);
 }

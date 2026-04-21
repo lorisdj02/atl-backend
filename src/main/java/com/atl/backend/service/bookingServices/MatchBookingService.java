@@ -40,7 +40,7 @@ public class MatchBookingService {
     private FootballMatchRepository footballMatchRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public MatchBooking createMatchBooking(Integer matchId, LocalDateTime startTime,
+    public MatchBooking createMatchBooking(Long matchId, LocalDateTime startTime,
             LocalDateTime finishTime) {
 
         Match match = matchRepository.findById(matchId)
@@ -59,7 +59,7 @@ public class MatchBookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public MatchBookingDTO scheduleMatch(Integer matchId, LocalDateTime scheduledStart) {
+    public MatchBookingDTO scheduleMatch(Long matchId, LocalDateTime scheduledStart) {
         // Il match deve essere schedulato almeno 2 ore prima dell'orario attuale
         if (scheduledStart.isBefore(LocalDateTime.now().plusHours(2))) {
             throw new BadRequestException(ErrorsString.MATCH_SCHEDULE_TOO_LATE);
@@ -143,11 +143,11 @@ public class MatchBookingService {
         return MatchBookingDTO.fromMatchBooking(matchBooking);
     }
 
-    public List<MatchBooking> getMatchBookingsByFieldId(Integer fieldId) {
+    public List<MatchBooking> getMatchBookingsByFieldId(Long fieldId) {
         return matchBookingRepository.findByBooking_Field_Id(fieldId);
     }
 
-    public Optional<MatchBooking> getMatchBookingByBookingId(Integer bookingId) {
+    public Optional<MatchBooking> getMatchBookingByBookingId(Long bookingId) {
         return matchBookingRepository.findById(bookingId);
     }
 

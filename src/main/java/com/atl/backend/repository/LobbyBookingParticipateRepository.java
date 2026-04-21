@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface LobbyBookingParticipateRepository extends JpaRepository<LobbyBookingParticipate, Integer> {
-    List<LobbyBookingParticipate> findByLobbyBooking_IdAndPlayer_PlayerId(Integer lobbyBookingId, Integer playerId);
+public interface LobbyBookingParticipateRepository extends JpaRepository<LobbyBookingParticipate, Long> {
+    List<LobbyBookingParticipate> findByLobbyBooking_IdAndPlayer_PlayerId(Long lobbyBookingId, Long playerId);
 
-    List<LobbyBookingParticipate> findByLobbyBooking_Id(Integer bookingId);
+    List<LobbyBookingParticipate> findByLobbyBooking_Id(Long bookingId);
 
-    List<LobbyBookingParticipate> findByPlayer_PlayerId(Integer playerId);
+    List<LobbyBookingParticipate> findByPlayer_PlayerId(Long playerId);
 
     @Query("SELECT lbp FROM LobbyBookingParticipate lbp WHERE lbp.player.playerId = :playerId AND lbp.lobbyBooking.id = :bookingId")
-    Optional<LobbyBookingParticipate> findByPlayer_PlayerIdAndLobbyBooking_Booking_Id(Integer playerId, Integer bookingId);
+    Optional<LobbyBookingParticipate> findByPlayer_PlayerIdAndLobbyBooking_Booking_Id(Long playerId, Long bookingId);
 }

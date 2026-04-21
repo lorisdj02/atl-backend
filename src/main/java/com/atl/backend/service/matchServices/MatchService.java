@@ -70,7 +70,7 @@ public class MatchService {
         return matchesInGroupStage + matchesInFinalStage;
     }
 
-    private Tournament getExistingTournamentByTournamentId(Integer tournamentId) {
+    private Tournament getExistingTournamentByTournamentId(Long tournamentId) {
         return tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
     }
@@ -83,7 +83,7 @@ public class MatchService {
         return footballMatchRepository.findAll();
     }
 
-    public Optional<FootballMatch> getFootballMatchById(Integer id) {
+    public Optional<FootballMatch> getFootballMatchById(Long id) {
         return footballMatchRepository.findById(id);
     }
 
@@ -91,15 +91,15 @@ public class MatchService {
         return footballMatchRepository.save(match);
     }
 
-    public void deleteFootballMatch(Integer id) {
+    public void deleteFootballMatch(Long id) {
         footballMatchRepository.deleteById(id);
     }
 
-    public List<FootballMatch> getFootballMatchesByTournamentId(Integer tournamentId) {
+    public List<FootballMatch> getFootballMatchesByTournamentId(Long tournamentId) {
         return footballMatchRepository.findByMatch_Tournament_Id(tournamentId);
     }
 
-    public Optional<Match> getMatchById(Integer id) {
+    public Optional<Match> getMatchById(Long id) {
         return matchRepository.findById(id);
     }
 
@@ -107,7 +107,7 @@ public class MatchService {
         return finalStageBracketRepository.save(finalStageBracket);
     }
 
-    public List<Integer> getTeamIdsByTournamentIdAndGroupStage(Integer tournamentId, String groupName) {
+    public List<Long> getTeamIdsByTournamentIdAndGroupStage(Long tournamentId, String groupName) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
         System.out.println("[DEBUG - MatchService] - Retrieving team IDs for tournament " + tournamentId + " and group "
@@ -129,7 +129,7 @@ public class MatchService {
         }
     }
 
-    public List<Team> getTeamsByMatchId(Integer matchId) {
+    public List<Team> getTeamsByMatchId(Long matchId) {
         Optional<Match> matchOptional = matchRepository.findById(matchId);
         if (matchOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
@@ -151,7 +151,7 @@ public class MatchService {
         return footballMatchRepository.findByStatus(FootballMatchStatus.SCHEDULED);
     }
 
-    public Boolean canMatchFinish(Integer matchId) {
+    public Boolean canMatchFinish(Long matchId) {
         Optional<Match> optionalMatch = matchRepository.findById(matchId);
         if (optionalMatch.isEmpty()) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
@@ -240,7 +240,7 @@ public class MatchService {
         return !finalStageBracket.isDraw();
     }
 
-    public List<FootballMatchEvent> getFootballMatchEventsByMatchId(Integer matchId) {
+    public List<FootballMatchEvent> getFootballMatchEventsByMatchId(Long matchId) {
         Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(matchId);
         if (footballMatchOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
@@ -250,7 +250,7 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<?> getMatchEvents(Integer matchId) {
+    public Optional<?> getMatchEvents(Long matchId) {
         Optional<Match> matchOptional = matchRepository.findById(matchId);
         if (matchOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
@@ -271,7 +271,7 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
-    public Boolean isTeamStillPlayingInTournamentByTeamIdAndTournamentIdAndPhase(Integer teamId, Integer tournamentId,
+    public Boolean isTeamStillPlayingInTournamentByTeamIdAndTournamentIdAndPhase(Long teamId, Long tournamentId,
             TournamentPhase tournamentPhase) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
@@ -337,7 +337,7 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
-    public Boolean hasTeamPrizesByTeamIdAndTournamentId(Integer teamId, Integer tournamentId) {
+    public Boolean hasTeamPrizesByTeamIdAndTournamentId(Long teamId, Long tournamentId) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
         Boolean prize1 = !tournament.getPrize1().equals(BigDecimal.ZERO);
@@ -392,7 +392,7 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
-    public Boolean areMatchesFinishedByTournamentIdAndGroupName(Integer tournamentId, String prefixGroupName) {
+    public Boolean areMatchesFinishedByTournamentIdAndGroupName(Long tournamentId, String prefixGroupName) {
         List<Match> matches = matchRepository.findByTournament_Id(tournamentId);
         if (matches.isEmpty()) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
@@ -435,7 +435,7 @@ public class MatchService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public FinalStageBracket updateFinalStageBracket(Integer finalStageBracketId, Short aggregateScoreHomeDelta,
+    public FinalStageBracket updateFinalStageBracket(Long finalStageBracketId, Short aggregateScoreHomeDelta,
             Short aggregateScoreAwayDelta) {
         Optional<FinalStageBracket> finalStageBracketOptional = finalStageBracketRepository
                 .findById(finalStageBracketId);
@@ -459,7 +459,7 @@ public class MatchService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void handleFinalStageBracketUpdate(Integer matchId) {
+    public void handleFinalStageBracketUpdate(Long matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
 
@@ -544,7 +544,7 @@ public class MatchService {
 
     }
 
-    public FootballMatch updateFootballMatch(Integer matchId, Short scoreHomeDelta, Short scoreAwayDelta,
+    public FootballMatch updateFootballMatch(Long matchId, Short scoreHomeDelta, Short scoreAwayDelta,
             Short penaltyScoreHomeDelta, Short penaltyScoreAwayDelta, Short missedPenaltyHomeDelta,
             Short missedPenaltyAwayDelta, FootballMatchStatus newStatus) {
         Optional<FootballMatch> footballMatchOptional = footballMatchRepository.findByMatch_Id(matchId);
@@ -623,7 +623,7 @@ public class MatchService {
         return saveFootballMatch(footballMatch);
     }
 
-    public FootballMatch getFirstLegFootballMatch(Integer matchId) {
+    public FootballMatch getFirstLegFootballMatch(Long matchId) {
         FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         if (footballMatch.getMatch().getFinalStageBracket() == null) {
@@ -644,7 +644,7 @@ public class MatchService {
         return firstLegMatch;
     }
 
-    public Optional<FootballMatch> getSecondLegFootballMatch(Integer matchId) {
+    public Optional<FootballMatch> getSecondLegFootballMatch(Long matchId) {
         FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         if (footballMatch.getMatch().getFinalStageBracket() == null) {
@@ -661,7 +661,7 @@ public class MatchService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void handleTeamRetireInKnockoutPhaseMatch(Integer matchId, Integer teamId) {
+    public void handleTeamRetireInKnockoutPhaseMatch(Long matchId, Long teamId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         if (match.getFinalStageBracket() == null) {
@@ -696,7 +696,7 @@ public class MatchService {
         }
     }
 
-    public Integer addMotmToMatch(Integer matchId, Integer playerId) {
+    public Long addMotmToMatch(Long matchId, Long playerId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         if (match.getMotmPlayer() != null) {
@@ -709,7 +709,7 @@ public class MatchService {
         return match.getMotmPlayer().getPlayerId();
     }
 
-    public void startFootballPenaltyShootout(Integer matchId) {
+    public void startFootballPenaltyShootout(Long matchId) {
         FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         if (footballMatch.getStatus() != FootballMatchStatus.START_HALF) {
@@ -725,7 +725,7 @@ public class MatchService {
         footballMatchRepository.save(footballMatch);
     }
 
-    public Match startMatch(Integer matchId) {
+    public Match startMatch(Long matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         if (match.getScheduledStart() == null) {
@@ -760,7 +760,7 @@ public class MatchService {
         return matchRepository.save(match);
     }
 
-    public FootballMatch startFootballHalftime(Integer matchId) {
+    public FootballMatch startFootballHalftime(Long matchId) {
         FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         if (footballMatch.getStatus() != FootballMatchStatus.START_HALF) {
@@ -772,7 +772,7 @@ public class MatchService {
         return footballMatchRepository.save(footballMatch);
     }
 
-    public FootballMatch startFootballSecondHalf(Integer matchId) {
+    public FootballMatch startFootballSecondHalf(Long matchId) {
         FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         if (footballMatch.getStatus() != FootballMatchStatus.HALFTIME) {
@@ -784,7 +784,7 @@ public class MatchService {
         return footballMatchRepository.save(footballMatch);
     }
 
-    public Match finishMatch(Integer matchId) {
+    public Match finishMatch(Long matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         if (!canMatchFinish(matchId)) {
@@ -797,7 +797,7 @@ public class MatchService {
         return matchRepository.save(match);
     }
 
-    public Boolean hasUnfinishedMatchesInTournament(Integer tournamentId) {
+    public Boolean hasUnfinishedMatchesInTournament(Long tournamentId) {
         List<Match> matches = matchRepository.findByTournament_Id(tournamentId);
         if (matches.isEmpty()) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
@@ -810,7 +810,7 @@ public class MatchService {
         return false;
     }
 
-    public Boolean isMatchInGroupStage(Integer matchId) {
+    public Boolean isMatchInGroupStage(Long matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         return match.getGroupName() != null && match.getGroupName().length() == 1;

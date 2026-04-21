@@ -12,15 +12,15 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CallupRepository extends JpaRepository<Callup, CallupId> {
-    public Optional<Callup> findByPlayer_PlayerIdAndTournament_Id(Integer playerId, Integer tournamentId);
+    public Optional<Callup> findByPlayer_PlayerIdAndTournament_Id(Long playerId, Long tournamentId);
 
-    public void deleteByPlayer_PlayerIdAndTournament_Id(Integer playerId, Integer tournamentId);
+    public void deleteByPlayer_PlayerIdAndTournament_Id(Long playerId, Long tournamentId);
 
-    public List<Callup> findByTournament_Id(Integer tournamentId);
+    public List<Callup> findByTournament_Id(Long tournamentId);
 
-    public List<Callup> findByPlayer_PlayerId(Integer playerId);
+    public List<Callup> findByPlayer_PlayerId(Long playerId);
 
-    public List<Callup> findByTournament_IdAndTeam_Id(Integer tournamentId, Integer teamId);
+    public List<Callup> findByTournament_IdAndTeam_Id(Long tournamentId, Long teamId);
 
-    public void deleteByTeam_IdAndTournament_Id(Integer teamId, Integer tournamentId);
+    public void deleteByTeam_IdAndTournament_Id(Long teamId, Long tournamentId);
 }

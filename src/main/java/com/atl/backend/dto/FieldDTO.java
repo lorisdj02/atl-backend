@@ -14,7 +14,7 @@ import jakarta.validation.constraints.*;
 public class FieldDTO {
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @NotNull
     @JsonProperty("name")
@@ -34,7 +34,7 @@ public class FieldDTO {
 
     @NotNull
     @JsonProperty("cityId")
-    private Integer cityId;
+    private Long cityId;
 
     @NotNull
     @JsonProperty("hourCostTournament")

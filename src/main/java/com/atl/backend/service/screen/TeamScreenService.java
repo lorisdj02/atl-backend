@@ -52,9 +52,9 @@ public class TeamScreenService {
 
     @Transactional(readOnly = true)
     public TeamsResponse getTeamsScreen(SportCategory sportCategory) {
-        Map<Integer, Team> teamsCache = teamService.getVisibleTeamsBySportCategory(sportCategory).stream()
+        Map<Long, Team> teamsCache = teamService.getVisibleTeamsBySportCategory(sportCategory).stream()
                 .collect(Collectors.toMap(Team::getId, team -> team));
-        Map<Integer, String> captainNamePerTeam = new HashMap<>();
+        Map<Long, String> captainNamePerTeam = new HashMap<>();
         for (Team team : teamsCache.values()) {
             captainNamePerTeam.put(team.getId(), team.getCaptainPlayer().getAccount().getUsername());
         }
@@ -63,15 +63,15 @@ public class TeamScreenService {
     }
 
     @Transactional(readOnly = true)
-    public AbstractTeamResponse getAbstractTeamScreen(Integer teamId) {
+    public AbstractTeamResponse getAbstractTeamScreen(Long teamId) {
         teamService.checkTeamExists(teamId);
 
         Team team = teamService.getTeamById(teamId).get();
         List<Tournament> tournaments = new ArrayList<>();
-        Map<Integer, Coordinator> coordinatorsCache = new HashMap<>();
-        Map<Integer, Field> fieldsCache = new HashMap<>();
-        Map<Integer, FootballTeamStat> footballPlayerStatsCache = new HashMap<>();
-        Map<Integer, String> cityNamePerField = new HashMap<>();
+        Map<Long, Coordinator> coordinatorsCache = new HashMap<>();
+        Map<Long, Field> fieldsCache = new HashMap<>();
+        Map<Long, FootballTeamStat> footballPlayerStatsCache = new HashMap<>();
+        Map<Long, String> cityNamePerField = new HashMap<>();
 
         List<Palmares> palmares = teamService.getPalmaresByTeamId(teamId);
         for (Palmares palmaresEntry : palmares) {
@@ -114,7 +114,7 @@ public class TeamScreenService {
     }
 
     @Transactional(readOnly = true)
-    public PayParticipationResponse getPayParticipationScreen(Integer teamId) {
+    public PayParticipationResponse getPayParticipationScreen(Long teamId) {
         teamService.checkTeamExists(teamId);
 
         Player player = AccountContext.getActivePlayer();
@@ -124,8 +124,8 @@ public class TeamScreenService {
 
         List<TournamentParticipation> tournamentParticipations = tournamentParticipantService
                 .getNotPaidTournamentParticipationsByTeamId(teamId);
-        Map<Integer, Tournament> tournamentsCache = new HashMap<>();
-        Map<Integer, Boolean> isCalledUpPerTournament = new HashMap<>();
+        Map<Long, Tournament> tournamentsCache = new HashMap<>();
+        Map<Long, Boolean> isCalledUpPerTournament = new HashMap<>();
         for (TournamentParticipation tournamentParticipation : tournamentParticipations) {
             Tournament tournament = tournamentParticipation.getTournament();
             tournamentsCache.put(tournament.getId(), tournament);
@@ -144,7 +144,7 @@ public class TeamScreenService {
     }
 
     @Transactional(readOnly = true)
-    public PlayerRequestsResponse getPlayerRequestsScreen(Integer teamId) {
+    public PlayerRequestsResponse getPlayerRequestsScreen(Long teamId) {
         teamService.checkTeamExists(teamId);
         Team team = teamService.getTeamById(teamId).get();
         Player activePlayer = AccountContext.getActivePlayer();
@@ -158,7 +158,7 @@ public class TeamScreenService {
         }
 
         List<TeamRequest> teamRequests = teamService.getTeamRequestsByTeamId(teamId);
-        Map<Integer, Player> playersCache = new HashMap<>();
+        Map<Long, Player> playersCache = new HashMap<>();
         for (TeamRequest teamRequest : teamRequests) {
             Player player = teamRequest.getPlayer();
             playersCache.put(player.getPlayerId(), player);
@@ -172,7 +172,7 @@ public class TeamScreenService {
     }
 
     @Transactional(readOnly = true)
-    public TeamDetailsResponse getTeamDetailsScreen(Integer teamId) {
+    public TeamDetailsResponse getTeamDetailsScreen(Long teamId) {
         teamService.checkTeamExists(teamId);
         TeamRequest existingRequest = null;
         Boolean isPlayerInTeam = false;

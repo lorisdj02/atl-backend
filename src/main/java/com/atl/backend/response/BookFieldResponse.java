@@ -26,12 +26,12 @@ public class BookFieldResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.minOpeningTimePerCity)
-    private Map<Integer, LocalTime> minOpeningTimePerCity = new HashMap<>();
+    private Map<Long, LocalTime> minOpeningTimePerCity = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.maxClosingTimePerCity)
-    private Map<Integer, LocalTime> maxClosingTimePerCity = new HashMap<>();
+    private Map<Long, LocalTime> maxClosingTimePerCity = new HashMap<>();
 
 
 }

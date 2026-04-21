@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.FootballMatchEventDTO;
 import com.atl.backend.exception.BadRequestException;
-import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballMatchEvent;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AvailableMatchesResponse;
@@ -47,7 +46,6 @@ public class MatchController {
     @Autowired
     private TournamentTeamMatchOrchestrator tournamentTeamMatchOrchestrator;
 
-
     @GetMapping("/{sportCategory}/referee/available-matches")
     public ResponseEntity<AvailableMatchesResponse> getAvailableMatchesScreen(@PathVariable String sportCategory) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
@@ -70,7 +68,7 @@ public class MatchController {
     }
 
     @GetMapping("/match/{matchId}")
-    public ResponseEntity<?> getMatchScreen(@PathVariable Integer matchId) {
+    public ResponseEntity<?> getMatchScreen(@PathVariable Long matchId) {
         Optional<?> response = matchScreenService.getMatchScreen(matchId);
         if (response.isEmpty()) {
             throw new BadRequestException(ErrorsString.MATCH_NOT_FOUND);
@@ -79,7 +77,7 @@ public class MatchController {
     }
 
     @GetMapping("/match/{matchId}/events")
-    public ResponseEntity<?> getMatchEvents(@PathVariable Integer matchId) {
+    public ResponseEntity<?> getMatchEvents(@PathVariable Long matchId) {
         Optional<?> response = matchService.getMatchEvents(matchId);
         if (response.isEmpty()) {
             throw new BadRequestException(ErrorsString.MATCH_NOT_FOUND);
@@ -88,31 +86,28 @@ public class MatchController {
     }
 
     @PatchMapping("/match/{matchId}/retire")
-    public ResponseEntity<Integer> retireFromMatch(@PathVariable Integer matchId) {
-        Integer response = tournamentService.retireFromMatch(matchId);
+    public ResponseEntity<Long> retireFromMatch(@PathVariable Long matchId) {
+        Long response = tournamentService.retireFromMatch(matchId);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/match/{matchId}/add-motm/{playerId}")
-    public ResponseEntity<Integer> addMotmToMatch(@PathVariable Integer matchId, @PathVariable Integer playerId) {
-        Integer response = tournamentTeamMatchOrchestrator.addMotmToMatch(matchId, playerId);
+    public ResponseEntity<Long> addMotmToMatch(@PathVariable Long matchId, @PathVariable Long playerId) {
+        Long response = tournamentTeamMatchOrchestrator.addMotmToMatch(matchId, playerId);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/match/{matchId}/insert-referee-assignment/{refereeRoleName}")
-    public ResponseEntity<Void> insertRefereeAssignment(@PathVariable Integer matchId, @PathVariable String refereeRoleName) {
+    public ResponseEntity<Void> insertRefereeAssignment(@PathVariable Long matchId,
+            @PathVariable String refereeRoleName) {
         matchRefereeService.insertRefereeAssignment(matchId, refereeRoleName);
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/match/{matchId}/football/start-penalty-shootout")
-    public ResponseEntity<Void> startPenaltyShootout(@PathVariable Integer matchId) {
-        matchService.startFootballPenaltyShootout(matchId);
-        return ResponseEntity.ok().build();
-    }
-
+    // Qui c'è anche penaltyshootout
     @PostMapping("/match/{matchId}/insert-football-event")
-    public ResponseEntity<FootballMatchEventDTO> insertFootballMatchEvent(@PathVariable Integer matchId, @RequestBody FootballMatchEventDTO footballMatchEventDTO) {
+    public ResponseEntity<FootballMatchEventDTO> insertFootballMatchEvent(@PathVariable Long matchId,
+            @RequestBody FootballMatchEventDTO footballMatchEventDTO) {
         FootballMatchEvent event = footballMatchEventService.insertFootballMatchEvent(matchId, footballMatchEventDTO);
         return ResponseEntity.ok(FootballMatchEventDTO.fromFootballMatchEvent(event));
     }

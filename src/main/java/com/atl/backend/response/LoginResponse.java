@@ -20,8 +20,8 @@ public class LoginResponse {
      * private String token;
      */
     @JsonProperty(ApiJsonKeys.roleId)
-    private Integer roleId;
+    private Long roleId;
 
     @JsonProperty(ApiJsonKeys.teamId)
-    private Integer teamId;
+    private Long teamId;
 }

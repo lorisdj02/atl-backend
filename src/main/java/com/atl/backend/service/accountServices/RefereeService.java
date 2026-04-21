@@ -40,13 +40,13 @@ public class RefereeService {
         return refereeRepository.save(referee);
     }
 
-    public Short getRefereeLevelByAccountId(Integer accountId) {
+    public Short getRefereeLevelByAccountId(Long accountId) {
         Referee referee = refereeRepository.findByAccount_Id(accountId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.REFEREE_NOT_FOUND));
         return referee.getLevel();
     }
 
-    public void deleteRefereeByAccountId(Integer accountId) {
+    public void deleteRefereeByAccountId(Long accountId) {
         Referee referee = refereeRepository.findByAccount_Id(accountId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.REFEREE_NOT_FOUND));
         refereeRepository.delete(referee);
@@ -56,11 +56,11 @@ public class RefereeService {
         refereeRepository.deleteAll();
     }
 
-    public Optional<Referee> getRefereeByAccountId(Integer accountId) {
+    public Optional<Referee> getRefereeByAccountId(Long accountId) {
         return refereeRepository.findByAccount_Id(accountId);
     }
 
-    public Optional<Referee> getRefereeByRefereeId(Integer refereeId) {
+    public Optional<Referee> getRefereeByRefereeId(Long refereeId) {
         return refereeRepository.findById(refereeId);
     }
 
@@ -105,7 +105,7 @@ public class RefereeService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void deleteRefereeLicense(Integer sportId) {
+    public void deleteRefereeLicense(Long sportId) {
         Referee referee = AccountContext.getActiveReferee();
         RefereeLicense refereeLicense = refereeLicenseRepository
                 .findByReferee_RefereeIdAndSport_Id(referee.getRefereeId(), sportId)

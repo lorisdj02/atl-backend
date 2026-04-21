@@ -13,15 +13,15 @@ import java.math.BigDecimal;
 public class PurchaseDTO {
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @NotNull
     @JsonProperty("accountId")
-    private Integer accountId;
+    private Long accountId;
 
     @NotNull
     @JsonProperty("objectId")
-    private Integer objectId;
+    private Long objectId;
 
     @NotNull
     @JsonProperty("type")

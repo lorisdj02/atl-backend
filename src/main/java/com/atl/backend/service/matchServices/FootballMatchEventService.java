@@ -49,7 +49,7 @@ public class FootballMatchEventService {
     @Autowired
     private TournamentStandingService tournamentStandingService;
 
-    private Team getPlayerTeam(Integer playerId, Integer tournamentId) {
+    private Team getPlayerTeam(Long playerId, Long tournamentId) {
         Team team = teamService.getTeamByPlayerIdAndSportCategory(playerId, SportCategory.FOOTBALL)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.PLAYER_NOT_IN_TEAM));
         Callup callup = tournamentParticipantService.getCallupByPlayerIdAndTournamentId(playerId, tournamentId)
@@ -60,19 +60,19 @@ public class FootballMatchEventService {
         return team;
     }
 
-    public Boolean hasPlayerReceivedYellowCard(Integer matchId, Integer playerId) {
+    public Boolean hasPlayerReceivedYellowCard(Long matchId, Long playerId) {
         return footballMatchEventRepository.existsByMatch_IdAndPlayer_PlayerIdAndType(matchId, playerId,
                 FootballEventType.YELLOW_CARD);
     }
 
-    public Boolean hasPlayerReceivedRedCard(Integer matchId, Integer playerId) {
+    public Boolean hasPlayerReceivedRedCard(Long matchId, Long playerId) {
         return footballMatchEventRepository.existsByMatch_IdAndPlayer_PlayerIdAndType(matchId, playerId,
                 FootballEventType.RED_CARD)
                 || footballMatchEventRepository.existsByMatch_IdAndPlayer_PlayerIdAndType(matchId, playerId,
                         FootballEventType.RED_YELLOW_CARD);
     }
 
-    public FootballMatchEvent insertFootballMatchEvent(Integer matchId, FootballMatchEventDTO footballMatchEventDTO) {
+    public FootballMatchEvent insertFootballMatchEvent(Long matchId, FootballMatchEventDTO footballMatchEventDTO) {
         FootballMatch footballMatch = footballMatchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
         FootballEventType eventType;

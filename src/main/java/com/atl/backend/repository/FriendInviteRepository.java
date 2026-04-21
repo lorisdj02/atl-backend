@@ -8,10 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FriendInviteRepository extends JpaRepository<FriendInvite, Integer> {
-    Integer countByInviterAccount_IdAndRedeemedTrue(Integer inviterAccountId);
+public interface FriendInviteRepository extends JpaRepository<FriendInvite, Long> {
+    Integer countByInviterAccount_IdAndRedeemedTrue(Long inviterAccountId);
 
-    Integer countByInviterAccount_Id(Integer inviterAccountId);
+    Integer countByInviterAccount_Id(Long inviterAccountId);
 
-    Optional<FriendInvite> findByInvitedAccount_IdAndRedeemedFalse(Integer invitedAccountId);
+    Optional<FriendInvite> findByInvitedAccount_IdAndRedeemedFalse(Long invitedAccountId);
 }

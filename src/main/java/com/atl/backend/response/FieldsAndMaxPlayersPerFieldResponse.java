@@ -26,10 +26,10 @@ public class FieldsAndMaxPlayersPerFieldResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.maxPlayersPerField)
-    private Map<Integer, Short> maxPlayersPerField = new HashMap<>();
+    private Map<Long, Short> maxPlayersPerField = new HashMap<>();
 
     /*
      * final List<Field> fields;
-     * final Map<int, int> maxPlayersPerField;
+     * final Map<Long, Short> maxPlayersPerField;
      */
 }

@@ -44,11 +44,11 @@ public class SportService {
         this.refereeRoleRepository = refereeRoleRepository;
     }
 
-    public void saveSport(com.atl.backend.model.Sport sport) {
+    public void saveSport(Sport sport) {
         sportRepository.save(sport);
     }
 
-    public Optional<Sport> getSportById(Integer id) {
+    public Optional<Sport> getSportById(Long id) {
         return sportRepository.findById(id);
     }
 
@@ -80,23 +80,23 @@ public class SportService {
         return sportRepository.findBySportCategory(sportCategory);
     }
 
-    public List<RefereeRole> getRefereeRolesBySportId(Integer sportId) {
+    public List<RefereeRole> getRefereeRolesBySportId(Long sportId) {
         return refereeRoleRepository.findBySport_Id(sportId);
     }
 
-    public List<RefereeRole> getRefereeRolesBySportIdAndLevel(Integer sportId, Short level) {
+    public List<RefereeRole> getRefereeRolesBySportIdAndLevel(Long sportId, Short level) {
         return refereeRoleRepository.findBySport_IdAndLevel(sportId, level);
     }
 
-    public List<RefereeLicense> getRefereeLicensesByRefereeId(Integer refereeId) {
+    public List<RefereeLicense> getRefereeLicensesByRefereeId(Long refereeId) {
         return refereeLicenseRepository.findByReferee_RefereeId(refereeId);
     }
 
-    public Optional<RefereeLicense> getRefereeLicensesByRefereeIdAndSportId(Integer refereeId, Integer sportId) {
+    public Optional<RefereeLicense> getRefereeLicensesByRefereeIdAndSportId(Long refereeId, Long sportId) {
         return refereeLicenseRepository.findByReferee_RefereeIdAndSport_Id(refereeId, sportId);
     }
 
-    public Map<String, BigDecimal> getRefereePayPerMatchBySportIdAndLevel(Integer sportId, Short level) {
+    public Map<String, BigDecimal> getRefereePayPerMatchBySportIdAndLevel(Long sportId, Short level) {
         Optional<Sport> sportOpt = sportRepository.findById(sportId);
         if (sportOpt.isEmpty()) {
             throw new NotFoundException(ErrorsString.SPORT_NOT_FOUND);
@@ -117,7 +117,7 @@ public class SportService {
         return sportRepository.findBySportCategory(sportCategory);
     }
 
-    public void checkSportExists(Integer sportId) {
+    public void checkSportExists(Long sportId) {
         if (!sportRepository.existsById(sportId)) {
             throw new NotFoundException(ErrorsString.SPORT_NOT_FOUND);
         }

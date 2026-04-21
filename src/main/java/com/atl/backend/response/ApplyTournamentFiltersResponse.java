@@ -29,23 +29,23 @@ public class ApplyTournamentFiltersResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.cityNamePerField)
-    private Map<Integer, String> cityNamePerField = new HashMap<>();
+    private Map<Long, String> cityNamePerField = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.fieldsCache)
-    private Map<Integer, FieldDTO> fieldsCache = new HashMap<>();
+    private Map<Long, FieldDTO> fieldsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.coordinatorsCache)
-    private Map<Integer, CoordinatorDTO> coordinatorsCache = new HashMap<>();
+    private Map<Long, CoordinatorDTO> coordinatorsCache = new HashMap();
 
 
     /*
      * List<Tournament> tournaments;
-     * Map<int, String> cityNamePerField;
-     * Map<int, Field> fieldsCache;
-     * Map<int, Coordinator> coordinatorsCache;
+     * Map<Long, String> cityNamePerField;
+     * Map<Long, Field> fieldsCache;
+     * Map<Long, Coordinator> coordinatorsCache;
      */
 }

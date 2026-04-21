@@ -13,11 +13,11 @@ import com.atl.backend.model.TournamentParticipation;
 public class TournamentParticipationDTO {
     @NotNull
     @JsonProperty("tournamentId")
-    private Integer tournamentId;
+    private Long tournamentId;
 
     @NotNull
     @JsonProperty("teamId")
-    private Integer teamId;
+    private Long teamId;
     
     @NotNull
     @JsonProperty("toPay")

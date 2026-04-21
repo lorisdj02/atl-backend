@@ -32,11 +32,11 @@ public class PrivateBookingService {
     @Autowired
     private PrivateBookingRepository privateBookingRepository;
 
-    public List<PrivateBooking> getPrivateBookingsByPlayerId(Integer playerId) {
+    public List<PrivateBooking> getPrivateBookingsByPlayerId(Long playerId) {
         return privateBookingRepository.findByPlayer_PlayerId(playerId);
     }
 
-    public List<PrivateBooking> getActivePrivateBookingsByPlayerId(Integer playerId) {
+    public List<PrivateBooking> getActivePrivateBookingsByPlayerId(Long playerId) {
         List<PrivateBooking> privateBookings = privateBookingRepository.findByPlayer_PlayerId(playerId);
         List<PrivateBooking> activePrivateBookings = List.of();
         for (PrivateBooking booking : privateBookings) {
@@ -48,7 +48,7 @@ public class PrivateBookingService {
         return activePrivateBookings;
     }
 
-    public List<PrivateBooking> getPrivateBookingsByFieldId(Integer fieldId) {
+    public List<PrivateBooking> getPrivateBookingsByFieldId(Long fieldId) {
         return privateBookingRepository.findByBooking_Field_Id(fieldId);
     }
 
@@ -72,7 +72,7 @@ public class PrivateBookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Integer createPrivateBookingFromCheckoutPayload(CheckoutPayload checkoutPayload) {
+    public Long createPrivateBookingFromCheckoutPayload(CheckoutPayload checkoutPayload) {
 
         PrivateBookingDTO privateBookingDTO = new PrivateBookingDTO();
         privateBookingDTO.setFieldId(checkoutPayload.getFieldId());
@@ -86,7 +86,7 @@ public class PrivateBookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundPrivateBooking(Integer bookingId) {
+    public void refundPrivateBooking(Long bookingId) {
         Player activePlayer = AccountContext.getActivePlayer();
         PrivateBooking privateBooking = privateBookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
@@ -99,14 +99,14 @@ public class PrivateBookingService {
         privateBookingRepository.save(privateBooking);
     }
 
-    public Integer countPrivateBookingsByPlayerIdAndSportCategory(Integer playerId, SportCategory sportCategory) {
+    public Integer countPrivateBookingsByPlayerIdAndSportCategory(Long playerId, SportCategory sportCategory) {
         List<PrivateBooking> privateBookings = privateBookingRepository.findByPlayer_PlayerId(playerId);
         List<PrivateBooking> filteredPrivateBookings = privateBookings.stream()
                 .filter(pb -> pb.getBooking().getSportCategory() == sportCategory).toList();
         return filteredPrivateBookings.size();
     }
 
-    public Optional<PrivateBooking> getPrivateBookingByBookingId(Integer bookingId) {
+    public Optional<PrivateBooking> getPrivateBookingByBookingId(Long bookingId) {
         return privateBookingRepository.findById(bookingId);
     }
 

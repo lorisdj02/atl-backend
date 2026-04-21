@@ -49,25 +49,25 @@ public class BookingService {
     @Autowired
     private PrivateBookingService privateBookingService;
 
-    public Optional<Booking> getBookingByBookingId(Integer bookingId) {
+    public Optional<Booking> getBookingByBookingId(Long bookingId) {
         return bookingRepository.findById(bookingId);
     }
 
-    public List<Booking> getBookingsByFieldId(Integer fieldId) {
+    public List<Booking> getBookingsByFieldId(Long fieldId) {
         return bookingRepository.findByField_Id(fieldId);
     }
 
     @Transactional(readOnly = true)
     public FieldsAndMaxPlayersPerFieldResponse getFreeFieldsByMaxPlayersAndCityAndDateAndSportCategory(
-            Integer maxPlayers, Integer cityId, LocalDateTime startTime, LocalDateTime finishTime,
+            Short maxPlayers, Long cityId, LocalDateTime startTime, LocalDateTime finishTime,
             SportCategory sportCategory) {
         List<Booking> bookings = bookingRepository
                 .findByField_City_IdAndStartTimeGreaterThanEqualAndFinishTimeLessThanEqual(cityId, startTime,
                         finishTime);
         List<Field> cityFields = fieldService.getFieldsByCityId(cityId);
-        List<Integer> bookedFieldIds = bookings.stream().map(b -> b.getField().getId()).toList();
+        List<Long> bookedFieldIds = bookings.stream().map(b -> b.getField().getId()).toList();
 
-        Map<Integer, Short> maxPlayersPerField = new HashMap<>();
+        Map<Long, Short> maxPlayersPerField = new HashMap<>();
         List<Field> freeFields = cityFields.stream().filter(f -> !bookedFieldIds.contains(f.getId())).toList();
         for (Field field : freeFields) {
             maxPlayersPerField.put(field.getId(),
@@ -80,12 +80,12 @@ public class BookingService {
                 .build();
     }
 
-    public List<Booking> getBookingsByFieldIdFromNow(Integer fieldId) {
+    public List<Booking> getBookingsByFieldIdFromNow(Long fieldId) {
         return bookingRepository.findByField_IdAndStartTimeGreaterThanEqual(fieldId, LocalDateTime.now());
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void startBooking(Integer bookingId) {
+    public void startBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
         if (booking.getStatus() != BookingStatus.BOOKED) {
@@ -96,14 +96,14 @@ public class BookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void finishBooking(Integer bookingId) {
+    public void finishBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
         booking.setStatus(BookingStatus.FINISHED);
         bookingRepository.save(booking);
     }
 
-    public void setBookingRefunded(Integer bookingId) {
+    public void setBookingRefunded(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
         booking.setStatus(BookingStatus.REFUND);
@@ -113,7 +113,7 @@ public class BookingService {
 
     @Transactional(rollbackFor = Exception.class)
     public void leaveAllBookings() {
-        Integer playerId = AccountContext.getPlayerId();
+        Long playerId = AccountContext.getPlayerId();
         List<LobbyBooking> lobbyBookings = lobbyBookingService.getLobbyBookingsByPlayerId(playerId);
         for (LobbyBooking lobbyBooking : lobbyBookings) {
             if (lobbyBooking.getOwnerPlayer().getPlayerId() == playerId) {
@@ -129,7 +129,7 @@ public class BookingService {
         }
     }
 
-    public Set<Integer> getPlayerIdsByBookingId(Integer bookingId) {
+    public Set<Long> getPlayerIdsByBookingId(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
 

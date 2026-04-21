@@ -80,14 +80,14 @@ public class ReviewsOrchestrator {
         }
 
         @Transactional(rollbackFor = Exception.class)
-        public void startTournament(Integer tournamentId) {
+        public void startTournament(Long tournamentId) {
                 Tournament tournament = tournamentService.startTournament(tournamentId);
-                List<Integer> participantIds = tournamentParticipantService
+                List<Long> participantIds = tournamentParticipantService
                                 .getCalluppedPlayerIdsByTournamentId(tournamentId);
                 BigDecimal weight = BigDecimal.ZERO;
 
                 Coordinator reviewedCoordinator = tournament.getCoordinator();
-                for (Integer participantId : participantIds) {
+                for (Long participantId : participantIds) {
                         Callup callup = tournamentParticipantService.getCallupByPlayerIdAndTournamentId(participantId,
                                         tournament.getId())
                                         .orElseThrow(() -> new NotFoundException(
@@ -101,12 +101,12 @@ public class ReviewsOrchestrator {
                         reviewService.createReview(reviewerPlayer.getAccount(), reviewedCoordinator.getAccount(),
                                         tournament, null,
                                         ReviewType.PLAYER_TO_COORDINATOR, weight,
-                                        null);
+                                        null, tournament.getSport().getSportCategory());
                 }
 
-                Set<Integer> playerIds = paymentService.getAccountIdsByTournamentId(tournamentId);
+                Set<Long> playerIds = paymentService.getAccountIdsByTournamentId(tournamentId);
 
-                for (Integer playerId : playerIds) {
+                for (Long playerId : playerIds) {
                         Player player = playerService.getPlayerByPlayerId(playerId)
                                         .orElseThrow(() -> new BadRequestException(ErrorsString.PLAYER_NOT_FOUND));
                         Optional<FriendInvite> friendInvite = accountService.redeemInvite(player.getAccount());
@@ -120,15 +120,15 @@ public class ReviewsOrchestrator {
         }
 
         @Transactional(rollbackFor = Exception.class)
-        public void finishTournament(Integer tournamentId) {
+        public void finishTournament(Long tournamentId) {
                 Tournament tournament = tournamentService.finishTournament(tournamentId);
                 Team winningTeam = tournamentParticipantService.getWinningTeamInTournament(tournamentId)
                                 .orElseThrow(() -> new NotFoundException(ErrorsString.WINNING_TEAM_NOT_FOUND));
                 Team finalistTeam = null;
-                List<Integer> winningPlayerIds = tournamentParticipantService
+                List<Long> winningPlayerIds = tournamentParticipantService
                                 .getCalluppedPlayerIdsByTournamentIdAndTeamId(tournamentId, winningTeam.getId());
 
-                List<Integer> finalistPlayerIds = new ArrayList<>();
+                List<Long> finalistPlayerIds = new ArrayList<>();
                 if (tournament.getPrize2() != null && tournament.getPrize2().compareTo(BigDecimal.ZERO) > 0) {
                         finalistTeam = tournamentParticipantService.getFinalistTeamInTournament(tournamentId)
                                         .orElseThrow(() -> new NotFoundException(ErrorsString.FINALIST_TEAM_NOT_FOUND));
@@ -137,9 +137,9 @@ public class ReviewsOrchestrator {
                                                         finalistTeam.getId());
                 }
 
-                List<Integer> callups = tournamentParticipantService.getCalluppedPlayerIdsByTournamentId(tournamentId);
+                List<Long> callups = tournamentParticipantService.getCalluppedPlayerIdsByTournamentId(tournamentId);
 
-                for (Integer playerId : callups) {
+                for (Long playerId : callups) {
                         if (!winningPlayerIds.contains(playerId)
                                         && (finalistTeam == null || !finalistPlayerIds.contains(playerId))) {
                                 Player reviewerPlayer = playerService.getPlayerByPlayerId(playerId)
@@ -197,7 +197,7 @@ public class ReviewsOrchestrator {
                         throw new BadRequestException(ErrorsString.PRIZE_DISTRIBUTION_EXCEEDS_TOTAL_PRIZE);
                 }
 
-                List<Integer> consideredPlayerIds = isWinningTeam ? tournamentParticipantService
+                List<Long> consideredPlayerIds = isWinningTeam ? tournamentParticipantService
                                 .getCalluppedPlayerIdsByTournamentIdAndTeamId(request.getTournamentId(),
                                                 winningTeam.getId())
                                 : tournamentParticipantService
@@ -207,7 +207,7 @@ public class ReviewsOrchestrator {
                 if (!consideredPlayerIds.contains(requestingPlayer.getPlayerId())) {
                         throw new ConflictException(ErrorsString.PLAYER_NOT_CALLED_UP_IN_TOURNAMENT);
                 }
-                for (Integer winningPlayerId : consideredPlayerIds) {
+                for (Long winningPlayerId : consideredPlayerIds) {
                         BigDecimal prize = request.getPrizePerPlayer().get(winningPlayerId);
                         // Create transaction for the winning player
                         TransactionGroup transactionGroup = new TransactionGroup();
@@ -236,7 +236,7 @@ public class ReviewsOrchestrator {
         }
 
         @Transactional(rollbackFor = Exception.class)
-        public void startMatch(Integer matchId) {
+        public void startMatch(Long matchId) {
                 Match match = matchService.startMatch(matchId);
                 Tournament tournament = match.getTournament();
                 Coordinator tournamentCoordinator = tournament.getCoordinator();
@@ -261,7 +261,7 @@ public class ReviewsOrchestrator {
                                         tournament,
                                         match,
                                         ReviewType.REFEREE_TO_COORDINATOR, BigDecimal.ONE,
-                                        linkedTransaction);
+                                        linkedTransaction, match.getSportCategory());
 
                         // COORDINATOR TO REFEREE REVIEW CREATION AND PAYMENT TRANSACTION CREATION
                         amount = coordinatorService
@@ -279,12 +279,12 @@ public class ReviewsOrchestrator {
                                         tournament,
                                         match,
                                         ReviewType.COORDINATOR_TO_REFEREE, BigDecimal.ONE,
-                                        linkedTransaction);
+                                        linkedTransaction, match.getSportCategory());
                 }
         }
 
         @Transactional(rollbackFor = Exception.class)
-        public void finishMatch(Integer matchId) {
+        public void finishMatch(Long matchId) {
                 Match match = matchService.finishMatch(matchId);
                 Tournament tournament = match.getTournament();
                 Coordinator tournamentCoordinator = tournament.getCoordinator();

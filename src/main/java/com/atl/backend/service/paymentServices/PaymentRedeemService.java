@@ -1,5 +1,6 @@
 package com.atl.backend.service.paymentServices;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,25 +29,27 @@ public class PaymentRedeemService {
     @Autowired
     private BookingService bookingService;
 
-    private Purchase getExistingPurchase(Integer purchaseId) {
+    private Purchase getExistingPurchase(Long purchaseId) {
         return purchaseRepository.findById(purchaseId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND));
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void redeemPurchase(Integer purchaseId) {
+    public void redeemPurchase(Long purchaseId) {
 
         Purchase purchase = getExistingPurchase(purchaseId);
         if (purchase.getStatus() != PurchaseStatus.CONFIRMED) {
             throw new ConflictException(ErrorsString.PURCHASE_NOT_REDEEMABLE);
         }
         purchase.setStatus(PurchaseStatus.REDEEMED);
+        purchase.setRedeemedAt(LocalDateTime.now());
+        purchase.setUpdatedAt(LocalDateTime.now());
         paymentRefundService.setTransactionsNotRefundableByTransactionGroupId(purchase.getTransactionGroup().getId());
         purchaseRepository.save(purchase);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void redeemBookingPurchasesByBookingId(Integer bookingId) {
+    public void redeemBookingPurchasesByBookingId(Long bookingId) {
         List<Purchase> purchases = new ArrayList<>();
         Booking booking = bookingService.getBookingByBookingId(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
@@ -82,10 +85,9 @@ public class PaymentRedeemService {
             redeemPurchase(purchase.getId());
         }
 
-        
     }
 
-    public void redeemTournamentFeePurchasesByTournamentId(Integer tournamentId) {
+    public void redeemTournamentFeePurchasesByTournamentId(Long tournamentId) {
         List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndStatus(
                 CheckoutType.TOURNAMENT_FEE, tournamentId, PurchaseStatus.CONFIRMED);
 

@@ -8,7 +8,7 @@ import lombok.Data;
 @Table(name = "match_booking", uniqueConstraints = @UniqueConstraint(columnNames = "match_id"))
 public class MatchBooking {
     @Id
-    private Integer id;
+    private Long id;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
@@ -18,7 +18,7 @@ public class MatchBooking {
 
     /*
      * @Column(name = "coordinator_id", nullable = false)
-     * private Integer coordinatorId;
+     * private Long coordinatorId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -27,7 +27,7 @@ public class MatchBooking {
 
     /*
      * @Column(name = "match_id", nullable = false)
-     * private Integer matchId;
+     * private Long matchId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

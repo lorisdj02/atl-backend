@@ -39,8 +39,8 @@ public class BookingScreenService {
 
         @Transactional(readOnly = true)
         public BookFieldResponse getBookFieldScreen(SportCategory sportCategory) {
-                Map<Integer, LocalTime> minOpeningTimePerCity = new HashMap<>();
-                Map<Integer, LocalTime> maxClosingTimePerCity = new HashMap<>();
+                Map<Long, LocalTime> minOpeningTimePerCity = new HashMap<>();
+                Map<Long, LocalTime> maxClosingTimePerCity = new HashMap<>();
                 List<City> cities = fieldService.getAllCities();
                 for (City city : cities) {
                         minOpeningTimePerCity.put(city.getId(),
@@ -57,20 +57,20 @@ public class BookingScreenService {
 
         @Transactional(readOnly = true)
         public JoinLobbyResponse getJoinLobbyScreen(SportCategory sportCategory, Short totalPlayers,
-                        Integer selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
+                        Long selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
 
-                Integer playerId = AccountContext.getPlayerId();
+                Long playerId = AccountContext.getPlayerId();
                 Optional<Player> optionalPlayer = playerService.getPlayerByPlayerId(playerId);
                 if (optionalPlayer.isEmpty()) {
                         throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
                 }
 
-                Map<Integer, String> usernamePerBooking = new HashMap<>();
-                Map<Integer, Short> maxPlayersPerLobby = new HashMap<>();
-                Map<Integer, Short> currentPlayersPerLobby = new HashMap<>();
-                Map<Integer, Short> playersPaidPerBooking = new HashMap<>();
-                Map<Integer, FieldDTO> fieldsCache = new HashMap<>();
-                Map<Integer, String> completeAddressPerField = new HashMap<>();
+                Map<Long, String> usernamePerBooking = new HashMap<>();
+                Map<Long, Short> maxPlayersPerLobby = new HashMap<>();
+                Map<Long, Short> currentPlayersPerLobby = new HashMap<>();
+                Map<Long, Short> playersPaidPerBooking = new HashMap<>();
+                Map<Long, FieldDTO> fieldsCache = new HashMap<>();
+                Map<Long, String> completeAddressPerField = new HashMap<>();
                 List<CityDTO> cities = fieldService.getAllCities().stream().map(CityDTO::fromCity).toList();
 
                 List<LobbyBooking> lobbies = lobbyBookingService.getBookedLobbyBookings(sportCategory, totalPlayers,

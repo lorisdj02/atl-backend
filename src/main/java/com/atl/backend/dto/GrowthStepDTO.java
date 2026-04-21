@@ -21,7 +21,7 @@ public class GrowthStepDTO {
 
     @NotNull
     @JsonProperty("x")
-    private Integer x;
+    private Short x;
 
     @JsonProperty("minRatingOverLastXMatches")
     private Double minRatingOverLastXMatches;

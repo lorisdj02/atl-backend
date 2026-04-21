@@ -70,25 +70,25 @@ public class TournamentController {
     }
 
     @GetMapping("/tournament/{tournamentId}/details")
-    public ResponseEntity<TournamentDetailsResponse> getTournamentDetailsScreen(@PathVariable Integer tournamentId) {
+    public ResponseEntity<TournamentDetailsResponse> getTournamentDetailsScreen(@PathVariable Long tournamentId) {
         TournamentDetailsResponse response = tournamentScreenService.getTournamentDetailsScreen(tournamentId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/tournament/{tournamentId}/view-callups")
-    public ResponseEntity<List<PlayerDTO>> getViewCallupsScreen(@PathVariable Integer tournamentId) {
+    public ResponseEntity<List<PlayerDTO>> getViewCallupsScreen(@PathVariable Long tournamentId) {
         List<PlayerDTO> response = tournamentScreenService.getViewCallupsScreen(tournamentId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/tournament/{tournamentId}/callups")
-    public ResponseEntity<CallupsResponse> getCallupsScreen(@PathVariable Integer tournamentId) {
+    public ResponseEntity<CallupsResponse> getCallupsScreen(@PathVariable Long tournamentId) {
         CallupsResponse response = tournamentScreenService.getCallupsScreen(tournamentId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/tournament/{tournamentId}")
-    public ResponseEntity<?> getTournamentScreen(@PathVariable Integer tournamentId) {
+    public ResponseEntity<?> getTournamentScreen(@PathVariable Long tournamentId) {
         Optional<?> response = tournamentScreenService.getTournamentScreen(tournamentId);
         return ResponseEntity.ok(response.get());
     }
@@ -98,7 +98,7 @@ public class TournamentController {
     @GetMapping("/{sportCategory}/filters")
     public ResponseEntity<ApplyTournamentFiltersResponse> applyTournamentFilters(
             @PathVariable String sportCategory,
-            @RequestParam(required = false) Integer cityId,
+            @RequestParam(required = false) Long cityId,
             @RequestParam(required = false) Short minTeams,
             @RequestParam(required = false) Short maxTeams,
             @RequestParam(required = false) BigDecimal minFee,
@@ -125,7 +125,7 @@ public class TournamentController {
     }
 
     @GetMapping("/search-by-id/{tournamentId}")
-    public ResponseEntity<TournamentDTO> getTournamentById(@PathVariable Integer tournamentId) {
+    public ResponseEntity<TournamentDTO> getTournamentById(@PathVariable Long tournamentId) {
         Optional<Tournament> response = tournamentService.getTournamentById(tournamentId);
         if (response.isEmpty()) {
             throw new BadRequestException(ErrorsString.TOURNAMENT_NOT_FOUND);
@@ -134,13 +134,13 @@ public class TournamentController {
     }
 
     @GetMapping("/tournament/{tournamentId}/schedule-data")
-    public ResponseEntity<ScheduleMatchResponse> getScheduleData(@PathVariable Integer tournamentId) {
+    public ResponseEntity<ScheduleMatchResponse> getScheduleData(@PathVariable Long tournamentId) {
         ScheduleMatchResponse response = tournamentService.getScheduleData(tournamentId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/tournament/{tournamentId}/summary")
-    public ResponseEntity<TournamentSummaryResponse> getTournamentSummary(@PathVariable Integer tournamentId) {
+    public ResponseEntity<TournamentSummaryResponse> getTournamentSummary(@PathVariable Long tournamentId) {
         TournamentSummaryResponse response = tournamentScreenService.getTournamentSummary(tournamentId);
         return ResponseEntity.ok(response);
     }
@@ -154,7 +154,7 @@ public class TournamentController {
     // Endpoint per partecipare a un torneo, che include la logica di conferma dei
     // callup
     @PostMapping("/tournament/{tournamentId}/confirm-callups")
-    public ResponseEntity<TournamentParticipationDTO> confirmCallups(@PathVariable Integer tournamentId,
+    public ResponseEntity<TournamentParticipationDTO> confirmCallups(@PathVariable Long tournamentId,
             @RequestBody ConfirmCallupsRequest request) {
         TournamentParticipation response = tournamentParticipantService.confirmCallups(tournamentId, request);
         return ResponseEntity.ok(TournamentParticipationDTO.fromTournamentParticipation(response));
@@ -163,25 +163,25 @@ public class TournamentController {
     // Endpoint per eliminare la partecipazione di una squadra a un torneo, che
     // include la logica di eliminazione dei callup
     @DeleteMapping("/tournament/{tournamentId}/team/{teamId}/delete-callups")
-    public ResponseEntity<Void> deleteCallups(@PathVariable Integer tournamentId, @PathVariable Integer teamId) {
+    public ResponseEntity<Void> deleteCallups(@PathVariable Long tournamentId, @PathVariable Long teamId) {
         purchasesOrchestrator.deleteCallups(tournamentId, teamId);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/tournament/{tournamentId}/go-next-phase")
-    public ResponseEntity<Void> goToCoordinatorNextPhase(@PathVariable Integer tournamentId) {
+    public ResponseEntity<Void> goToCoordinatorNextPhase(@PathVariable Long tournamentId) {
         tournamentPhaseService.goToCoordinatorNextPhase(tournamentId);
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/tournament/{tournamentId}/start")
-    public ResponseEntity<Void> startTournament(@PathVariable Integer tournamentId) {
+    public ResponseEntity<Void> startTournament(@PathVariable Long tournamentId) {
         reviewsOrchestrator.startTournament(tournamentId);
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/tournament/{tournamentId}/toggle-favorite-status")
-    public ResponseEntity<Void> toggleFavoriteStatus(@PathVariable Integer tournamentId) {
+    public ResponseEntity<Void> toggleFavoriteStatus(@PathVariable Long tournamentId) {
         tournamentService.toggleTournamentFavoriteStatus(tournamentId);
         return ResponseEntity.ok().build();
     }

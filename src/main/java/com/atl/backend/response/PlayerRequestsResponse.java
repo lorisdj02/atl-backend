@@ -23,5 +23,5 @@ public class PlayerRequestsResponse {
 
     @NotNull
     @JsonProperty(ApiJsonKeys.playersCache)
-    private Map<Integer, PlayerDTO> playersCache;
+    private Map<Long, PlayerDTO> playersCache;
 }

@@ -11,20 +11,20 @@ public class TeamDTO {
 
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @JsonProperty("cityId")
-    private Integer cityId;
+    private Long cityId;
 
     @NotNull
     @JsonProperty("captainPlayerId")
-    private Integer captainPlayerId;
+    private Long captainPlayerId;
 
     @JsonProperty("vice1PlayerId")
-    private Integer vice1PlayerId;
+    private Long vice1PlayerId;
 
     @JsonProperty("vice2PlayerId")
-    private Integer vice2PlayerId;
+    private Long vice2PlayerId;
 
     @JsonProperty("logoUrl")
     private String logoUrl;

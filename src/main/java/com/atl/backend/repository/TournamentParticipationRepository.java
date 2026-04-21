@@ -13,19 +13,19 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TournamentParticipationRepository extends JpaRepository<TournamentParticipation, TournamentParticipationId> {
 
-    List<TournamentParticipation> findByTeam_Id(Integer teamId);
+    List<TournamentParticipation> findByTeam_Id(Long teamId);
 
-    List<TournamentParticipation> findByTournament_Id(Integer tournamentId);
+    List<TournamentParticipation> findByTournament_Id(Long tournamentId);
 
-    List<TournamentParticipation> findByTournament_IdAndToPayGreaterThan(Integer tournamentId, BigDecimal toPay);
+    List<TournamentParticipation> findByTournament_IdAndToPayGreaterThan(Long tournamentId, BigDecimal toPay);
 
-    List<TournamentParticipation> findByTournament_IdAndToPay(Integer tournamentId, BigDecimal toPay);
+    List<TournamentParticipation> findByTournament_IdAndToPay(Long tournamentId, BigDecimal toPay);
 
-    Optional<TournamentParticipation> findByTeam_IdAndTournament_Id(Integer teamId, Integer tournamentId);
+    Optional<TournamentParticipation> findByTeam_IdAndTournament_Id(Long teamId, Long tournamentId);
 
-    List<TournamentParticipation> findByTeam_IdAndToPay(Integer teamId, BigDecimal toPay);
+    List<TournamentParticipation> findByTeam_IdAndToPay(Long teamId, BigDecimal toPay);
 
-    List<TournamentParticipation> findByTeam_IdAndToPayGreaterThan(Integer teamId, BigDecimal toPay);
+    List<TournamentParticipation> findByTeam_IdAndToPayGreaterThan(Long teamId, BigDecimal toPay);
 
-    void deleteByTeam_IdAndTournament_Id(Integer teamId, Integer tournamentId);
+    void deleteByTeam_IdAndTournament_Id(Long teamId, Long tournamentId);
 }

@@ -12,17 +12,17 @@ import jakarta.validation.constraints.*;
 public class FootballMatchEventDTO {
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @NotNull
     @JsonProperty("matchId")
-    private Integer matchId;
+    private Long matchId;
 
     @JsonProperty("teamId")
-    private Integer teamId;
+    private Long teamId;
 
     @JsonProperty("playerId")
-    private Integer playerId;
+    private Long playerId;
 
     @NotNull
     @JsonProperty("type")

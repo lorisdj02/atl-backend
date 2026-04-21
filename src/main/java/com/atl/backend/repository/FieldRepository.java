@@ -8,10 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FieldRepository extends JpaRepository<Field, Integer> {
+public interface FieldRepository extends JpaRepository<Field, Long> {
         void deleteAll();
 
-        List<Field> findByOrganization_OrganizationId(Integer organizationId);
+        List<Field> findByOrganization_OrganizationId(Long organizationId);
 
-        List<Field> findByCity_Id(Integer cityId);
+        List<Field> findByCity_Id(Long cityId);
 }

@@ -31,7 +31,7 @@ public class CallupsResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.calledUpPlayerIds)
-    private List<Integer> calledUpPlayerIds = new ArrayList<>();
+    private List<Long> calledUpPlayerIds = new ArrayList<>();
 
     @NotNull
     @JsonProperty(ApiJsonKeys.tournament)

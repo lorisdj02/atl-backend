@@ -12,9 +12,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FootballTeamStatRepository extends JpaRepository<FootballTeamStat, FootballTeamStatId> {
 
-    List<FootballTeamStat> findByTeam_Id(Integer teamId);
+    List<FootballTeamStat> findByTeam_Id(Long teamId);
 
-    List<FootballTeamStat> findByPlayer_PlayerId(Integer playerId);
+    List<FootballTeamStat> findByPlayer_PlayerId(Long playerId);
 
-    Optional<FootballTeamStat> findByTeam_IdAndPlayer_PlayerId(Integer teamId, Integer playerId);
+    Optional<FootballTeamStat> findByTeam_IdAndPlayer_PlayerId(Long teamId, Long playerId);
 }

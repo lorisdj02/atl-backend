@@ -5,6 +5,6 @@ import java.io.Serializable;
 
 @Data
 public class FootballStandingId implements Serializable {
-    private Integer tournament;
-    private Integer team;
+    private Long tournament;
+    private Long team;
 }

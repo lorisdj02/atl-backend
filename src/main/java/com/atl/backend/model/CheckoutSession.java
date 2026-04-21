@@ -15,11 +15,11 @@ import java.time.LocalDateTime;
 public class CheckoutSession {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "account_id")
-     * private Integer accountId;
+     * private Long accountId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

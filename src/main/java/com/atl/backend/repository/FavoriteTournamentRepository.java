@@ -15,8 +15,8 @@ import org.springframework.stereotype.Repository;
 public interface FavoriteTournamentRepository extends JpaRepository<FavoriteTournament, FavoriteTournamentId> {
 
     @Query("SELECT ft FROM FavoriteTournament ft WHERE ft.account.id = :accountId AND ft.tournament.sport.sportCategory = :sportCategory")
-    public List<FavoriteTournament> findByAccount_IdAndTournament_Sport_SportCategory(Integer accountId,
+    public List<FavoriteTournament> findByAccount_IdAndTournament_Sport_SportCategory(Long accountId,
             SportCategory sportCategory);
 
-    public Optional<FavoriteTournament> findByAccount_IdAndTournament_Id(Integer accountId, Integer tournamentId);
+    public Optional<FavoriteTournament> findByAccount_IdAndTournament_Id(Long accountId, Long tournamentId);
 }

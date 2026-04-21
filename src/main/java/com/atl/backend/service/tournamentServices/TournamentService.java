@@ -125,7 +125,7 @@ public class TournamentService {
         return tournamentRepository.findAll();
     }
 
-    public Optional<Tournament> getTournamentById(Integer id) {
+    public Optional<Tournament> getTournamentById(Long id) {
         return tournamentRepository.findById(id);
     }
 
@@ -133,11 +133,11 @@ public class TournamentService {
         return tournamentRepository.save(tournament);
     }
 
-    public void deleteTournament(Integer id) {
+    public void deleteTournament(Long id) {
         tournamentRepository.deleteById(id);
     }
 
-    private Coordinator getExistingCoordinatorByCoordinatorId(Integer coordinatorId) {
+    private Coordinator getExistingCoordinatorByCoordinatorId(Long coordinatorId) {
         Optional<Coordinator> coordinatorOpt = coordinatorRepository.findById(coordinatorId);
         if (coordinatorOpt.isEmpty()) {
             throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND);
@@ -153,13 +153,13 @@ public class TournamentService {
         return tournamentRepository.findActiveTournamentsBySportCategory(sportCategory);
     }
 
-    public List<Tournament> getActiveTournamentsByCoordinatorIdAndSportCategory(Integer coordinatorId,
+    public List<Tournament> getActiveTournamentsByCoordinatorIdAndSportCategory(Long coordinatorId,
             SportCategory sportCategory) {
         return tournamentRepository.findActiveTournamentsByCoordinator_CoordinatorIdAndSportCategory(coordinatorId,
                 sportCategory);
     }
 
-    public String getTournamentName(Integer tournamentId) {
+    public String getTournamentName(Long tournamentId) {
         Optional<Tournament> tournamentOpt = tournamentRepository.findById(tournamentId);
         if (tournamentOpt.isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
@@ -167,11 +167,11 @@ public class TournamentService {
         return tournamentOpt.get().getName();
     }
 
-    public List<FinalStageBracket> getFinalStageBracketsByTournamentId(Integer tournamentId) {
+    public List<FinalStageBracket> getFinalStageBracketsByTournamentId(Long tournamentId) {
         return finalStageBracketRepository.findByTournament_Id(tournamentId);
     }
 
-    public List<Tournament> getActiveTournamentsByTeamId(Integer teamId) {
+    public List<Tournament> getActiveTournamentsByTeamId(Long teamId) {
         teamService.checkTeamExists(teamId);
         List<TournamentParticipation> participations = tournamentParticipantService
                 .getTournamentParticipationsByTeamId(teamId);
@@ -193,7 +193,7 @@ public class TournamentService {
         return result;
     }
 
-    public List<Tournament> getActiveTournamentsByTeamIdAndSportCategory(Integer teamId, SportCategory sportCategory) {
+    public List<Tournament> getActiveTournamentsByTeamIdAndSportCategory(Long teamId, SportCategory sportCategory) {
         List<TournamentParticipation> participations = tournamentParticipantService
                 .getTournamentParticipationsByTeamId(teamId);
         return participations.stream()
@@ -204,7 +204,7 @@ public class TournamentService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Tournament startTournament(Integer tournamentId) {
+    public Tournament startTournament(Long tournamentId) {
         checkTournamentExists(tournamentId);
         Tournament tournament = tournamentRepository.findById(tournamentId).get();
 
@@ -251,7 +251,7 @@ public class TournamentService {
     }
 
     public List<TournamentDTO> getMyTournaments(SportCategory sportCategory) {
-        Integer accountId = AccountContext.getAccountId();
+        Long accountId = AccountContext.getAccountId();
         if (accountId == null) {
             throw new ForbiddenException(ErrorsString.AUTHENTICATION_REQUIRED);
         }
@@ -303,14 +303,14 @@ public class TournamentService {
         return myTournaments;
     }
 
-    public void checkTournamentExists(Integer tournamentId) {
+    public void checkTournamentExists(Long tournamentId) {
         if (tournamentRepository.findById(tournamentId).isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
         }
     }
 
     @Transactional(readOnly = true)
-    public ApplyTournamentFiltersResponse applyTournamentFilters(SportCategory sportCategory, Integer cityId,
+    public ApplyTournamentFiltersResponse applyTournamentFilters(SportCategory sportCategory, Long cityId,
             Short minTeams, Short maxTeams, BigDecimal minFee, BigDecimal maxFee, BigDecimal minPrize,
             BigDecimal maxPrize,
             String name) {
@@ -356,9 +356,9 @@ public class TournamentService {
                     .toList();
         }
 
-        Map<Integer, Field> fieldsCache = new HashMap<>();
-        Map<Integer, String> cityNamePerField = new HashMap<>();
-        Map<Integer, Coordinator> coordinatorsCache = new HashMap<>();
+        Map<Long, Field> fieldsCache = new HashMap<>();
+        Map<Long, String> cityNamePerField = new HashMap<>();
+        Map<Long, Coordinator> coordinatorsCache = new HashMap<>();
 
         for (Tournament tournament : tournaments) {
             if (!fieldsCache.containsKey(tournament.getField().getId())) {
@@ -457,7 +457,7 @@ public class TournamentService {
     }
 
     @Transactional(readOnly = true)
-    public ScheduleMatchResponse getScheduleData(Integer tournamentId) {
+    public ScheduleMatchResponse getScheduleData(Long tournamentId) {
         Optional<Tournament> tournamentOpt = tournamentRepository.findById(tournamentId);
         if (tournamentOpt.isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
@@ -511,7 +511,7 @@ public class TournamentService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Integer retireFromMatch(Integer matchId) {
+    public Long retireFromMatch(Long matchId) {
         Player activePlayer = AccountContext.getActivePlayer();
 
         Optional<Match> optionalMatch = matchService.getMatchById(matchId);
@@ -526,7 +526,7 @@ public class TournamentService {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
         }
         Team team = teamOptional.get();
-        Integer teamId = team.getId();
+        Long teamId = team.getId();
 
         if (!tournamentParticipantService.isPlayerCalledUpInTournament(activePlayer.getPlayerId(),
                 match.getTournament().getId())) {
@@ -599,7 +599,7 @@ public class TournamentService {
         return match.getId();
     }
 
-    public Integer countActiveTournamentsByTeamIdAndPlayerId(Integer teamId, Integer playerId) {
+    public Integer countActiveTournamentsByTeamIdAndPlayerId(Long teamId, Long playerId) {
         teamService.checkTeamExists(teamId);
         List<Tournament> tournaments = getActiveTournamentsByTeamId(teamId);
 
@@ -614,7 +614,7 @@ public class TournamentService {
         return count;
     }
 
-    public BigDecimal getCoordinatorPayPerMatchByCoordinatorId(Integer coordinatorId) {
+    public BigDecimal getCoordinatorPayPerMatchByCoordinatorId(Long coordinatorId) {
         Coordinator coordinator = getExistingCoordinatorByCoordinatorId(coordinatorId);
         Short level = coordinator.getLevel();
         if (level == null) {
@@ -635,7 +635,7 @@ public class TournamentService {
         return levels.get(index);
     }
 
-    public void toggleTournamentFavoriteStatus(Integer tournamentId) {
+    public void toggleTournamentFavoriteStatus(Long tournamentId) {
         Account account = AccountContext.getActiveAccount();
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
@@ -652,7 +652,7 @@ public class TournamentService {
         }
     }
 
-    public Tournament assignPrizeInTournament(Integer tournamentId, Boolean assignFirstPrize,
+    public Tournament assignPrizeInTournament(Long tournamentId, Boolean assignFirstPrize,
             Boolean assignSecondPrize) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
@@ -672,7 +672,7 @@ public class TournamentService {
         return tournamentRepository.save(tournament);
     }
 
-    public Boolean arePrizesAsssignedInTournament(Integer tournamentId) {
+    public Boolean arePrizesAsssignedInTournament(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
 
@@ -684,7 +684,7 @@ public class TournamentService {
                 && (tournament.getPrize2() == null || tournament.getPrize2().compareTo(BigDecimal.ZERO) < 0);
     }
 
-    public Tournament closeTournament(Integer tournamentId) {
+    public Tournament closeTournament(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
 
@@ -696,7 +696,7 @@ public class TournamentService {
         return tournamentRepository.save(tournament);
     }
 
-    public Tournament finishTournament(Integer tournamentId) {
+    public Tournament finishTournament(Long tournamentId) {
         // TODO: controllare secondo
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));

@@ -5,6 +5,6 @@ import java.io.Serializable;
 
 @Data
 public class TeamRequestId implements Serializable {
-    private Integer team;
-    private Integer player;
+    private Long team;
+    private Long player;
 }

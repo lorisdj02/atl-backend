@@ -14,7 +14,7 @@ public class PrivateBookingDTO extends BookingDTO {
 
     @NotNull
     @JsonProperty("playerId")
-    private Integer playerId;
+    private Long playerId;
 
     @NotNull
     @JsonProperty("cost")

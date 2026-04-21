@@ -10,15 +10,15 @@ import org.springframework.stereotype.Repository;
 import com.atl.backend.model.WalletBalance;
 
 @Repository
-public interface WalletBalanceRepository extends JpaRepository<WalletBalance, Integer> {
-    Optional<WalletBalance> findByAccount_Id(Integer accountId);
+public interface WalletBalanceRepository extends JpaRepository<WalletBalance, Long> {
+    Optional<WalletBalance> findByAccount_Id(Long accountId);
 
     @Query("SELECT w.prizeBalance FROM WalletBalance w WHERE w.account.id = :accountId")
-    BigDecimal findPrizeBalanceByAccount_Id(Integer accountId);
+    BigDecimal findPrizeBalanceByAccount_Id(Long accountId);
 
     @Query("SELECT w.personalBalance FROM WalletBalance w WHERE w.account.id = :accountId")
-    BigDecimal findPersonalBalanceByAccount_Id(Integer accountId);
+    BigDecimal findPersonalBalanceByAccount_Id(Long accountId);
 
     @Query("SELECT w.inviteBalance FROM WalletBalance w WHERE w.account.id = :accountId")
-    BigDecimal findInviteBalanceByAccount_Id(Integer accountId);
+    BigDecimal findInviteBalanceByAccount_Id(Long accountId);
 }

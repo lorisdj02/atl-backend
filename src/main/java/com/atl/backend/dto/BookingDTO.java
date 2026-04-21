@@ -12,7 +12,7 @@ import lombok.Data;
 public class BookingDTO {
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @NotNull
     @JsonProperty("startTime")
@@ -32,7 +32,7 @@ public class BookingDTO {
 
     @NotNull
     @JsonProperty("fieldId")
-    private Integer fieldId;
+    private Long fieldId;
 
     @NotNull
     @JsonProperty("bookingType")

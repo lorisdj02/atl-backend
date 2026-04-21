@@ -8,16 +8,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface OrganizationRepository extends JpaRepository<Organization, Integer> {
+public interface OrganizationRepository extends JpaRepository<Organization, Long> {
 
-    Optional<Organization> findByOrganizationId(Integer organizationId);
+    Optional<Organization> findByOrganizationId(Long organizationId);
 
-    Optional<Organization> findByAccount_Id(Integer accountId);
+    Optional<Organization> findByAccount_Id(Long accountId);
 
-    void deleteByAccount_Id(Integer accountId);
+    void deleteByAccount_Id(Long accountId);
 
-    boolean existsByAccount_Id(Integer accountId);
+    boolean existsByAccount_Id(Long accountId);
 
-    boolean existsByOrganizationId(Integer organizationId);
+    boolean existsByOrganizationId(Long organizationId);
 
 }

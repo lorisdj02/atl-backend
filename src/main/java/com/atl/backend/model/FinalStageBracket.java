@@ -16,11 +16,11 @@ public class FinalStageBracket {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "tournament_id", nullable = false)
-     * private Integer tournamentId;
+     * private Long tournamentId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,7 +38,7 @@ public class FinalStageBracket {
 
     /*
      * @Column(name = "next_final_stage_bracket_id")
-     * private Integer nextFinalStageBracketId;
+     * private Long nextFinalStageBracketId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

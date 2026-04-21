@@ -22,7 +22,7 @@ public class PayParticipationResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.tournamentsCache)
-    private Map<Integer, TournamentDTO> tournamentsCache = new HashMap<>();
+    private Map<Long, TournamentDTO> tournamentsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
@@ -32,5 +32,5 @@ public class PayParticipationResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.isCalledUpPerTournament)
-    private Map<Integer, Boolean> isCalledUpPerTournament = new HashMap<>();
+    private Map<Long, Boolean> isCalledUpPerTournament = new HashMap<>();
 }

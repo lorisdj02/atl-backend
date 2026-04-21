@@ -39,12 +39,12 @@ public class AllTournamentsResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.coordinatorsCache)
-    private Map<Integer, CoordinatorDTO> coordinatorsCache = new HashMap<>();
+    private Map<Long, CoordinatorDTO> coordinatorsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.fieldsCache)
-    private Map<Integer, FieldDTO> fieldsCache = new HashMap<>();
+    private Map<Long, FieldDTO> fieldsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
@@ -54,7 +54,7 @@ public class AllTournamentsResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.cityNamePerField)
-    private Map<Integer, String> cityNamePerField = new HashMap<>();
+    private Map<Long, String> cityNamePerField = new HashMap<>();
 
     @NotNull
     @Builder.Default

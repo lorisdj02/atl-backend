@@ -24,21 +24,21 @@ public class AvailableMatchesResponse {
 
     @NotNull
     @JsonProperty(ApiJsonKeys.teamsCache)
-    private Map<Integer, TeamDTO> teamsCache;
+    private Map<Long, TeamDTO> teamsCache;
 
     @NotNull
     @JsonProperty(ApiJsonKeys.minutesRoundPerTournament)
-    private Map<Integer, Short> minutesRoundPerTournament;
+    private Map<Long, Short> minutesRoundPerTournament;
 
     @NotNull
     @JsonProperty(ApiJsonKeys.minutesPausePerTournament)
-    private Map<Integer, Short> minutesPausePerTournament;
+    private Map<Long, Short> minutesPausePerTournament;
 
     @NotNull
     @JsonProperty(ApiJsonKeys.footballMatchesPerSport)
-    private Map<Integer, List<FootballMatchDTO>> footballMatchesPerSport;
+    private Map<Long, List<FootballMatchDTO>> footballMatchesPerSport;
 
     @NotNull
     @JsonProperty(ApiJsonKeys.sportNames)
-    private Map<Integer, String> sportNames;
+    private Map<Long, String> sportNames;
 }

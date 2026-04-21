@@ -70,7 +70,7 @@ public class AccountController {
     }
 
     @DeleteMapping("/referee/delete-referee-license/{sportId}")
-    public ResponseEntity<Void> deleteRefereeLicense(@PathVariable Integer sportId) {
+    public ResponseEntity<Void> deleteRefereeLicense(@PathVariable Long sportId) {
         refereeService.deleteRefereeLicense(sportId);
         return ResponseEntity.ok().build();
     }

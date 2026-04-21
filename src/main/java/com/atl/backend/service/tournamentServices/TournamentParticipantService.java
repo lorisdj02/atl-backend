@@ -68,7 +68,7 @@ public class TournamentParticipantService {
     @Autowired
     private MatchRepository matchRepository;
 
-    private Player getExistingPlayerByPlayerId(Integer playerId) {
+    private Player getExistingPlayerByPlayerId(Long playerId) {
         Optional<Player> playerOpt = playerRepository.findByPlayerId(playerId);
         if (playerOpt.isEmpty()) {
             throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
@@ -76,7 +76,7 @@ public class TournamentParticipantService {
         return playerOpt.get();
     }
 
-    private Player getExistingPlayerByAccountId(Integer accountId) {
+    private Player getExistingPlayerByAccountId(Long accountId) {
         Optional<Player> playerOpt = playerRepository.findByAccount_Id(accountId);
         if (playerOpt.isEmpty()) {
             throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
@@ -84,7 +84,7 @@ public class TournamentParticipantService {
         return playerOpt.get();
     }
 
-    private Tournament getExistingTournamentByTournamentId(Integer tournamentId) {
+    private Tournament getExistingTournamentByTournamentId(Long tournamentId) {
         Optional<Tournament> tournamentOptional = tournamentRepository.findById(tournamentId);
         if (tournamentOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
@@ -100,21 +100,21 @@ public class TournamentParticipantService {
         callupRepository.deleteAll();
     }
 
-    public List<Tournament> getTournamentsByTeamId(Integer teamId) {
+    public List<Tournament> getTournamentsByTeamId(Long teamId) {
         List<TournamentParticipation> participations = tournamentParticipationRepository.findByTeam_Id(teamId);
         return participations.stream().map(TournamentParticipation::getTournament).toList();
     }
 
-    public List<TournamentParticipation> getTournamentParticipationsByTeamId(Integer teamId) {
+    public List<TournamentParticipation> getTournamentParticipationsByTeamId(Long teamId) {
         return tournamentParticipationRepository.findByTeam_Id(teamId);
     }
 
-    public List<TournamentParticipation> getTournamentParticipationsByTournamentId(Integer tournamentId) {
+    public List<TournamentParticipation> getTournamentParticipationsByTournamentId(Long tournamentId) {
         return tournamentParticipationRepository.findByTournament_Id(tournamentId);
     }
 
-    public Optional<TournamentParticipation> getTournamentParticipationByTeamIdAndTournamentId(Integer teamId,
-            Integer tournamentId) {
+    public Optional<TournamentParticipation> getTournamentParticipationByTeamIdAndTournamentId(Long teamId,
+            Long tournamentId) {
         return tournamentParticipationRepository.findByTeam_IdAndTournament_Id(teamId, tournamentId);
     }
 
@@ -122,21 +122,21 @@ public class TournamentParticipantService {
         return tournamentParticipationRepository.save(tournamentParticipation);
     }
 
-    public List<TournamentParticipation> getPaidTournamentParticipationsByTeamId(Integer teamId) {
+    public List<TournamentParticipation> getPaidTournamentParticipationsByTeamId(Long teamId) {
         return tournamentParticipationRepository.findByTeam_IdAndToPay(teamId, BigDecimal.ZERO);
     }
 
-    public List<TournamentParticipation> getNotPaidTournamentParticipationsByTeamId(Integer teamId) {
+    public List<TournamentParticipation> getNotPaidTournamentParticipationsByTeamId(Long teamId) {
         return tournamentParticipationRepository.findByTeam_IdAndToPayGreaterThan(teamId, BigDecimal.ZERO);
     }
 
-    public List<TournamentParticipation> getTeamParticipations(Integer teamId) {
+    public List<TournamentParticipation> getTeamParticipations(Long teamId) {
         teamService.checkTeamExists(teamId);
         List<TournamentParticipation> participations = tournamentParticipationRepository.findByTeam_Id(teamId);
         return participations;
     }
 
-    public Integer countTournamentsByPlayerIdAndSportCategory(Integer playerId, SportCategory sportCategory) {
+    public Integer countTournamentsByPlayerIdAndSportCategory(Long playerId, SportCategory sportCategory) {
         List<Callup> callups = callupRepository.findByPlayer_PlayerId(playerId);
         List<Callup> filteredCallups = callups.stream()
                 .filter(callup -> callup.getTournament().getSport().getSportCategory() == sportCategory)
@@ -144,15 +144,15 @@ public class TournamentParticipantService {
         return filteredCallups.size();
     }
 
-    public boolean isPlayerCalledUpInTournament(Integer playerId, Integer tournamentId) {
+    public boolean isPlayerCalledUpInTournament(Long playerId, Long tournamentId) {
         Optional<Callup> callupOptional = callupRepository.findByPlayer_PlayerIdAndTournament_Id(playerId,
                 tournamentId);
         return callupOptional.isPresent();
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public TournamentParticipation participateToTournament(Integer tournamentId, Integer teamId,
-            List<Integer> playerIds) {
+    public TournamentParticipation participateToTournament(Long tournamentId, Long teamId,
+            List<Long> playerIds) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
         if (tournament.getStatus() != TournamentStatus.CREATED) {
             throw new ConflictException(ErrorsString.TOURNAMENT_ALREADY_STARTED);
@@ -193,7 +193,7 @@ public class TournamentParticipantService {
                     + " and tournament " + tournamentId);
         }
         List<Callup> newCallups = new ArrayList<>();
-        for (Integer playerId : playerIds) {
+        for (Long playerId : playerIds) {
             Player player = getExistingPlayerByPlayerId(playerId);
             Callup callup = new Callup();
             callup.setPlayer(player);
@@ -205,13 +205,13 @@ public class TournamentParticipantService {
         return tournamentParticipation;
     }
 
-    public void checkValidCallups(Integer teamId, List<Integer> playerIds) {
+    public void checkValidCallups(Long teamId, List<Long> playerIds) {
         teamService.checkTeamExists(teamId);
 
         Boolean areCallupsValid = false;
         System.out.println("[DEBUG - TournamentService] - Checking callups for team " + teamId + " and playerIds "
                 + playerIds);
-        for (Integer playerId : playerIds) {
+        for (Long playerId : playerIds) {
             if (!teamService.isPlayerInTeam(teamId, playerId)) {
                 throw new ConflictException(ErrorsString.PLAYER_NOT_IN_TEAM);
             }
@@ -225,38 +225,38 @@ public class TournamentParticipantService {
 
     }
 
-    public List<Integer> getTeamIdsParticipatingInTournament(Integer tournamentId) {
+    public List<Long> getTeamIdsParticipatingInTournament(Long tournamentId) {
         List<TournamentParticipation> participations = tournamentParticipationRepository
                 .findByTournament_IdAndToPay(tournamentId, BigDecimal.ZERO);
         return participations.stream().map(tp -> tp.getTeam().getId()).toList();
     }
 
-    public List<Integer> getTeamIdsExcludedFromTournament(Integer tournamentId) {
+    public List<Long> getTeamIdsExcludedFromTournament(Long tournamentId) {
         List<TournamentParticipation> participations = tournamentParticipationRepository
                 .findByTournament_IdAndToPayGreaterThan(tournamentId, BigDecimal.ZERO);
         return participations.stream().map(tp -> tp.getTeam().getId()).toList();
     }
 
-    public List<Integer> getCalluppedPlayerIdsByTournamentIdAndTeamId(Integer tournamentId, Integer teamId) {
+    public List<Long> getCalluppedPlayerIdsByTournamentIdAndTeamId(Long tournamentId, Long teamId) {
         List<Callup> callups = callupRepository.findByTournament_IdAndTeam_Id(tournamentId, teamId);
         return callups.stream().map(callup -> callup.getPlayer().getPlayerId()).toList();
     }
 
-    public List<Integer> getCalluppedPlayerIdsByTournamentId(Integer tournamentId) {
+    public List<Long> getCalluppedPlayerIdsByTournamentId(Long tournamentId) {
         List<Callup> callups = callupRepository.findByTournament_Id(tournamentId);
         return callups.stream().map(callup -> callup.getPlayer().getPlayerId()).toList();
     }
 
-    public List<Callup> getCallupsByPlayerId(Integer playerId) {
+    public List<Callup> getCallupsByPlayerId(Long playerId) {
         return callupRepository.findByPlayer_PlayerId(playerId);
     }
 
-    public Optional<Callup> getCallupByPlayerIdAndTournamentId(Integer playerId, Integer tournamentId) {
+    public Optional<Callup> getCallupByPlayerIdAndTournamentId(Long playerId, Long tournamentId) {
         return callupRepository.findByPlayer_PlayerIdAndTournament_Id(playerId, tournamentId);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public TournamentParticipation confirmCallups(Integer tournamentId, ConfirmCallupsRequest request) {
+    public TournamentParticipation confirmCallups(Long tournamentId, ConfirmCallupsRequest request) {
         if (!tournamentId.equals(request.getTournamentId())) {
             throw new BadRequestException(ErrorsString.TOURNAMENT_ID_MISMATCH);
         }
@@ -264,7 +264,7 @@ public class TournamentParticipantService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void deleteCallupsCheck(Integer tournamentId, Integer teamId) {
+    public void deleteCallupsCheck(Long tournamentId, Long teamId) {
         // TODO: Non sono sicuro che funzioni... tanto è tutto da testare, fare
         // attenzione
         teamService.checkTeamExists(teamId);
@@ -281,18 +281,18 @@ public class TournamentParticipantService {
         }
     }
 
-    public void deleteCallupsByTeamIdIdAndTournamentId(Integer teamId, Integer tournamentId) {
+    public void deleteCallupsByTeamIdIdAndTournamentId(Long teamId, Long tournamentId) {
         callupRepository.deleteByTeam_IdAndTournament_Id(teamId, tournamentId);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void deleteTournamentParticipationByTeamIdAndTournamentId(Integer teamId, Integer tournamentId) {
+    public void deleteTournamentParticipationByTeamIdAndTournamentId(Long teamId, Long tournamentId) {
         callupRepository.deleteByTeam_IdAndTournament_Id(teamId, tournamentId);
         tournamentParticipationRepository.deleteByTeam_IdAndTournament_Id(teamId, tournamentId);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void decreseTournamentParticipation_ToPay(Integer tournamentId, Integer accountId, BigDecimal amount) {
+    public void decreseTournamentParticipation_ToPay(Long tournamentId, Long accountId, BigDecimal amount) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
 
@@ -318,7 +318,7 @@ public class TournamentParticipantService {
         saveTournamentParticipation(tournamentParticipation);
     }
 
-    public List<TournamentParticipationDTO> getNotPaidTeamParticipations(Integer teamId) {
+    public List<TournamentParticipationDTO> getNotPaidTeamParticipations(Long teamId) {
         teamService.checkTeamExists(teamId);
         List<TournamentParticipation> participations = tournamentParticipationRepository
                 .findByTeam_IdAndToPayGreaterThan(teamId, BigDecimal.ZERO);
@@ -337,9 +337,9 @@ public class TournamentParticipantService {
         List<Player> playersToRefund = new ArrayList<>();
         List<TournamentParticipation> participations = tournamentParticipationRepository
                 .findByTournament_IdAndToPayGreaterThan(tournament.getId(), BigDecimal.ZERO);
-        List<Integer> excludedTeamIds = participations.stream().map(tp -> tp.getTeam().getId()).toList();
+        List<Long> excludedTeamIds = participations.stream().map(tp -> tp.getTeam().getId()).toList();
 
-        for (Integer teamId : excludedTeamIds) {
+        for (Long teamId : excludedTeamIds) {
             List<Player> players = teamService.getPlayersByTeamId(teamId);
             playersToRefund.addAll(players);
         }
@@ -359,7 +359,7 @@ public class TournamentParticipantService {
         }
     }
 
-    public List<Integer> getNotPaidTournamentIdsByTeamId(Integer teamId) {
+    public List<Long> getNotPaidTournamentIdsByTeamId(Long teamId) {
         teamService.checkTeamExists(teamId);
         List<TournamentParticipation> tournamentParticipations = tournamentParticipationRepository
                 .findByTeam_IdAndToPayGreaterThan(teamId, BigDecimal.ZERO);
@@ -372,7 +372,7 @@ public class TournamentParticipantService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void updateToPayTournamentParticipationByTournamentIdAndTeamId(Integer tournamentId, Integer teamId,
+    public void updateToPayTournamentParticipationByTournamentIdAndTeamId(Long tournamentId, Long teamId,
             BigDecimal toPayDelta) {
         Optional<TournamentParticipation> tournamentParticipationOptional = tournamentParticipationRepository
                 .findByTeam_IdAndTournament_Id(teamId, tournamentId);
@@ -384,7 +384,7 @@ public class TournamentParticipantService {
         saveTournamentParticipation(tournamentParticipation);
     }
 
-    public BigDecimal getToPayByTournamentIdAndPlayerId(Integer tournamentId, Integer accountId) {
+    public BigDecimal getToPayByTournamentIdAndPlayerId(Long tournamentId, Long accountId) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
         Player player = getExistingPlayerByAccountId(accountId);
 
@@ -398,7 +398,7 @@ public class TournamentParticipantService {
         return tournamentParticipation.getToPay();
     }
 
-    public Optional<Team> getWinningTeamInTournament(Integer tournamentId) {
+    public Optional<Team> getWinningTeamInTournament(Long tournamentId) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
         if (tournament.getStatus() != TournamentStatus.PENDING_PAYMENTS
@@ -432,7 +432,7 @@ public class TournamentParticipantService {
         }
     }
 
-    public Optional<Team> getFinalistTeamInTournament(Integer tournamentId) {
+    public Optional<Team> getFinalistTeamInTournament(Long tournamentId) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
         if (tournament.getStatus() != TournamentStatus.PENDING_PAYMENTS
@@ -466,7 +466,7 @@ public class TournamentParticipantService {
         }
     }
 
-    public Map<TournamentPhase, Set<Team>> getTeamsInEachPhaseOfTournament(Integer tournamentId) {
+    public Map<TournamentPhase, Set<Team>> getTeamsInEachPhaseOfTournament(Long tournamentId) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
         switch (tournament.getSport().getSportCategory()) {

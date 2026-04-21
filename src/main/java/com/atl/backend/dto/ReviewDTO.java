@@ -14,22 +14,22 @@ import com.atl.backend.model.Review;
 public class ReviewDTO {
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @NotNull
     @JsonProperty("tournamentId")
-    private Integer tournamentId;
+    private Long tournamentId;
 
     @JsonProperty("matchId")
-    private Integer matchId;
+    private Long matchId;
 
     @NotNull
     @JsonProperty("reviewerAccountId")
-    private Integer reviewerAccountId;
+    private Long reviewerAccountId;
 
     @NotNull
     @JsonProperty("reviewedAccountId")
-    private Integer reviewedAccountId;
+    private Long reviewedAccountId;
 
     @JsonProperty("comment")
     private String comment;

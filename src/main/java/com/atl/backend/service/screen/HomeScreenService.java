@@ -61,21 +61,21 @@ public class HomeScreenService {
 
         @Transactional(readOnly = true)
         public PlayerHomeResponse getPlayerHomeScreen(SportCategory sportCategory) {
-                Integer playerId = AccountContext.getPlayerId();
+                Long playerId = AccountContext.getPlayerId();
 
                 List<Tournament> activeTournaments = new ArrayList<>();
-                Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
-                Map<Integer, Short> minutesPausePerTournament = new HashMap<>();
-                Map<Integer, List<FootballMatch>> footballMatchesPerTournament = new HashMap<>();
-                Map<Integer, List<FootballStanding>> footballStandingsPerTournament = new HashMap<>();
-                Map<Integer, Team> teamsCache = new HashMap<>();
+                Map<Long, Short> minutesRoundPerTournament = new HashMap<>();
+                Map<Long, Short> minutesPausePerTournament = new HashMap<>();
+                Map<Long, List<FootballMatch>> footballMatchesPerTournament = new HashMap<>();
+                Map<Long, List<FootballStanding>> footballStandingsPerTournament = new HashMap<>();
+                Map<Long, Team> teamsCache = new HashMap<>();
                 Optional<Team> accountTeam = Optional.empty();
-                Map<Integer, String> usernamePerBooking = new HashMap<>();
-                Map<Integer, Field> fieldsCache = new HashMap<>();
-                Map<Integer, Short> maxPlayersPerLobby = new HashMap<>();
-                Map<Integer, Short> currentPlayersPerLobby = new HashMap<>();
-                Map<Integer, String> completeAddressPerField = new HashMap<>();
-                Map<Integer, Short> playersPaidPerBooking = new HashMap<>();
+                Map<Long, String> usernamePerBooking = new HashMap<>();
+                Map<Long, Field> fieldsCache = new HashMap<>();
+                Map<Long, Short> maxPlayersPerLobby = new HashMap<>();
+                Map<Long, Short> currentPlayersPerLobby = new HashMap<>();
+                Map<Long, String> completeAddressPerField = new HashMap<>();
+                Map<Long, Short> playersPaidPerBooking = new HashMap<>();
 
                 accountTeam = teamService.getTeamByPlayerIdAndSportCategory(playerId, sportCategory);
 
@@ -105,10 +105,10 @@ public class HomeScreenService {
                                         Short.valueOf((short) lobbyBooking.getCurrentPlayers()));
                 }
 
-                Map<Integer, TeamDTO> teamsCacheDTO = new HashMap<>();
-                Map<Integer, FieldDTO> fieldsCacheDTO = new HashMap<>();
-                Map<Integer, List<FootballMatchDTO>> footballMatchesPerTournamentDTO = new HashMap<>();
-                Map<Integer, List<FootballStandingDTO>> footballStandingsPerTournamentDTO = new HashMap<>();
+                Map<Long, TeamDTO> teamsCacheDTO = new HashMap<>();
+                Map<Long, FieldDTO> fieldsCacheDTO = new HashMap<>();
+                Map<Long, List<FootballMatchDTO>> footballMatchesPerTournamentDTO = new HashMap<>();
+                Map<Long, List<FootballStandingDTO>> footballStandingsPerTournamentDTO = new HashMap<>();
 
                 if (accountTeam.isPresent()) {
 
@@ -135,9 +135,9 @@ public class HomeScreenService {
                                 minutesPausePerTournament.put(tournament.getId(),
                                                 tournament.getSport().getMinutesPerPause());
                                 fieldsCache.put(tournament.getField().getId(), tournament.getField());
-                                final List<Integer> teamIds = tournamentParticipantService
+                                final List<Long> teamIds = tournamentParticipantService
                                                 .getTeamIdsParticipatingInTournament(tournament.getId());
-                                for (Integer teamId : teamIds) {
+                                for (Long teamId : teamIds) {
                                         teamsCache.put(teamId, teamService.getTeamById(teamId).get());
                                 }
                         }
@@ -188,12 +188,12 @@ public class HomeScreenService {
 
         @Transactional(readOnly = true)
         public CoordinatorHomeResponse getCoordinatorHomeScreen(SportCategory sportCategory) {
-                Integer coordinatorId = AccountContext.getCoordinatorId();
+                Long coordinatorId = AccountContext.getCoordinatorId();
                 List<Tournament> activeTournaments = new ArrayList<>();
-                Map<Integer, List<FootballMatch>> footballMatchesPerTournament = new HashMap<>();
-                Map<Integer, Team> teamsCache = new HashMap<>();
-                Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
-                Map<Integer, Short> minutesPausePerTournament = new HashMap<>();
+                Map<Long, List<FootballMatch>> footballMatchesPerTournament = new HashMap<>();
+                Map<Long, Team> teamsCache = new HashMap<>();
+                Map<Long, Short> minutesRoundPerTournament = new HashMap<>();
+                Map<Long, Short> minutesPausePerTournament = new HashMap<>();
 
                 activeTournaments = tournamentService.getActiveTournamentsByCoordinatorIdAndSportCategory(coordinatorId,
                                 sportCategory);
@@ -209,9 +209,9 @@ public class HomeScreenService {
                                 default:
                                         break;
                         }
-                        List<Integer> teamIds = tournamentParticipantService
+                        List<Long> teamIds = tournamentParticipantService
                                         .getTeamIdsParticipatingInTournament(tournament.getId());
-                        for (Integer teamId : teamIds) {
+                        for (Long teamId : teamIds) {
                                 teamsCache.put(teamId, teamService.getTeamById(teamId).get());
                         }
 
@@ -222,10 +222,10 @@ public class HomeScreenService {
                                         tournament.getSport().getMinutesPerPause());
                 }
 
-                Map<Integer, TeamDTO> taemsCacheDTO = teamsCache.entrySet().stream()
+                Map<Long, TeamDTO> taemsCacheDTO = teamsCache.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> TeamDTO.fromTeam(entry.getValue())));
-                Map<Integer, List<FootballMatchDTO>> footballMatchesPerTournamentDTO = footballMatchesPerTournament
+                Map<Long, List<FootballMatchDTO>> footballMatchesPerTournamentDTO = footballMatchesPerTournament
                                 .entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> entry.getValue().stream()
@@ -245,11 +245,11 @@ public class HomeScreenService {
 
         @Transactional(readOnly = true)
         public RefereeHomeResponse getRefereeHomeScreen(SportCategory sportCategory) {
-                Integer refereeId = AccountContext.getRefereeId();
+                Long refereeId = AccountContext.getRefereeId();
                 List<FootballMatch> assignedFootballMatches = new ArrayList<>();
-                Map<Integer, Team> teamsCache = new HashMap<>();
-                Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
-                Map<Integer, Short> minutesPausePerTournament = new HashMap<>();
+                Map<Long, Team> teamsCache = new HashMap<>();
+                Map<Long, Short> minutesRoundPerTournament = new HashMap<>();
+                Map<Long, Short> minutesPausePerTournament = new HashMap<>();
 
                 switch (sportCategory) {
                         case FOOTBALL:
@@ -271,7 +271,7 @@ public class HomeScreenService {
                                 break;
                 }
 
-                Map<Integer, TeamDTO> teamsCacheDTO = teamsCache.entrySet().stream()
+                Map<Long, TeamDTO> teamsCacheDTO = teamsCache.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> TeamDTO.fromTeam(entry.getValue())));
                 List<FootballMatchDTO> assignedFootballMatchesDTO = assignedFootballMatches.stream()
@@ -288,17 +288,17 @@ public class HomeScreenService {
 
         @Transactional(readOnly = true)
         public OrganizationHomeResponse getOrganizationHomeScreen(SportCategory sportCategory) {
-                Integer organizationId = AccountContext.getOrganizationId();
+                Long organizationId = AccountContext.getOrganizationId();
 
                 List<Field> fields = new ArrayList<>();
                 List<Booking> generalBookings = new ArrayList<>();
-                Map<Integer, String> cityNamePerField = new HashMap<>();
-                Map<Integer, LobbyBooking> lobbyBookingsCache = new HashMap<>();
-                Map<Integer, PrivateBooking> privateBookingsCache = new HashMap<>();
-                Map<Integer, MatchBooking> matchBookingsCache = new HashMap<>();
-                Map<Integer, FootballMatch> footballMatchPerBooking = new HashMap<>();
-                Map<Integer, Team> teamsCache = new HashMap<>();
-                Map<Integer, String> usernamePerBooking = new HashMap<>();
+                Map<Long, String> cityNamePerField = new HashMap<>();
+                Map<Long, LobbyBooking> lobbyBookingsCache = new HashMap<>();
+                Map<Long, PrivateBooking> privateBookingsCache = new HashMap<>();
+                Map<Long, MatchBooking> matchBookingsCache = new HashMap<>();
+                Map<Long, FootballMatch> footballMatchPerBooking = new HashMap<>();
+                Map<Long, Team> teamsCache = new HashMap<>();
+                Map<Long, String> usernamePerBooking = new HashMap<>();
 
                 fields = fieldService.getFieldsByOrganizationId(organizationId);
 
@@ -389,19 +389,19 @@ public class HomeScreenService {
                 List<FieldDTO> fieldsDTO = fields.stream().map(FieldDTO::fromField).toList();
                 List<BookingDTO> generalBookingsDTO = generalBookings.stream().map(BookingDTO::fromBooking)
                                 .toList();
-                Map<Integer, LobbyBookingDTO> lobbyBookingsCacheDTO = lobbyBookingsCache.entrySet().stream()
+                Map<Long, LobbyBookingDTO> lobbyBookingsCacheDTO = lobbyBookingsCache.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> LobbyBookingDTO.fromLobbyBooking(entry.getValue())));
-                Map<Integer, PrivateBookingDTO> privateBookingsCacheDTO = privateBookingsCache.entrySet().stream()
+                Map<Long, PrivateBookingDTO> privateBookingsCacheDTO = privateBookingsCache.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> PrivateBookingDTO.fromPrivateBooking(entry.getValue())));
-                Map<Integer, MatchBookingDTO> matchBookingsCacheDTO = matchBookingsCache.entrySet().stream()
+                Map<Long, MatchBookingDTO> matchBookingsCacheDTO = matchBookingsCache.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> MatchBookingDTO.fromMatchBooking(entry.getValue())));
-                Map<Integer, FootballMatchDTO> footballMatchPerBookingDTO = footballMatchPerBooking.entrySet().stream()
+                Map<Long, FootballMatchDTO> footballMatchPerBookingDTO = footballMatchPerBooking.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> FootballMatchDTO.fromFootballMatch(entry.getValue())));
-                Map<Integer, TeamDTO> teamsCacheDTO = teamsCache.entrySet().stream()
+                Map<Long, TeamDTO> teamsCacheDTO = teamsCache.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> TeamDTO.fromTeam(entry.getValue())));
 

@@ -39,36 +39,36 @@ public class OrganizationHomeResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.cityNamePerField)
-    private Map<Integer, String> cityNamePerField = new HashMap<>();
+    private Map<Long, String> cityNamePerField = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.lobbyBookingsCache)
-    private Map<Integer, LobbyBookingDTO> lobbyBookingsCache = new HashMap<>();
+    private Map<Long, LobbyBookingDTO> lobbyBookingsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.privateBookingsCache)
-    private Map<Integer, PrivateBookingDTO> privateBookingsCache = new HashMap<>();
+    private Map<Long, PrivateBookingDTO> privateBookingsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.matchBookingsCache)
-    private Map<Integer, MatchBookingDTO> matchBookingsCache = new HashMap<>();
+    private Map<Long, MatchBookingDTO> matchBookingsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.footballMatchPerBooking)
-    private Map<Integer, FootballMatchDTO> footballMatchPerBooking = new HashMap<>();
+    private Map<Long, FootballMatchDTO> footballMatchPerBooking = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.teamsCache)
-    private Map<Integer, TeamDTO> teamsCache = new HashMap<>();
+    private Map<Long, TeamDTO> teamsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.usernamePerBooking)
-    private Map<Integer, String> usernamePerBooking = new HashMap<>();
+    private Map<Long, String> usernamePerBooking = new HashMap<>();
 
 }

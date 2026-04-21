@@ -10,17 +10,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface RefereeRepository extends JpaRepository<Referee, Integer> {
+public interface RefereeRepository extends JpaRepository<Referee, Long> {
 
-    Optional<Referee> findByAccount_Id(Integer accountId);
+    Optional<Referee> findByAccount_Id(Long accountId);
 
-    Optional<Referee> findByRefereeId(Integer refereeId);
+    Optional<Referee> findByRefereeId(Long refereeId);
 
-    void deleteByAccount_Id(Integer accountId);
+    void deleteByAccount_Id(Long accountId);
 
-    boolean existsByAccount_Id(Integer accountId);
+    boolean existsByAccount_Id(Long accountId);
 
-    boolean existsByRefereeId(Integer refereeId);
+    boolean existsByRefereeId(Long refereeId);
 
     @Query("SELECT r.level FROM Referee r WHERE r.level IS NOT NULL ORDER BY r.level ASC")
     List<Short> findAllLevelsOrdered();

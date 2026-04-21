@@ -20,14 +20,14 @@ import lombok.Data;
 
 @Data
 public class AccountContextData {
-    private Integer accountId;
+    private Long accountId;
     private AccountRole accountRole;
     private String firebaseUid;
 
-    private Integer playerId;
-    private Integer coordinatorId;
-    private Integer refereeId;
-    private Integer organizationId;
+    private Long playerId;
+    private Long coordinatorId;
+    private Long refereeId;
+    private Long organizationId;
 
     private Account activeAccount;
     private Player activePlayer;

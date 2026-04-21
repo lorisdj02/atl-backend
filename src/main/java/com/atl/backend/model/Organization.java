@@ -10,11 +10,11 @@ public class Organization {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "organization_id")
-    private Integer organizationId;
+    private Long organizationId;
 
     /*
     @Column(name = "account_id", unique = true, nullable = false)
-    private Integer accountId;
+    private Long accountId;
      */
 
     @OneToOne

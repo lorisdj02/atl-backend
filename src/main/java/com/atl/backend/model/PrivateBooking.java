@@ -11,7 +11,7 @@ import lombok.Data;
 @Table(name = "private_booking")
 public class PrivateBooking {
     @Id
-    private Integer id;
+    private Long id;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
@@ -20,7 +20,7 @@ public class PrivateBooking {
 
     /*
      * @Column(name = "player_id", nullable = false)
-     * private Integer playerId;
+     * private Long playerId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,7 +32,7 @@ public class PrivateBooking {
 
     /*
      * @Column(name = "transaction_group_id", nullable = false)
-     * private Integer transactionGroupId;
+     * private Long transactionGroupId;
      */
 
     @Column(name = "created_at", nullable = false)

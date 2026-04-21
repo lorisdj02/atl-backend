@@ -84,7 +84,7 @@ public class ProfileScreenService {
 
     @Transactional(readOnly = true)
     public MyGrowthResponse getMyGrowthScreen() {
-        Integer accountId = AccountContext.getAccountId();
+        Long accountId = AccountContext.getAccountId();
         Optional<Account> optionalAccount = accountService.getAccountById(accountId);
         if (optionalAccount.isEmpty()) {
             throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
@@ -148,7 +148,7 @@ public class ProfileScreenService {
 
     @Transactional(readOnly = true)
     public WalletResponse getWalletScreen() {
-        Integer accountId = AccountContext.getAccountId();
+        Long accountId = AccountContext.getAccountId();
 
         List<Transaction> transactions = paymentService.getTransactionsByAccountId(accountId);
         Optional<Wallet> wallet = paymentService.getWalletByAccountId(accountId);
@@ -204,8 +204,8 @@ public class ProfileScreenService {
     public ReviewsResponse getReviewsScreen() {
         Account account = AccountContext.getActiveAccount();
         List<Review> reviews = accountService.getReviewsByReviewerAccountId(account.getId());
-        Map<Integer, Account> accountPerReview = new HashMap<>();
-        Map<Integer, String> matchTeamsStringPerReview = new HashMap<>();
+        Map<Long, Account> accountPerReview = new HashMap<>();
+        Map<Long, String> matchTeamsStringPerReview = new HashMap<>();
         for (Review review : reviews) {
             accountPerReview.put(review.getId(), review.getReviewedAccount());
 

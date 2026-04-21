@@ -24,11 +24,11 @@ public class ReviewsResponse {
 
     @NotNull
     @JsonProperty(ApiJsonKeys.accountPerReview)
-    private Map<Integer, AccountDTO> accountPerReview;
+    private Map<Long, AccountDTO> accountPerReview;
 
     @NotNull
     @JsonProperty(ApiJsonKeys.matchTeamsStringPerReview)
-    private Map<Integer, String> matchTeamsStringPerReview;
+    private Map<Long, String> matchTeamsStringPerReview;
     /*
      * final List<Review> reviews;
      * final Map<int, Account> accountPerReview;

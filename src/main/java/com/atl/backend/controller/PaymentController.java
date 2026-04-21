@@ -31,7 +31,7 @@ public class PaymentController {
     private PurchasesOrchestrator purchasesOrchestrator;
 
     @GetMapping("/checkout-session/{sessionId}")
-    public ResponseEntity<CheckoutResponse> getCheckoutScreen(@PathVariable Integer sessionId) {
+    public ResponseEntity<CheckoutResponse> getCheckoutScreen(@PathVariable Long sessionId) {
         CheckoutResponse response = paymentService.getCheckoutScreen(sessionId);
         return ResponseEntity.ok(response);
     }
@@ -44,7 +44,7 @@ public class PaymentController {
 
     // Uso: /api/payments/checkout-session/{sessionId}/pay?useWallet=true
     @PatchMapping("/checkout-session/{sessionId}/pay")
-    public ResponseEntity<PurchaseDTO> payCheckoutSession(@PathVariable Integer sessionId, @RequestParam(required = false) Boolean useWallet) {
+    public ResponseEntity<PurchaseDTO> payCheckoutSession(@PathVariable Long sessionId, @RequestParam(required = false) Boolean useWallet) {
         Purchase response = purchasesOrchestrator.payCheckoutSession(sessionId, useWallet != null ? useWallet : false);
         if (response == null) {
             throw new PaymentRequiredException(ErrorsString.PAYMENT_FAILED);

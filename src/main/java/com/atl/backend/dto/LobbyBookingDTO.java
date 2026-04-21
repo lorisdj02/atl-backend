@@ -14,7 +14,7 @@ import jakarta.validation.constraints.*;
 public class LobbyBookingDTO extends BookingDTO {
     @NotNull
     @JsonProperty("ownerPlayerId")
-    private Integer ownerPlayerId;
+    private Long ownerPlayerId;
 
     @NotNull
     @JsonProperty("playersToFind")

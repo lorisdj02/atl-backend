@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.*;
 public class PalmaresDTO {
     @NotNull
     @JsonProperty("tournamentId")
-    private Integer tournamentId;
+    private Long tournamentId;
 
     @NotNull
     @JsonProperty("position")

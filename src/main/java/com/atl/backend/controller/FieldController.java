@@ -31,8 +31,8 @@ public class FieldController {
     @GetMapping("/{sportCategory}/city/{cityId}/max-players/{maxPlayers}")
     public ResponseEntity<FieldsAndMaxPlayersPerFieldResponse> getFieldsByMaxPlayersAndCityAndSportCategory(
             @PathVariable SportCategory sportCategory,
-            @PathVariable Integer cityId,
-            @PathVariable Integer maxPlayers) {
+            @PathVariable Long cityId,
+            @PathVariable Short maxPlayers) {
         FieldsAndMaxPlayersPerFieldResponse response = fieldService.getFieldsByMaxPlayersAndCityAndSportCategory(maxPlayers, cityId, sportCategory);
         return ResponseEntity.ok(response);
     }

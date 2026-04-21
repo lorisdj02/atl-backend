@@ -53,7 +53,7 @@ public class BookingController {
     // /football/1/join-lobby?totalPlayers=4&selectedCityId=1&startTime=2024-07-01T10:00:00&finishTime=2024-07-01T12:00:00
     @GetMapping("/join-lobby-screen/{sportCategory}")
     public ResponseEntity<JoinLobbyResponse> getJoinLobbyScreen(@PathVariable String sportCategory,
-            @RequestParam(required = false) Short totalPlayers, @RequestParam(required = false) Integer selectedCityId,
+            @RequestParam(required = false) Short totalPlayers, @RequestParam(required = false) Long selectedCityId,
             @RequestParam(required = false) String startTime, @RequestParam(required = false) String finishTime) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -85,7 +85,7 @@ public class BookingController {
     @GetMapping("/free-fields/{sportCategory}/max-players/{maxPlayers}/city/{cityId}/startDate/{startTime}/finishDate/{finishTime}")
     public ResponseEntity<FieldsAndMaxPlayersPerFieldResponse> getFreeFieldsByPlayerAndCityAndDate(
             @PathVariable String sportCategory,
-            @PathVariable Integer maxPlayers, @PathVariable Integer cityId, @PathVariable String startTime,
+            @PathVariable Short maxPlayers, @PathVariable Long cityId, @PathVariable String startTime,
             @PathVariable String finishTime) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -133,36 +133,36 @@ public class BookingController {
      * }
      * 
      * @PostMapping("/lobby-booking/{bookingId}/join/playersToPay/{playersToPay}")
-     * public ResponseEntity<Integer> joinLobbyBooking(@PathVariable Integer
+     * public ResponseEntity<Long> joinLobbyBooking(@PathVariable Long
      * bookingId,
      * 
-     * @PathVariable Integer playersToPay) {
-     * Integer participants =
+     * @PathVariable Long playersToPay) {
+     * Long participants =
      * bookingService.createLobbyBookingParticipate(bookingId, playersToPay);
      * return ResponseEntity.ok(participants);
      * }
      */
 
     @DeleteMapping("/lobby-booking/{bookingId}/refund")
-    public ResponseEntity<Void> refundLobbyBooking(@PathVariable Integer bookingId) {
+    public ResponseEntity<Void> refundLobbyBooking(@PathVariable Long bookingId) {
         purchasesOrchestrator.refundLobbyBooking(bookingId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/lobby-booking/{bookingId}/leave")
-    public ResponseEntity<Void> leaveLobbyBooking(@PathVariable Integer bookingId) {
+    public ResponseEntity<Void> leaveLobbyBooking(@PathVariable Long bookingId) {
         purchasesOrchestrator.leaveLobbyBooking(bookingId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/private-booking/{bookingId}/refund")
-    public ResponseEntity<Void> refundPrivateBooking(@PathVariable Integer bookingId) {
+    public ResponseEntity<Void> refundPrivateBooking(@PathVariable Long bookingId) {
         purchasesOrchestrator.refundPrivateBooking(bookingId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/match-booking/{matchId}/schedule/{scheduledStart}")
-    public ResponseEntity<MatchBookingDTO> scheduleMatch(@PathVariable Integer matchId,
+    public ResponseEntity<MatchBookingDTO> scheduleMatch(@PathVariable Long matchId,
             @PathVariable String scheduledStart) {
         LocalDateTime scheduledStartTime;
         try {

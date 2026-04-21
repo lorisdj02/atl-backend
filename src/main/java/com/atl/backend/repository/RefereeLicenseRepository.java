@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RefereeLicenseRepository extends JpaRepository<RefereeLicense, RefereeLicenseId> {
-    List<RefereeLicense> findByReferee_RefereeId(Integer refereeId);
+    List<RefereeLicense> findByReferee_RefereeId(Long refereeId);
 
-    Optional<RefereeLicense> findByReferee_RefereeIdAndSport_Id(Integer refereeId, Integer sportId);
+    Optional<RefereeLicense> findByReferee_RefereeIdAndSport_Id(Long refereeId, Long sportId);
 }

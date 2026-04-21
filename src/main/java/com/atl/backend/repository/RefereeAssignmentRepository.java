@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 public interface RefereeAssignmentRepository extends JpaRepository<RefereeAssignment, RefereeAssignmentId> {
 
     
-    public List<RefereeAssignment> findByReferee_RefereeId(Integer refereeId);
+    public List<RefereeAssignment> findByReferee_RefereeId(Long refereeId);
 
-    public List<RefereeAssignment> findByMatch_Id(Integer matchId);
+    public List<RefereeAssignment> findByMatch_Id(Long matchId);
 }

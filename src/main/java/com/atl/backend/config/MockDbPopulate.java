@@ -80,7 +80,7 @@ public class MockDbPopulate {
     @Autowired
     private TournamentParticipationRepository tournamentParticipationRepository;
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public void createAccounts() {
         for (Integer i = 1; i <= 300; i++) {
             Account account = new Account();
@@ -110,9 +110,9 @@ public class MockDbPopulate {
         System.out.println("[DEBUG] - Created 200 players, 50 coordinators, 25 referees, 25 organizations");
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public void createTeams() {
-        List<Integer> playerIds = playerService.getAllPlayers().stream().map(player -> player.getPlayerId()).toList();
+        List<Long> playerIds = playerService.getAllPlayers().stream().map(player -> player.getPlayerId()).toList();
 
         List<Team> teams = new ArrayList<>();
 
@@ -138,10 +138,10 @@ public class MockDbPopulate {
         System.out.println("[DEBUG] - Created 20 teams, each with 10 players");
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public void createSports() {
         Sport football5v5 = new Sport();
-        football5v5.setId(1);
+        football5v5.setId(1L);
         football5v5.setName("Football 5v5");
         football5v5.setMinPlayersPerTeam((short) 5);
         football5v5.setMaxPlayersPerTeam((short) 10);
@@ -152,7 +152,7 @@ public class MockDbPopulate {
         sportService.saveSport(football5v5);
 
         Sport football7v7 = new Sport();
-        football7v7.setId(2);
+        football7v7.setId(2L);
         football7v7.setName("Football 7v7");
         football7v7.setMinPlayersPerTeam((short) 7);
         football7v7.setMaxPlayersPerTeam((short) 14);
@@ -163,7 +163,7 @@ public class MockDbPopulate {
         sportService.saveSport(football7v7);
 
         Sport football8v8 = new Sport();
-        football8v8.setId(3);
+        football8v8.setId(3L);
         football8v8.setName("Football 8v8");
         football8v8.setMinPlayersPerTeam((short) 8);
         football8v8.setMaxPlayersPerTeam((short) 16);
@@ -174,7 +174,7 @@ public class MockDbPopulate {
         sportService.saveSport(football8v8);
 
         Sport football11v11 = new Sport();
-        football11v11.setId(4);
+        football11v11.setId(4L);
         football11v11.setName("Football 11v11");
         football11v11.setMinPlayersPerTeam((short) 11);
         football11v11.setMaxPlayersPerTeam((short) 22);
@@ -187,24 +187,25 @@ public class MockDbPopulate {
         System.out.println("[DEBUG] - Created 4 sports: Football 5v5, Football 7v7, Football 8v8, Football 11v11");
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public void createCities() {
         City milano = new City();
-        milano.setId(1);
+        milano.setId(1L);
         milano.setName("Milano");
         fieldService.saveCity(milano);
         City roma = new City();
-        roma.setId(2);
+        roma.setId(2L);
         roma.setName("Roma");
         fieldService.saveCity(roma);
         City taranto = new City();
-        taranto.setId(3);
+        taranto.setId(3L);
         taranto.setName("Taranto");
         fieldService.saveCity(taranto);
         System.out.println("[DEBUG] - Created 3 cities: Milano, Roma, Taranto");
 
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public void createFields() {
         Map<SportCategory, Short> maxPlayersPerSportCategoryField1 = new HashMap<>();
         maxPlayersPerSportCategoryField1.put(SportCategory.FOOTBALL, (short) 10);
@@ -212,7 +213,7 @@ public class MockDbPopulate {
 
         Field field1 = new Field();
         field1.setName("Campo 1");
-        field1.setCity(fieldService.getCityById(1).get());
+        field1.setCity(fieldService.getCityById(1L).get());
         field1.setLocationLat((double) 12);
         field1.setLocationLng((double) 13);
         field1.setAddress("Via Roma 1");
@@ -228,7 +229,7 @@ public class MockDbPopulate {
 
         Field field2 = new Field();
         field2.setName("Campo 2");
-        field2.setCity(fieldService.getCityById(2).get());
+        field2.setCity(fieldService.getCityById(2L).get());
         field2.setLocationLat((double) 12);
         field2.setLocationLng((double) 13);
         field2.setAddress("Via Milano 2");
@@ -244,7 +245,7 @@ public class MockDbPopulate {
 
         Field field3 = new Field();
         field3.setName("Campo 3");
-        field3.setCity(fieldService.getCityById(3).get());
+        field3.setCity(fieldService.getCityById(3L).get());
         field3.setLocationLat((double) 12);
         field3.setLocationLng((double) 13);
         field3.setAddress("Via Palermo 3");
@@ -257,182 +258,184 @@ public class MockDbPopulate {
         System.out.println("[DEBUG] - Created 3 fields: Campo 1, Campo 2, Campo 3");
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public void createRefereeRoles() {
         RefereeRole role1 = new RefereeRole();
-        role1.setSport(sportService.getSportById(1).get());
+        role1.setSport(sportService.getSportById(1L).get());
         role1.setName("MAIN");
         role1.setLevel((short) 1);
         role1.setPayPerMatch(new BigDecimal(15));
         sportService.saveRefereeRole(role1);
 
         RefereeRole role2 = new RefereeRole();
-        role2.setSport(sportService.getSportById(1).get());
+        role2.setSport(sportService.getSportById(1L).get());
         role2.setName("MAIN");
         role2.setLevel((short) 2);
         role2.setPayPerMatch(new BigDecimal(20));
         sportService.saveRefereeRole(role2);
 
         RefereeRole role3 = new RefereeRole();
-        role3.setSport(sportService.getSportById(1).get());
+        role3.setSport(sportService.getSportById(1L).get());
         role3.setName("MAIN");
         role3.setLevel((short) 3);
         role3.setPayPerMatch(new BigDecimal(25));
         sportService.saveRefereeRole(role3);
 
         RefereeRole role4 = new RefereeRole();
-        role4.setSport(sportService.getSportById(1).get());
+        role4.setSport(sportService.getSportById(1L).get());
         role4.setName("MAIN");
         role4.setLevel((short) 4);
         role4.setPayPerMatch(new BigDecimal(30));
         sportService.saveRefereeRole(role4);
 
         RefereeRole role5 = new RefereeRole();
-        role5.setSport(sportService.getSportById(2).get());
+        role5.setSport(sportService.getSportById(2L).get());
         role5.setName("MAIN");
         role5.setLevel((short) 1);
         role5.setPayPerMatch(new BigDecimal(18));
         sportService.saveRefereeRole(role5);
 
         RefereeRole role6 = new RefereeRole();
-        role6.setSport(sportService.getSportById(2).get());
+        role6.setSport(sportService.getSportById(2L).get());
         role6.setName("MAIN");
         role6.setLevel((short) 2);
         role6.setPayPerMatch(new BigDecimal(22));
         sportService.saveRefereeRole(role6);
 
         RefereeRole role7 = new RefereeRole();
-        role7.setSport(sportService.getSportById(2).get());
+        role7.setSport(sportService.getSportById(2L).get());
         role7.setName("MAIN");
         role7.setLevel((short) 3);
         role7.setPayPerMatch(new BigDecimal(28));
         sportService.saveRefereeRole(role7);
 
         RefereeRole role8 = new RefereeRole();
-        role8.setSport(sportService.getSportById(2).get());
+        role8.setSport(sportService.getSportById(2L).get());
         role8.setName("MAIN");
         role8.setLevel((short) 4);
         role8.setPayPerMatch(new BigDecimal(35));
         sportService.saveRefereeRole(role8);
 
         RefereeRole role9 = new RefereeRole();
-        role9.setSport(sportService.getSportById(3).get());
+        role9.setSport(sportService.getSportById(3L).get());
         role9.setName("MAIN");
         role9.setLevel((short) 1);
         role9.setPayPerMatch(new BigDecimal(20));
         sportService.saveRefereeRole(role9);
 
         RefereeRole role10 = new RefereeRole();
-        role10.setSport(sportService.getSportById(3).get());
+        role10.setSport(sportService.getSportById(3L).get());
         role10.setName("MAIN");
         role10.setLevel((short) 2);
         role10.setPayPerMatch(new BigDecimal(25));
         sportService.saveRefereeRole(role10);
 
         RefereeRole role11 = new RefereeRole();
-        role11.setSport(sportService.getSportById(3).get());
+        role11.setSport(sportService.getSportById(3L).get());
         role11.setName("MAIN");
         role11.setLevel((short) 3);
         role11.setPayPerMatch(new BigDecimal(30));
         sportService.saveRefereeRole(role11);
 
         RefereeRole role12 = new RefereeRole();
-        role12.setSport(sportService.getSportById(3).get());
+        role12.setSport(sportService.getSportById(3L).get());
         role12.setName("MAIN");
         role12.setLevel((short) 4);
         role12.setPayPerMatch(new BigDecimal(35));
         sportService.saveRefereeRole(role12);
 
         RefereeRole role13 = new RefereeRole();
-        role13.setSport(sportService.getSportById(4).get());
+        role13.setSport(sportService.getSportById(4L).get());
         role13.setName("MAIN");
         role13.setLevel((short) 1);
         role13.setPayPerMatch(new BigDecimal(30));
         sportService.saveRefereeRole(role13);
 
         RefereeRole role14 = new RefereeRole();
-        role14.setSport(sportService.getSportById(4).get());
+        role14.setSport(sportService.getSportById(4L).get());
         role14.setName("MAIN");
         role14.setLevel((short) 2);
         role14.setPayPerMatch(new BigDecimal(35));
         sportService.saveRefereeRole(role14);
 
         RefereeRole role15 = new RefereeRole();
-        role15.setSport(sportService.getSportById(4).get());
+        role15.setSport(sportService.getSportById(4L).get());
         role15.setName("MAIN");
         role15.setLevel((short) 3);
         role15.setPayPerMatch(new BigDecimal(40));
         sportService.saveRefereeRole(role15);
 
         RefereeRole role16 = new RefereeRole();
-        role16.setSport(sportService.getSportById(4).get());
+        role16.setSport(sportService.getSportById(4L).get());
         role16.setName("MAIN");
         role16.setLevel((short) 4);
         role16.setPayPerMatch(new BigDecimal(50));
         sportService.saveRefereeRole(role16);
 
         RefereeRole role17 = new RefereeRole();
-        role17.setSport(sportService.getSportById(4).get());
+        role17.setSport(sportService.getSportById(4L).get());
         role17.setName("ASSISTANT1");
         role17.setLevel((short) 1);
         role17.setPayPerMatch(new BigDecimal(15));
         sportService.saveRefereeRole(role17);
 
         RefereeRole role18 = new RefereeRole();
-        role18.setSport(sportService.getSportById(4).get());
+        role18.setSport(sportService.getSportById(4L).get());
         role18.setName("ASSISTANT1");
         role18.setLevel((short) 2);
         role18.setPayPerMatch(new BigDecimal(18));
         sportService.saveRefereeRole(role18);
 
         RefereeRole role19 = new RefereeRole();
-        role19.setSport(sportService.getSportById(4).get());
+        role19.setSport(sportService.getSportById(4L).get());
         role19.setName("ASSISTANT1");
         role19.setLevel((short) 3);
         role19.setPayPerMatch(new BigDecimal(20));
         sportService.saveRefereeRole(role19);
 
         RefereeRole role20 = new RefereeRole();
-        role20.setSport(sportService.getSportById(4).get());
+        role20.setSport(sportService.getSportById(4L).get());
         role20.setName("ASSISTANT1");
         role20.setLevel((short) 4);
         role20.setPayPerMatch(new BigDecimal(25));
         sportService.saveRefereeRole(role20);
 
         RefereeRole role21 = new RefereeRole();
-        role21.setSport(sportService.getSportById(4).get());
+        role21.setSport(sportService.getSportById(4L).get());
         role21.setName("ASSISTANT2");
         role21.setLevel((short) 1);
         role21.setPayPerMatch(new BigDecimal(15));
         sportService.saveRefereeRole(role21);
 
         RefereeRole role22 = new RefereeRole();
-        role22.setSport(sportService.getSportById(4).get());
+        role22.setSport(sportService.getSportById(4L).get());
         role22.setName("ASSISTANT2");
         role22.setLevel((short) 2);
         role22.setPayPerMatch(new BigDecimal(18));
         sportService.saveRefereeRole(role22);
 
         RefereeRole role23 = new RefereeRole();
-        role23.setSport(sportService.getSportById(4).get());
+        role23.setSport(sportService.getSportById(4L).get());
         role23.setName("ASSISTANT2");
         role23.setLevel((short) 3);
         role23.setPayPerMatch(new BigDecimal(20));
         sportService.saveRefereeRole(role23);
 
         RefereeRole role24 = new RefereeRole();
-        role24.setSport(sportService.getSportById(4).get());
+        role24.setSport(sportService.getSportById(4L).get());
         role24.setName("ASSISTANT2");
         role24.setLevel((short) 4);
         role24.setPayPerMatch(new BigDecimal(25));
         sportService.saveRefereeRole(role24);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public void createGrowthSteps() {
         GrowthStep step1 = new GrowthStep();
         step1.setType(GrowthStepType.REFEREE);
         step1.setTitle("Amateur Referee");
         step1.setLevel((short) 1);
-        step1.setX(0);
+        step1.setX((short) 0);
         step1.setMinRatingOverLastXMatches(BigDecimal.valueOf(0));
         step1.setMinRefereedMatches((short) 0);
         accountService.saveGrowthStep(step1);
@@ -441,7 +444,7 @@ public class MockDbPopulate {
         step2.setType(GrowthStepType.REFEREE);
         step2.setTitle("Pro Referee");
         step2.setLevel((short) 2);
-        step2.setX(10);
+        step2.setX((short) 10);
         step2.setMinRatingOverLastXMatches(BigDecimal.valueOf(4.0));
         step2.setMinRefereedMatches((short) 30);
         accountService.saveGrowthStep(step2);
@@ -450,7 +453,7 @@ public class MockDbPopulate {
         step3.setType(GrowthStepType.REFEREE);
         step3.setTitle("Elite Referee");
         step3.setLevel((short) 3);
-        step3.setX(20);
+        step3.setX((short) 20);
         step3.setMinRatingOverLastXMatches(BigDecimal.valueOf(4.5));
         step3.setMinRefereedMatches((short) 60);
         accountService.saveGrowthStep(step3);
@@ -459,7 +462,7 @@ public class MockDbPopulate {
         step4.setType(GrowthStepType.REFEREE);
         step4.setTitle("ATL Referee");
         step4.setLevel((short) 4);
-        step4.setX(30);
+        step4.setX((short) 30);
         step4.setMinRatingOverLastXMatches(BigDecimal.valueOf(4.8));
         step4.setMinRefereedMatches((short) 100);
         accountService.saveGrowthStep(step4);
@@ -468,7 +471,7 @@ public class MockDbPopulate {
         step5.setType(GrowthStepType.COORDINATOR);
         step5.setTitle("Amateur Coordinator");
         step5.setLevel((short) 1);
-        step5.setX(0);
+        step5.setX((short) 0);
         step5.setMinRatingOverLastXTournaments(BigDecimal.valueOf(0));
         step5.setMinCoordinatedTournaments((short) 0);
         step5.setCoordinatorPayPerMatch(BigDecimal.valueOf(12.5));
@@ -478,7 +481,7 @@ public class MockDbPopulate {
         step6.setType(GrowthStepType.COORDINATOR);
         step6.setTitle("Pro Coordinator");
         step6.setLevel((short) 2);
-        step6.setX(3);
+        step6.setX((short) 3);
         step6.setMinRatingOverLastXTournaments(BigDecimal.valueOf(3.5));
         step6.setMinCoordinatedTournaments((short) 3);
         step6.setCoordinatorPayPerMatch(BigDecimal.valueOf(15));
@@ -488,7 +491,7 @@ public class MockDbPopulate {
         step7.setType(GrowthStepType.COORDINATOR);
         step7.setTitle("Elite Coordinator");
         step7.setLevel((short) 3);
-        step7.setX(5);
+        step7.setX((short) 5);
         step7.setMinRatingOverLastXTournaments(BigDecimal.valueOf(4.0));
         step7.setMinCoordinatedTournaments((short) 10);
         step7.setCoordinatorPayPerMatch(BigDecimal.valueOf(17.5));
@@ -498,22 +501,22 @@ public class MockDbPopulate {
         step8.setType(GrowthStepType.COORDINATOR);
         step8.setTitle("ATL Coordinator");
         step8.setLevel((short) 4);
-        step8.setX(10);
+        step8.setX((short) 10);
         step8.setMinRatingOverLastXTournaments(BigDecimal.valueOf(4.5));
         step8.setMinCoordinatedTournaments((short) 20);
         step8.setCoordinatorPayPerMatch(BigDecimal.valueOf(20));
         accountService.saveGrowthStep(step8);
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public void createTournaments() {
         List<Coordinator> coordinators = coordinatorService.getAllCoordinators();
-        List<Integer> fieldIds = fieldService.getAllFields().stream().map(field -> field.getId()).toList();
-        List<Integer> teamIds = teamService.getAllTeams().stream().map(team -> team.getId()).toList();
+        List<Long> fieldIds = fieldService.getAllFields().stream().map(field -> field.getId()).toList();
+        List<Long> teamIds = teamService.getAllTeams().stream().map(team -> team.getId()).toList();
 
         Tournament tournament = new Tournament();
         tournament.setName("Torneo in corso");
-        tournament.setSport(sportService.getSportById(2).get());
+        tournament.setSport(sportService.getSportById(2L).get());
         tournament.setStatus(TournamentStatus.CREATED);
         tournament.setCity(fieldService.getFieldById(fieldIds.get(0)).get().getCity());
         tournament.setStartDate(null);
@@ -536,7 +539,7 @@ public class MockDbPopulate {
             System.out
                     .println("[DEBUG] - Participating team " + teamIds.get(i - 1) + " to tournament 'Torneo in corso'");
             List<Player> players = teamService.getPlayersByTeamId(teamIds.get(i - 1));
-            List<Integer> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
+            List<Long> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
             tournamentParticipantService.participateToTournament(savedTournament1.getId(), teamIds.get(i - 1),
                     playerIds);
             TournamentParticipation tp = tournamentParticipationRepository
@@ -556,7 +559,7 @@ public class MockDbPopulate {
 
         Tournament tournament2 = new Tournament();
         tournament2.setName("Torneo da cominciare");
-        tournament2.setSport(sportService.getSportById(1).get());
+        tournament2.setSport(sportService.getSportById(1L).get());
         tournament2.setStatus(TournamentStatus.CREATED);
         tournament2.setCity(fieldService.getFieldById(fieldIds.get(0)).get().getCity());
         tournament2.setStartDate(null);
@@ -579,7 +582,7 @@ public class MockDbPopulate {
             System.out.println(
                     "[DEBUG] - Participating team " + teamIds.get(i + 8 - 1) + " to tournament 'Torneo da cominciare'");
             List<Player> players = teamService.getPlayersByTeamId(teamIds.get(i + 8 - 1));
-            List<Integer> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
+            List<Long> playerIds = players.stream().map(player -> player.getPlayerId()).toList();
             tournamentParticipantService.participateToTournament(savedTournament2.getId(), teamIds.get(i + 8 - 1),
                     playerIds);
             TournamentParticipation tp = tournamentParticipationRepository
@@ -606,7 +609,7 @@ public class MockDbPopulate {
         }
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public void clearDb() {
         // Temporarily disable FK checks in PostgreSQL
         try (Connection c = dataSource.getConnection(); Statement s = c.createStatement()) {
@@ -646,7 +649,7 @@ public class MockDbPopulate {
         }
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public void populateDb() {
         createSports();
         createAccounts();

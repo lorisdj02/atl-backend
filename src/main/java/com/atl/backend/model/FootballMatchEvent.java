@@ -16,11 +16,11 @@ import lombok.Data;
 public class FootballMatchEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "match_id", nullable = false)
-     * private Integer matchId;
+     * private Long matchId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -29,7 +29,7 @@ public class FootballMatchEvent {
 
     /*
      * @Column(name = "team_id")
-     * private Integer teamId;
+     * private Long teamId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,7 +38,7 @@ public class FootballMatchEvent {
 
     /*
      * @Column(name = "player_id")
-     * private Integer playerId;
+     * private Long playerId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

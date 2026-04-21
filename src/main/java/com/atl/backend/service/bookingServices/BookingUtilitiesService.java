@@ -28,7 +28,7 @@ public class BookingUtilitiesService {
     @Autowired
     private BookingRepository bookingRepository;
 
-    public Booking createBooking(Integer fieldId, String startTime, String finishTime,
+    public Booking createBooking(Long fieldId, String startTime, String finishTime,
             String sportCategory,
             BookingType bookingType) {
 
@@ -67,7 +67,7 @@ public class BookingUtilitiesService {
         return bookingRepository.save(booking);
     }
 
-    public Boolean isFieldFree(Integer fieldId, LocalDateTime startTime, LocalDateTime finishTime) {
+    public Boolean isFieldFree(Long fieldId, LocalDateTime startTime, LocalDateTime finishTime) {
 
         if (startTime.isBefore(LocalDateTime.now()) || finishTime.isBefore(LocalDateTime.now())
                 || startTime.isAfter(finishTime)) {
@@ -79,16 +79,16 @@ public class BookingUtilitiesService {
         return freeFields.contains(field);
     }
 
-    public List<Field> getFreeFieldInCityByDate(Integer cityId, LocalDateTime startTime, LocalDateTime finishTime) {
+    public List<Field> getFreeFieldInCityByDate(Long cityId, LocalDateTime startTime, LocalDateTime finishTime) {
         List<Booking> bookings = bookingRepository
                 .findByField_City_IdAndStartTimeGreaterThanEqualAndFinishTimeLessThanEqual(cityId, startTime,
                         finishTime);
         List<Field> cityFields = fieldService.getFieldsByCityId(cityId);
-        List<Integer> bookedFieldIds = bookings.stream().map(b -> b.getField().getId()).toList();
+        List<Long> bookedFieldIds = bookings.stream().map(b -> b.getField().getId()).toList();
         return cityFields.stream().filter(f -> !bookedFieldIds.contains(f.getId())).toList();
     }
 
-    public Boolean isBookingRefundable(Integer bookingId) {
+    public Boolean isBookingRefundable(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
         if (!booking.getStatus().equals(BookingStatus.BOOKED)) {

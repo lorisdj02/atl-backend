@@ -83,8 +83,8 @@ public class TournamentScreenService {
     @Transactional(readOnly = true)
     public AllTournamentsResponse getAllTournamentsScreen(SportCategory sportCategory) {
         List<Tournament> tournaments = tournamentService.getActiveTournamentsBySportCategory(sportCategory);
-        Map<Integer, Coordinator> coordinatorCache = new HashMap<>();
-        Map<Integer, Field> fieldsCache = new HashMap<>();
+        Map<Long, Coordinator> coordinatorCache = new HashMap<>();
+        Map<Long, Field> fieldsCache = new HashMap<>();
         BigDecimal prizeMin = BigDecimal.ZERO;
         BigDecimal prizeMax = BigDecimal.ZERO;
         BigDecimal feeMin = BigDecimal.ZERO;
@@ -181,7 +181,7 @@ public class TournamentScreenService {
     }
 
     @Transactional(readOnly = true)
-    public TournamentDetailsResponse getTournamentDetailsScreen(Integer tournamentId) {
+    public TournamentDetailsResponse getTournamentDetailsScreen(Long tournamentId) {
         // Semplicemente i dettagli del torneo, con eventuale team partecipante
         // dell'account e partecipazione del team al torneo
         Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
@@ -190,14 +190,14 @@ public class TournamentScreenService {
         }
         Tournament tournament = optionalTournament.get();
 
-        Map<Integer, Team> teamsCache = new HashMap<>();
+        Map<Long, Team> teamsCache = new HashMap<>();
 
         if (!tournament.getAtlEvent()) {
             // Per gli eventi ATL, le squadre partecipanti rimangono nascoste fino
             // all'inizio del torneo.
-            List<Integer> teams = tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId);
+            List<Long> teams = tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId);
 
-            for (Integer teamId : teams) {
+            for (Long teamId : teams) {
                 Optional<Team> optionalTeam = teamService.getTeamById(teamId);
                 if (optionalTeam.isEmpty()) {
                     throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
@@ -235,7 +235,7 @@ public class TournamentScreenService {
     }
 
     @Transactional(readOnly = true)
-    public List<PlayerDTO> getViewCallupsScreen(Integer tournamentId) {
+    public List<PlayerDTO> getViewCallupsScreen(Long tournamentId) {
         Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
         if (optionalTournament.isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
@@ -254,15 +254,15 @@ public class TournamentScreenService {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
         }
 
-        List<Integer> teamIds = tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId);
+        List<Long> teamIds = tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId);
         if (!teamIds.contains(team.getId())) {
             throw new ConflictException(ErrorsString.TEAM_MUST_PARTECIPATE_TO_TOURNAMENT);
         }
 
-        List<Integer> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(
+        List<Long> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(
                 tournamentId,
                 team.getId());
-        for (Integer playerId : calluppedPlayerIds) {
+        for (Long playerId : calluppedPlayerIds) {
             Optional<Player> optionalPlayer = playerService.getPlayerByPlayerId(playerId);
             if (optionalPlayer.isEmpty()) {
                 throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
@@ -273,7 +273,7 @@ public class TournamentScreenService {
     }
 
     @Transactional(readOnly = true)
-    public CallupsResponse getCallupsScreen(Integer tournamentId) {
+    public CallupsResponse getCallupsScreen(Long tournamentId) {
         Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
         if (optionalTournament.isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
@@ -293,7 +293,7 @@ public class TournamentScreenService {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
         }
 
-        List<Integer> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(
+        List<Long> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(
                 tournamentId,
                 accountTeam.get().getId());
 
@@ -308,7 +308,7 @@ public class TournamentScreenService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<?> getTournamentScreen(Integer tournamentId) {
+    public Optional<?> getTournamentScreen(Long tournamentId) {
         Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
         if (optionalTournament.isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
@@ -323,7 +323,7 @@ public class TournamentScreenService {
     }
 
     @Transactional(readOnly = true)
-    public FootballTournamentResponse getFootballTournamentScreen(Integer tournamentId) {
+    public FootballTournamentResponse getFootballTournamentScreen(Long tournamentId) {
         Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
         if (optionalTournament.isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
@@ -338,10 +338,10 @@ public class TournamentScreenService {
 
         List<FootballStanding> standings = tournamentStandingService.getFootballStandingsByTournamentId(tournamentId);
 
-        List<Integer> teams = tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId);
+        List<Long> teams = tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId);
 
-        Map<Integer, Team> teamsCache = new HashMap<>();
-        for (Integer teamId : teams) {
+        Map<Long, Team> teamsCache = new HashMap<>();
+        for (Long teamId : teams) {
             Optional<Team> optionalTeam = teamService.getTeamById(teamId);
             if (optionalTeam.isEmpty()) {
                 throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
@@ -349,7 +349,7 @@ public class TournamentScreenService {
             teamsCache.put(teamId, optionalTeam.get());
         }
 
-        Map<Integer, FootballTeamStatDTO> footballPlayerStatsCache = new HashMap<>();
+        Map<Long, FootballTeamStatDTO> footballPlayerStatsCache = new HashMap<>();
         List<FootballTournamentStat> footballTournamentStats = tournamentStatService
                 .getFootballTournamentStatsByTournamentId(tournamentId);
 
@@ -387,7 +387,7 @@ public class TournamentScreenService {
     }
 
     @Transactional(readOnly = true)
-    public TournamentSummaryResponse getTournamentSummary(Integer tournamentId) {
+    public TournamentSummaryResponse getTournamentSummary(Long tournamentId) {
         Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
         if (optionalTournament.isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);

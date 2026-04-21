@@ -17,11 +17,11 @@ public class TeamsResponse {
     @NotNull
     @Builder.Default
     @JsonProperty("teamsCache")
-    private Map<Integer, TeamDTO> teamsCache = new HashMap<>();
+    private Map<Long, TeamDTO> teamsCache = new HashMap<>();
 
 
     @NotNull
     @Builder.Default
     @JsonProperty("captainNamePerTeam")
-    private Map<Integer, String> captainNamePerTeam = new HashMap<>();
+    private Map<Long, String> captainNamePerTeam = new HashMap<>();
 }

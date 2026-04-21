@@ -10,7 +10,7 @@ import lombok.Data;
 @Table(name = "city")
 public class City {
     @Id
-    private Integer id;
+    private Long id;
 
     @Column(unique = true, nullable = false)
     private String name;

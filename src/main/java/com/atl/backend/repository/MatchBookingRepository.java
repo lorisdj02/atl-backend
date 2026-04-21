@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface MatchBookingRepository extends JpaRepository<MatchBooking, Integer> {
+public interface MatchBookingRepository extends JpaRepository<MatchBooking, Long> {
 
-    List<MatchBooking> findByBooking_Field_Id(Integer fieldId);
+    List<MatchBooking> findByBooking_Field_Id(Long fieldId);
 
-    Optional<MatchBooking> findByMatch_Id(Integer matchId);
+    Optional<MatchBooking> findByMatch_Id(Long matchId);
 }

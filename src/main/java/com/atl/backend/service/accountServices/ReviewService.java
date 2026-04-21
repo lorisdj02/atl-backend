@@ -21,6 +21,7 @@ import com.atl.backend.model.Tournament;
 import com.atl.backend.model.Transaction;
 import com.atl.backend.model.enums.ReviewStatus;
 import com.atl.backend.model.enums.ReviewType;
+import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.repository.ReviewRepository;
 
 @Service
@@ -87,7 +88,7 @@ public class ReviewService {
     }
 
     public Review createReview(Account reviewerAccount, Account reviewedAccount, Tournament tournament, Match match,
-            ReviewType reviewType, BigDecimal weight, Transaction linkedTransaction) {
+            ReviewType reviewType, BigDecimal weight, Transaction linkedTransaction, SportCategory sportCategory) {
         Review review = new Review();
         review.setReviewerAccount(reviewerAccount);
         review.setReviewedAccount(reviewedAccount);
@@ -97,18 +98,19 @@ public class ReviewService {
         review.setWeight(weight);
         review.setLinkedTransaction(linkedTransaction);
         review.setStatus(ReviewStatus.WAITING);
+        review.setSportCategory(sportCategory);
         return reviewRepository.save(review);
     }
 
-    public Optional<Review> getReviewByReviewerAccount_IdAndReviewedAccount_IdAndTournament_Id(Integer reviewerAccountId,
-            Integer reviewedAccountId, Integer tournamentId) {
+    public Optional<Review> getReviewByReviewerAccount_IdAndReviewedAccount_IdAndTournament_Id(Long reviewerAccountId,
+            Long reviewedAccountId, Long tournamentId) {
         return reviewRepository
                 .findByReviewerAccount_IdAndReviewedAccount_IdAndTournament_Id(reviewerAccountId,
                         reviewedAccountId, tournamentId);
     }
 
-    public Review getReviewByReviewerAccountIdAndReviewedAccountIdAndTournamentIdAndMatchId(Integer reviewerAccountId,
-            Integer reviewedAccountId, Integer tournamentId, Integer matchId) {
+    public Review getReviewByReviewerAccountIdAndReviewedAccountIdAndTournamentIdAndMatchId(Long reviewerAccountId,
+            Long reviewedAccountId, Long tournamentId, Long matchId) {
         return reviewRepository
                 .findByReviewerAccount_IdAndReviewedAccount_IdAndTournament_IdAndMatch_Id(reviewerAccountId,
                         reviewedAccountId, tournamentId, matchId)

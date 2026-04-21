@@ -11,11 +11,11 @@ import lombok.Data;
 public class PlayerDTO {
     @NotNull
     @JsonProperty("playerId")
-    private Integer playerId;
+    private Long playerId;
 
     @NotNull
     @JsonProperty("accountId")
-    private Integer accountId;
+    private Long accountId;
 
     @NotNull
     @JsonProperty("username")

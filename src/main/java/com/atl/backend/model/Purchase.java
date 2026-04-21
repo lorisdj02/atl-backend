@@ -16,11 +16,11 @@ import java.time.LocalDateTime;
 public class Purchase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "account_id")
-     * private Integer accountId;
+     * private Long accountId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -28,7 +28,7 @@ public class Purchase {
     private Account account;
 
     @Column(name = "object_id", nullable = false)
-    private Integer objectId;
+    private Long objectId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
@@ -44,7 +44,7 @@ public class Purchase {
 
     /*
      * @Column(name = "transaction_group_id", nullable = false)
-     * private Integer transactionGroupId;
+     * private Long transactionGroupId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -53,6 +53,9 @@ public class Purchase {
 
     @Column(name = "refunded_at")
     private LocalDateTime refundedAt;
+
+    @Column(name = "redeemed_at")
+    private LocalDateTime redeemedAt;
 
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;

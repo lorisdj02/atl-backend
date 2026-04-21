@@ -31,15 +31,15 @@ public class OrganizationService {
         organizationRepository.deleteAll();
     }
 
-    public void deleteOrganizationByAccountId(Integer accountId) {
+    public void deleteOrganizationByAccountId(Long accountId) {
         organizationRepository.deleteByAccount_Id(accountId);
     }
 
-    public Optional<Organization> getOrganizationByAccountId(Integer accountId) {
+    public Optional<Organization> getOrganizationByAccountId(Long accountId) {
         return organizationRepository.findByAccount_Id(accountId);
     }
 
-    public Optional<Organization> getOrganizationByOrganizationId(Integer orgId) {
+    public Optional<Organization> getOrganizationByOrganizationId(Long orgId) {
         return organizationRepository.findByOrganizationId(orgId);
     }
 

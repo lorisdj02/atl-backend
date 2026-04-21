@@ -35,12 +35,12 @@ public class MatchRefereeService {
     @Autowired
     private FootballMatchRepository footballMatchRepository;
 
-    public List<RefereeAssignment> getRefereeAssignmentsByRefereeId(Integer refereeId) {
+    public List<RefereeAssignment> getRefereeAssignmentsByRefereeId(Long refereeId) {
         return refereeAssignmentRepository.findByReferee_RefereeId(refereeId);
     }
 
     @Transactional(readOnly = true)
-    public Boolean hasRefereeActiveMatchesByRefereeId(Integer refereeId) {
+    public Boolean hasRefereeActiveMatchesByRefereeId(Long refereeId) {
         List<RefereeAssignment> refereeAssignments = refereeAssignmentRepository.findByReferee_RefereeId(refereeId);
         for (RefereeAssignment refereeAssignment : refereeAssignments) {
             Match match = refereeAssignment.getMatch();
@@ -51,11 +51,11 @@ public class MatchRefereeService {
         return false;
     }
 
-    public List<RefereeAssignment> getRefereeAssignmentsForMatch(Integer matchId) {
+    public List<RefereeAssignment> getRefereeAssignmentsForMatch(Long matchId) {
         return refereeAssignmentRepository.findByMatch_Id(matchId);
     }
 
-    public BigDecimal getRefereeRolePayPerMatch(Integer sportId, String name, Short level) {
+    public BigDecimal getRefereeRolePayPerMatch(Long sportId, String name, Short level) {
         List<RefereeRole> refereeRoles = refereeRoleRepository.findBySport_IdAndName(sportId, name);
         if (refereeRoles.isEmpty()) {
             throw new NotFoundException(ErrorsString.REFEREE_ROLE_NOT_FOUND);
@@ -73,16 +73,16 @@ public class MatchRefereeService {
         return maxPayPerMatch;
     }
 
-    public List<Integer> getRefereeIdsByMatchId(Integer matchId) {
+    public List<Long> getRefereeIdsByMatchId(Long matchId) {
         List<RefereeAssignment> refereeAssignments = refereeAssignmentRepository.findByMatch_Id(matchId);
-        List<Integer> refereeIds = new ArrayList<>();
+        List<Long> refereeIds = new ArrayList<>();
         for (RefereeAssignment refereeAssignment : refereeAssignments) {
             refereeIds.add(refereeAssignment.getReferee().getRefereeId());
         }
         return refereeIds;
     }
 
-    public void insertRefereeAssignment(Integer matchId, String refereeRoleName) {
+    public void insertRefereeAssignment(Long matchId, String refereeRoleName) {
         Referee referee = AccountContext.getActiveReferee();
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
@@ -105,7 +105,7 @@ public class MatchRefereeService {
         refereeAssignmentRepository.save(refereeAssignment);
     }
 
-    public List<FootballMatch> getAssignedFootballMatchesByRefereeId(Integer refereeId) {
+    public List<FootballMatch> getAssignedFootballMatchesByRefereeId(Long refereeId) {
         List<RefereeAssignment> refereeAssignments = getRefereeAssignmentsByRefereeId(refereeId);
         List<FootballMatch> assignedFootballMatches = new ArrayList<>();
         for (RefereeAssignment refereeAssignment : refereeAssignments) {

@@ -8,15 +8,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CoordinatorRepository extends JpaRepository<Coordinator, Integer> {
+public interface CoordinatorRepository extends JpaRepository<Coordinator, Long> {
 
-    Optional<Coordinator> findByAccount_Id(Integer accountId);
+    Optional<Coordinator> findByAccount_Id(Long accountId);
 
-    Optional<Coordinator> findByCoordinatorId(Integer coordinatorId);
+    Optional<Coordinator> findByCoordinatorId(Long coordinatorId);
 
-    void deleteByAccount_Id(Integer accountId);
+    void deleteByAccount_Id(Long accountId);
 
-    boolean existsByAccount_Id(Integer accountId);
+    boolean existsByAccount_Id(Long accountId);
 
-    boolean existsByCoordinatorId(Integer coordinatorId);
+    boolean existsByCoordinatorId(Long coordinatorId);
 }

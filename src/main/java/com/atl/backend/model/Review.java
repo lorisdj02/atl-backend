@@ -13,11 +13,11 @@ import java.math.BigDecimal;
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "tournament_id", nullable = false)
-     * private Integer tournamentId;
+     * private Long tournamentId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,7 +30,7 @@ public class Review {
 
     /*
      * @Column(name = "reviewer_account_id", nullable = false)
-     * private Integer reviewerAccountId;
+     * private Long reviewerAccountId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -39,7 +39,7 @@ public class Review {
 
     /*
      * @Column(name = "reviewed_account_id", nullable = false)
-     * private Integer reviewedAccountId;
+     * private Long reviewedAccountId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -49,7 +49,7 @@ public class Review {
     @Column(length = 255)
     private String comment;
 
-    @Column(nullable = false, precision = 3, scale = 2)
+    @Column(precision = 3, scale = 2)
     private BigDecimal rating;
 
     @Column(nullable = false, precision = 3, scale = 2)
@@ -69,7 +69,7 @@ public class Review {
 
     /*
      * @Column(name = "linked_transaction_id")
-     * private Integer linkedTransactionId;
+     * private Long linkedTransactionId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -10,11 +10,11 @@ public class Referee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "referee_id")
-    private Integer refereeId;
+    private Long refereeId;
 
     /*
      * @Column(name = "account_id", unique = true, nullable = false)
-     * private Integer accountId;
+     * private Long accountId;
      */
 
     @OneToOne

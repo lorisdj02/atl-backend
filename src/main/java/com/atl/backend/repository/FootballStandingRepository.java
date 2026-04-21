@@ -12,10 +12,10 @@ import org.springframework.stereotype.Repository;
 public interface FootballStandingRepository extends JpaRepository<FootballStanding, FootballStandingId> {
 
     // Custom query method to find standings by tournament ID
-    List<FootballStanding> findByTournament_Id(Integer tournamentId);
+    List<FootballStanding> findByTournament_Id(Long tournamentId);
 
     // Custom query method to find standings by tournament ID and group name
-    List<FootballStanding> findByTournament_IdAndGroupName(Integer tournamentId, String groupName);
+    List<FootballStanding> findByTournament_IdAndGroupName(Long tournamentId, String groupName);
 
-    Optional<FootballStanding> findByTournament_IdAndTeam_Id(Integer tournamentId, Integer teamId);
+    Optional<FootballStanding> findByTournament_IdAndTeam_Id(Long tournamentId, Long teamId);
 }

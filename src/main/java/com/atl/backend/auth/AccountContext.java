@@ -31,7 +31,7 @@ public class AccountContext {
         context.remove();
     }
 
-    public static Integer getAccountId() {
+    public static Long getAccountId() {
         return get().getAccountId();
     }
 
@@ -39,35 +39,35 @@ public class AccountContext {
         return get().getAccountRole();
     }
 
-    public static Integer getPlayerId() {
+    public static Long getPlayerId() {
         if (getAccountRole() != AccountRole.PLAYER) {
             throw new ForbiddenException(ErrorsString.PLAYER_ROLE_REQUIRED);
         }
         return get().getPlayerId();
     }
 
-    public static Integer getCoordinatorId() {
+    public static Long getCoordinatorId() {
         if (getAccountRole() != AccountRole.COORDINATOR) {
             throw new ForbiddenException(ErrorsString.COORDINATOR_ROLE_REQUIRED);
         }
         return get().getCoordinatorId();
     }
 
-    public static Integer getRefereeId() {
+    public static Long getRefereeId() {
         if (getAccountRole() != AccountRole.REFEREE) {
             throw new ForbiddenException(ErrorsString.REFEREE_ROLE_REQUIRED);
         }
         return get().getRefereeId();
     }
 
-    public static Integer getOrganizationId(){
+    public static Long getOrganizationId(){
             if(getAccountRole() != AccountRole.ORGANIZATION){
                 throw new ForbiddenException(ErrorsString.ORGANIZATION_ROLE_REQUIRED);
             }
             return get().getOrganizationId();
     }
 
-    public static Integer getRoleId() {
+    public static Long getRoleId() {
         switch (getAccountRole()) {
             case PLAYER:
                 return getPlayerId();

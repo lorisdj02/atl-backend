@@ -6,9 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 @Repository
-public interface PrivateBookingRepository extends JpaRepository<PrivateBooking, Integer> {
+public interface PrivateBookingRepository extends JpaRepository<PrivateBooking, Long> {
 
-    List<PrivateBooking> findByPlayer_PlayerId(Integer playerId);
+    List<PrivateBooking> findByPlayer_PlayerId(Long playerId);
     
-    List<PrivateBooking> findByBooking_Field_Id(Integer fieldId);
+    List<PrivateBooking> findByBooking_Field_Id(Long fieldId);
 }

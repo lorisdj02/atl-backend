@@ -181,7 +181,7 @@ public class AccountService {
         return accountRepository.findAll();
     }
 
-    public Optional<Account> getAccountById(Integer id) {
+    public Optional<Account> getAccountById(Long id) {
         return accountRepository.findById(id);
     }
 
@@ -203,7 +203,7 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public Short getAccountLevel() {
-        Integer accountId = AccountContext.getAccountId();
+        Long accountId = AccountContext.getAccountId();
         Optional<Account> accountOptional = getAccountById(accountId);
         if (accountOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
@@ -221,7 +221,7 @@ public class AccountService {
     }
 
     // Soft delete: set status to PURGED instead of deleting the record
-    public void softDeleteAccount(Integer id) {
+    public void softDeleteAccount(Long id) {
         Optional<Account> accountOptional = accountRepository.findById(id);
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
@@ -248,7 +248,7 @@ public class AccountService {
         accountRepository.deleteAll();
     }
 
-    public void deleteAccount(Integer id) {
+    public void deleteAccount(Long id) {
         accountRepository.deleteById(id);
         playerService.deletePlayerByAccountId(id);
         organizationService.deleteOrganizationByAccountId(id);
@@ -268,15 +268,15 @@ public class AccountService {
         return growthStepRepository.findAll();
     }
 
-    public List<Review> getReviewsByReviewerAccountId(Integer reviewerAccountId) {
+    public List<Review> getReviewsByReviewerAccountId(Long reviewerAccountId) {
         return reviewRepository.findByReviewerAccount_Id(reviewerAccountId);
     }
 
-    public List<Review> getPendingReviewsByReviewerAccountId(Integer reviewerAccountId) {
+    public List<Review> getPendingReviewsByReviewerAccountId(Long reviewerAccountId) {
         return reviewRepository.findByReviewerAccount_IdAndStatus(reviewerAccountId, ReviewStatus.PENDING);
     }
 
-    public String getReferralCodeByAccountId(Integer accountId) {
+    public String getReferralCodeByAccountId(Long accountId) {
         Optional<Account> accountOptional = getAccountById(accountId);
         if (accountOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
@@ -287,11 +287,11 @@ public class AccountService {
         return account.getUsername();
     }
 
-    public Integer getRedeemedInvitesByAccountId(Integer accountId) {
+    public Integer getRedeemedInvitesByAccountId(Long accountId) {
         return friendInviteRepository.countByInviterAccount_IdAndRedeemedTrue(accountId);
     }
 
-    public Integer getTotalInvitesByAccountId(Integer accountId) {
+    public Integer getTotalInvitesByAccountId(Long accountId) {
         return friendInviteRepository.countByInviterAccount_Id(accountId);
     }
 
@@ -312,7 +312,7 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public boolean hasNotifications() {
-        Integer accountId = AccountContext.getAccountId();
+        Long accountId = AccountContext.getAccountId();
         List<Review> reviews = getReviewsByReviewerAccountId(accountId);
         List<Review> pendingReviews = getPendingReviewsByReviewerAccountId(accountId);
         return !reviews.isEmpty() || !pendingReviews.isEmpty();
@@ -347,7 +347,7 @@ public class AccountService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteAccountAndRelatedData() {
         Account account = AccountContext.getActiveAccount();
-        Integer accountId = account.getId();
+        Long accountId = account.getId();
         paymentService.isWalletEmptyByAccountId(accountId);
         List<Review> reviews = getReviewsByReviewerAccountId(accountId);
         if (!reviews.isEmpty()) {

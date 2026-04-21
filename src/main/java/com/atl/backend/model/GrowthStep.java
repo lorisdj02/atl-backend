@@ -24,7 +24,7 @@ public class GrowthStep {
     private Short level;
 
     @Column(nullable = false)
-    private Integer x;
+    private Short x;
 
     @Column(name = "min_rating_over_last_x_matches", precision = 3, scale = 2)
     private BigDecimal minRatingOverLastXMatches;

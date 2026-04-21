@@ -50,7 +50,7 @@ public class MatchCombinationService {
     @Autowired
     private FootballStandingRepository footballStandingRepository;
 
-    private Tournament getExistingTournamentByTournamentId(Integer tournamentId) {
+    private Tournament getExistingTournamentByTournamentId(Long tournamentId) {
         return tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
     }
@@ -62,7 +62,7 @@ public class MatchCombinationService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void generateMatchesForTournament(Tournament tournament, List<Integer> teamIds) {
+    public void generateMatchesForTournament(Tournament tournament, List<Long> teamIds) {
 
         if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
@@ -72,7 +72,7 @@ public class MatchCombinationService {
                 .println("[DEBUG - MatchService] - Retrieved team IDs for tournament " + tournament.getId() + ": "
                         + teamIds);
 
-        List<Integer> shuffledTeamIds = new ArrayList<>(teamIds);
+        List<Long> shuffledTeamIds = new ArrayList<>(teamIds);
         Collections.shuffle(shuffledTeamIds);
 
         System.out
@@ -93,7 +93,7 @@ public class MatchCombinationService {
 
     }
 
-    private void generateMatchesForGroupStage(Tournament tournament, List<Integer> teamIds,
+    private void generateMatchesForGroupStage(Tournament tournament, List<Long> teamIds,
             SportCategory sportCategory) {
         final int numTeamsPerGroup = tournament.getNumTeams() / tournament.getNumGroups();
 
@@ -101,7 +101,7 @@ public class MatchCombinationService {
 
         for (int i = 0; i < tournament.getNumGroups(); i++) {
             String groupName = "" + (char) ('A' + i);
-            List<Integer> groupTeams = new ArrayList<>(
+            List<Long> groupTeams = new ArrayList<>(
                     teamIds.subList(i * numTeamsPerGroup, (i + 1) * numTeamsPerGroup));
 
             if (groupTeams.size() % 2 != 0) {
@@ -126,8 +126,8 @@ public class MatchCombinationService {
 
                     boolean random = Math.random() % 100 < 50;
 
-                    Integer homeTeamId = random ? groupTeams.get(homeIndex) : groupTeams.get(awayIndex);
-                    Integer awayTeamId = random ? groupTeams.get(awayIndex) : groupTeams.get(homeIndex);
+                    Long homeTeamId = random ? groupTeams.get(homeIndex) : groupTeams.get(awayIndex);
+                    Long awayTeamId = random ? groupTeams.get(awayIndex) : groupTeams.get(homeIndex);
 
                     if (homeTeamId != null && awayTeamId != null) {
                         Match matchEntity = new Match();
@@ -307,7 +307,7 @@ public class MatchCombinationService {
     }
 
     @Transactional(readOnly = true)
-    private Boolean areTeamInSameGroup(Integer tournamentId, Integer teamId1, Integer teamId2) {
+    private Boolean areTeamInSameGroup(Long tournamentId, Long teamId1, Long teamId2) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
         switch (tournament.getSport().getSportCategory()) {
             case FOOTBALL:
@@ -327,7 +327,7 @@ public class MatchCombinationService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void drawKnockoutStageMatches(int tournamentId, Map<Integer, List<Team>> teamsPerRank) {
+    public void drawKnockoutStageMatches(Long tournamentId, Map<Integer, List<Team>> teamsPerRank) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
         String groupNamePrefix;
         switch (tournament.getNumTeamsQualified()) {
@@ -369,7 +369,7 @@ public class MatchCombinationService {
                 Collections.reverse(worstTeams); // Reverse per andare dal peggiore al migliore
 
                 // ===== STEP 3: Tracciare i team già usati =====
-                Set<Integer> usedTeams = new HashSet<>();
+                Set<Long> usedTeams = new HashSet<>();
 
                 // ===== STEP 4: Abbinare i match: best[i] vs worst[i] =====
                 for (FootballMatch footballMatch : footballMatches) {
@@ -431,7 +431,7 @@ public class MatchCombinationService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void updateKnockoutStageMatches(int tournamentId) {
+    public void updateKnockoutStageMatches(Long tournamentId) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
         String groupNamePrefix;
 

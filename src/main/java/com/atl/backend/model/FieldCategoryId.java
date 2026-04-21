@@ -7,6 +7,6 @@ import java.io.Serializable;
 
 @Data
 public class FieldCategoryId implements Serializable {
-    private Integer field;
+    private Long field;
     private SportCategory sportCategory;
 }

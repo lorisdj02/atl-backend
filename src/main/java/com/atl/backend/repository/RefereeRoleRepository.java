@@ -11,9 +11,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RefereeRoleRepository extends JpaRepository<RefereeRole, RefereeRoleId> {
     
-    List<RefereeRole> findBySport_Id(Integer sportId);
+    List<RefereeRole> findBySport_Id(Long sportId);
 
-    List<RefereeRole> findBySport_IdAndLevel(Integer sportId, Short level);
+    List<RefereeRole> findBySport_IdAndLevel(Long sportId, Short level);
 
-    List<RefereeRole> findBySport_IdAndName(Integer sportId, String name);
+    List<RefereeRole> findBySport_IdAndName(Long sportId, String name);
 }

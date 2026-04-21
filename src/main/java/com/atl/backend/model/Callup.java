@@ -24,7 +24,7 @@ public class Callup {
 
     /*
      * @Column(name = "team_id")
-     * private Integer teamId;
+     * private Long teamId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

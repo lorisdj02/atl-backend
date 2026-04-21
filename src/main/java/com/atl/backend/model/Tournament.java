@@ -14,11 +14,11 @@ import java.math.BigDecimal;
 public class Tournament {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "coordinator_id", nullable = false)
-     * private Integer coordinatorId;
+     * private Long coordinatorId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -27,7 +27,7 @@ public class Tournament {
 
     /*
      * @Column(name = "field_id", nullable = false)
-     * private Integer fieldId;
+     * private Long fieldId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,7 +36,7 @@ public class Tournament {
 
     /*
      * @Column(name = "city_id", nullable = false)
-     * private Integer cityId;
+     * private Long cityId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -45,7 +45,7 @@ public class Tournament {
 
     /*
      * @Column(name = "sport_id", nullable = false)
-     * private Integer sportId;
+     * private Long sportId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

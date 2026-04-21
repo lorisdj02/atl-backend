@@ -29,7 +29,7 @@ public class TournamentStatService {
     @Autowired
     private TeamService teamService;
 
-    public List<FootballTournamentStat> getFootballTournamentStatsByTournamentId(Integer tournamentId) {
+    public List<FootballTournamentStat> getFootballTournamentStatsByTournamentId(Long tournamentId) {
         return footballTournamentStatRepository.findByTournament_Id(tournamentId);
     }
 
@@ -37,7 +37,7 @@ public class TournamentStatService {
         footballTournamentStatRepository.deleteAll();
     }
 
-    private Player getExistingPlayerByPlayerId(Integer playerId) {
+    private Player getExistingPlayerByPlayerId(Long playerId) {
         Optional<Player> playerOpt = playerRepository.findByPlayerId(playerId);
         if (playerOpt.isEmpty()) {
             throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
@@ -45,17 +45,17 @@ public class TournamentStatService {
         return playerOpt.get();
     }
 
-    private List<Integer> getCalluppedPlayerIdsByTournamentIdAndTeamId(Integer tournamentId, Integer teamId) {
+    private List<Long> getCalluppedPlayerIdsByTournamentIdAndTeamId(Long tournamentId, Long teamId) {
         List<Callup> callups = callupRepository.findByTournament_IdAndTeam_Id(tournamentId, teamId);
         return callups.stream().map(callup -> callup.getPlayer().getPlayerId()).toList();
     }
 
-    public void generateTournamentStats(Tournament tournament, List<Integer> teamIds) {
+    public void generateTournamentStats(Tournament tournament, List<Long> teamIds) {
         switch (tournament.getSport().getSportCategory()) {
             case FOOTBALL:
-                for (Integer teamId : teamIds) {
-                    List<Integer> playerIds = getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(), teamId);
-                    for (Integer playerId : playerIds) {
+                for (Long teamId : teamIds) {
+                    List<Long> playerIds = getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(), teamId);
+                    for (Long playerId : playerIds) {
                         Player player = getExistingPlayerByPlayerId(playerId);
                         FootballTournamentStat tournamentStats = new FootballTournamentStat();
                         tournamentStats.setTournament(tournament);
@@ -70,7 +70,7 @@ public class TournamentStatService {
         }
     }
 
-    public void updateFootballTournamentStats(Integer tournamentId, Integer playerId, Integer teamId,
+    public void updateFootballTournamentStats(Long tournamentId, Long playerId, Long teamId,
             Short goalsDelta, Short motmDelta, Short redCardsDelta,
             Short yellowCardsDelta) {
         FootballTournamentStat footballTournamentStats = footballTournamentStatRepository

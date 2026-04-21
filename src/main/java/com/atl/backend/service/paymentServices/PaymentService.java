@@ -94,7 +94,7 @@ public class PaymentService {
         return walletRepository.save(wallet);
     }
 
-    private Player getExistingPlayerByPlayerId(Integer playerId) {
+    private Player getExistingPlayerByPlayerId(Long playerId) {
         Optional<Player> optPlayer = playerRepository.findById(playerId);
         if (optPlayer.isEmpty()) {
             throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
@@ -102,19 +102,19 @@ public class PaymentService {
         return optPlayer.get();
     }
 
-    public List<Transaction> getTransactionsByAccountId(Integer accountId) {
+    public List<Transaction> getTransactionsByAccountId(Long accountId) {
         return transactionRepository.findByAccount_Id(accountId);
     }
 
-    public Optional<Wallet> getWalletByAccountId(Integer accountId) {
+    public Optional<Wallet> getWalletByAccountId(Long accountId) {
         return walletRepository.findByAccount_Id(accountId);
     }
 
-    public Optional<CheckoutSession> getCheckoutSessionById(Integer sessionId) {
+    public Optional<CheckoutSession> getCheckoutSessionById(Long sessionId) {
         return checkoutSessionRepository.findById(sessionId);
     }
 
-    public Optional<TransactionGroup> getTransactionGroupById(Integer transactionGroupId) {
+    public Optional<TransactionGroup> getTransactionGroupById(Long transactionGroupId) {
         return transactionGroupRepository.findById(transactionGroupId);
     }
 
@@ -122,7 +122,7 @@ public class PaymentService {
         checkoutSessionRepository.save(session);
     }
 
-    public BigDecimal getInviteBalanceByAccountId(Integer accountId) {
+    public BigDecimal getInviteBalanceByAccountId(Long accountId) {
         Optional<Wallet> walletOpt = walletRepository.findByAccount_Id(accountId);
         WalletBalance walletBalance = getWalletBalanceByAccountId(accountId);
         if (walletOpt.isPresent()) {
@@ -134,13 +134,13 @@ public class PaymentService {
         }
     }
 
-    public WalletBalance getWalletBalanceByAccountId(Integer accountId) {
+    public WalletBalance getWalletBalanceByAccountId(Long accountId) {
         return walletBalanceRepository.findByAccount_Id(accountId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.WALLET_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
-    public CheckoutResponse getCheckoutScreen(Integer sessionId) {
+    public CheckoutResponse getCheckoutScreen(Long sessionId) {
         // TODO: Verifica
         Account account = AccountContext.getActiveAccount();
         Optional<CheckoutSession> optSession = getCheckoutSessionById(sessionId);
@@ -183,13 +183,13 @@ public class PaymentService {
 
         switch (session.getType()) {
             case TOURNAMENT_FEE:
-                Integer tournamentId = payload.getTournamentId();
+                Long tournamentId = payload.getTournamentId();
                 Tournament tournament = tournamentRepository.findById(tournamentId)
                         .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
                 tournamentName = tournament.getName();
                 break;
             case LOBBY_BOOKING_PARTICIPATE:
-                Integer lobbyId = payload.getLobbyId();
+                Long lobbyId = payload.getLobbyId();
                 LobbyBooking booking = lobbyBookingRepository.findById(lobbyId)
                         .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
                 fieldName = booking.getBooking().getField().getName();
@@ -206,7 +206,7 @@ public class PaymentService {
                 break;
             case LOBBY_BOOKING_CREATE:
 
-                Integer fieldId = payload.getFieldId();
+                Long fieldId = payload.getFieldId();
                 Field field = fieldRepository.findById(fieldId)
                         .orElseThrow(() -> new NotFoundException(ErrorsString.FIELD_NOT_FOUND));
                 if (payload.getOwnerPlayerId() == null) {
@@ -225,7 +225,7 @@ public class PaymentService {
                         : 1;
                 break;
             case PRIVATE_BOOKING:
-                Integer privateFieldId = payload.getFieldId();
+                Long privateFieldId = payload.getFieldId();
                 Field privateField = fieldRepository.findById(privateFieldId)
                         .orElseThrow(() -> new NotFoundException(ErrorsString.FIELD_NOT_FOUND));
 
@@ -257,18 +257,18 @@ public class PaymentService {
                 .build();
     }
 
-    public void checkTransactionGroup(Integer transactionGroupId) {
+    public void checkTransactionGroup(Long transactionGroupId) {
         Optional<TransactionGroup> optTransactionGroup = transactionGroupRepository.findById(transactionGroupId);
         if (optTransactionGroup.isEmpty()) {
             throw new PaymentRequiredException(ErrorsString.PAYMENT_REQUIRED);
         }
     }
 
-    public List<Transaction> getTransactionsByTransactionGroupId(Integer transactionGroupId) {
+    public List<Transaction> getTransactionsByTransactionGroupId(Long transactionGroupId) {
         return transactionRepository.findByTransactionGroup_Id(transactionGroupId);
     }
 
-    public List<Purchase> getPurchasesByTournamentIdAndAccountId(Integer tournamentId, Integer accountId) {
+    public List<Purchase> getPurchasesByTournamentIdAndAccountId(Long tournamentId, Long accountId) {
         return purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
                 CheckoutType.TOURNAMENT_FEE, tournamentId, accountId, PurchaseStatus.CONFIRMED);
     }
@@ -302,7 +302,7 @@ public class PaymentService {
         return transactionRepository.save(transaction);
     }
 
-    public TransactionGroup updateTransactionGroupStatus(Integer transactionGroupId, TransactionStatus status) {
+    public TransactionGroup updateTransactionGroupStatus(Long transactionGroupId, TransactionStatus status) {
         TransactionGroup transactionGroup = transactionGroupRepository.findById(transactionGroupId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TRANSACTION_GROUP_NOT_FOUND));
 
@@ -423,7 +423,7 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public Boolean isWalletEmptyByAccountId(Integer accountId) {
+    public Boolean isWalletEmptyByAccountId(Long accountId) {
         WalletBalance walletBalance = getWalletBalanceByAccountId(accountId);
         // Il wallet invite non viene considerato, dato che non è possibile prelevarlo o
         // trasferirlo, e quindi non è rilevante ai fini del controllo se il wallet è
@@ -445,7 +445,7 @@ public class PaymentService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void payOrganizationByBookingId(Integer bookingId) {
+    public void payOrganizationByBookingId(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
         if (booking.getStatus() == BookingStatus.IN_PROGRESS) {
@@ -466,10 +466,10 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public Set<Integer> getAccountIdsByTournamentId(Integer tournamentId) {
+    public Set<Long> getAccountIdsByTournamentId(Long tournamentId) {
         List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndStatus(CheckoutType.TOURNAMENT_FEE,
                 tournamentId, PurchaseStatus.CONFIRMED);
-        Set<Integer> accountIds = new HashSet<>();
+        Set<Long> accountIds = new HashSet<>();
         for (Purchase purchase : purchases) {
             accountIds.add(purchase.getAccount().getId());
         }

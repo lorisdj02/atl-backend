@@ -49,27 +49,27 @@ public class PlayerHomeResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.minutesRoundPerTournament)
-    private Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
+    private Map<Long, Short> minutesRoundPerTournament = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.minutesPausePerTournament)
-    private Map<Integer, Short> minutesPausePerTournament = new HashMap<>();
+    private Map<Long, Short> minutesPausePerTournament = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.footballMatchesPerTournament)
-    private Map<Integer, List<FootballMatchDTO>> footballMatchesPerTournament = new HashMap<>();
+    private Map<Long, List<FootballMatchDTO>> footballMatchesPerTournament = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.footballStandingsPerTournament)
-    private Map<Integer, List<FootballStandingDTO>> footballStandingsPerTournament = new HashMap<>();
+    private Map<Long, List<FootballStandingDTO>> footballStandingsPerTournament = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.teamsCache)
-    private Map<Integer, TeamDTO> teamsCache = new HashMap<>();
+    private Map<Long, TeamDTO> teamsCache = new HashMap<>();
 
     @JsonProperty(ApiJsonKeys.accountTeam)
     private TeamDTO accountTeam;
@@ -77,31 +77,31 @@ public class PlayerHomeResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.usernamePerBooking)
-    private Map<Integer, String> usernamePerBooking = new HashMap<>();
+    private Map<Long, String> usernamePerBooking = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.fieldsCache)
-    private Map<Integer, FieldDTO> fieldsCache = new HashMap<>();
+    private Map<Long, FieldDTO> fieldsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.maxPlayersPerLobby)
-    private Map<Integer, Short> maxPlayersPerLobby = new HashMap<>();
+    private Map<Long, Short> maxPlayersPerLobby = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.currentPlayersPerLobby)
-    private Map<Integer, Short> currentPlayersPerLobby = new HashMap<>();
+    private Map<Long, Short> currentPlayersPerLobby = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.completeAddressPerField)
-    private Map<Integer, String> completeAddressPerField = new HashMap<>();
+    private Map<Long, String> completeAddressPerField = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.playersPaidPerBooking)
-    private Map<Integer, Short> playersPaidPerBooking = new HashMap<>();
+    private Map<Long, Short> playersPaidPerBooking = new HashMap<>();
 
 }

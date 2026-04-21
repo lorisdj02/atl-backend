@@ -12,7 +12,7 @@ import java.util.List;
 @Table(name = "football_match")
 public class FootballMatch {
     @Id
-    private Integer id;
+    private Long id;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
@@ -21,7 +21,7 @@ public class FootballMatch {
 
     /*
      * @Column(name = "home_team_id")
-     * private Integer homeTeamId;
+     * private Long homeTeamId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,7 +30,7 @@ public class FootballMatch {
 
     /*
      * @Column(name = "away_team_id")
-     * private Integer awayTeamId;
+     * private Long awayTeamId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

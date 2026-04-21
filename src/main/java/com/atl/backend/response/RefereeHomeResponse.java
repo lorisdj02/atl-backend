@@ -27,16 +27,16 @@ public class RefereeHomeResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.teamsCache)
-    private Map<Integer, TeamDTO> teamsCache = new HashMap<>();
+    private Map<Long, TeamDTO> teamsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.minutesRoundPerTournament)
-    private Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
+    private Map<Long, Short> minutesRoundPerTournament = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.minutesPausePerTournament)
-    private Map<Integer, Short> minutesPausePerTournament = new HashMap<>();
+    private Map<Long, Short> minutesPausePerTournament = new HashMap<>();
 
 }

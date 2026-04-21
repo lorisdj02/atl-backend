@@ -10,9 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FootballMatchEventRepository extends JpaRepository<FootballMatchEvent, Integer> {
+public interface FootballMatchEventRepository extends JpaRepository<FootballMatchEvent, Long> {
     @Query("SELECT e FROM FootballMatchEvent e WHERE e.match.match.id = :matchId ORDER BY e.minute, e.additionalMinute")
-    List<FootballMatchEvent> findByMatch_Match_Id(Integer matchId);
+    List<FootballMatchEvent> findByMatch_Match_Id(Long matchId);
 
-    Boolean existsByMatch_IdAndPlayer_PlayerIdAndType(Integer matchId, Integer playerId, FootballEventType type);
+    Boolean existsByMatch_IdAndPlayer_PlayerIdAndType(Long matchId, Long playerId, FootballEventType type);
 }

@@ -11,11 +11,11 @@ import lombok.Data;
 public class TeamRequestDTO {
     @NotNull
     @JsonProperty("teamId")
-    private Integer teamId;
+    private Long teamId;
 
     @NotNull
     @JsonProperty("playerId")
-    private Integer playerId;
+    private Long playerId;
 
     static public TeamRequestDTO fromTeamRequest(TeamRequest teamRequest) {
         TeamRequestDTO dto = new TeamRequestDTO();

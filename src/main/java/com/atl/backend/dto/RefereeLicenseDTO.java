@@ -13,11 +13,11 @@ import lombok.Data;
 public class RefereeLicenseDTO {
     @NotNull
     @JsonProperty("sportId")
-    private Integer sportId;
+    private Long sportId;
 
     @NotNull
     @JsonProperty("refereeId")
-    private Integer refereeId;
+    private Long refereeId;
 
     @JsonProperty("photoUrl")
     private String photoUrl;

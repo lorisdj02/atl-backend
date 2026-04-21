@@ -42,15 +42,15 @@ public class TournamentPhaseService {
     @Autowired
     private FootballStandingRepository footballStandingRepository;
 
-    private Tournament getExistingTournament(Integer tournamentId) {
+    private Tournament getExistingTournament(Long tournamentId) {
         return tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
-    public Boolean canGoToNextPhase(Integer tournamentId) {
+    public Boolean canGoToNextPhase(Long tournamentId) {
         Tournament tournament = getExistingTournament(tournamentId);
-        if(tournament.getStatus() != TournamentStatus.SCHEDULED){
+        if (tournament.getStatus() != TournamentStatus.SCHEDULED) {
             throw new ConflictException(ErrorsString.TOURNAMENT_NOT_ACTIVE);
         }
         switch (tournament.getPhase()) {
@@ -72,7 +72,7 @@ public class TournamentPhaseService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void goToCoordinatorNextPhase(Integer tournamentId) {
+    public void goToCoordinatorNextPhase(Long tournamentId) {
         Tournament tournament = getExistingTournament(tournamentId);
         if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
@@ -84,7 +84,7 @@ public class TournamentPhaseService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void goToNextPhase(Integer tournamentId) {
+    public void goToNextPhase(Long tournamentId) {
         Tournament tournament = getExistingTournament(tournamentId);
         if (!canGoToNextPhase(tournamentId)) {
             throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
@@ -116,7 +116,7 @@ public class TournamentPhaseService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    private TournamentPhase handlePostGroupStage(Integer tournamentId) {
+    private TournamentPhase handlePostGroupStage(Long tournamentId) {
         Tournament tournament = getExistingTournament(tournamentId);
         matchCombinationService.drawKnockoutStageMatches(tournamentId,
                 getQualifiedTeamsPerRankByTournamentId(tournamentId));
@@ -135,7 +135,7 @@ public class TournamentPhaseService {
     }
 
     @Transactional(readOnly = true)
-    public Map<Integer, List<Team>> getQualifiedTeamsPerRankByTournamentId(Integer tournamentId) {
+    public Map<Integer, List<Team>> getQualifiedTeamsPerRankByTournamentId(Long tournamentId) {
 
         Tournament tournament = getExistingTournament(tournamentId);
         Map<Integer, List<Team>> qualifiedTeamsPerRank = new HashMap<>();
@@ -148,9 +148,9 @@ public class TournamentPhaseService {
                         continue;
                     }
                     if (!footballStandingsPerRank.containsKey(Integer.valueOf(footballStanding.getRankPos()))) {
-                        footballStandingsPerRank.put((int) footballStanding.getRankPos(), new ArrayList<>());
+                        footballStandingsPerRank.put(Integer.valueOf(footballStanding.getRankPos()), new ArrayList<>());
                     }
-                    footballStandingsPerRank.get((int) footballStanding.getRankPos()).add(footballStanding);
+                    footballStandingsPerRank.get(Integer.valueOf(footballStanding.getRankPos())).add(footballStanding);
                 }
 
                 for (Integer rank : footballStandingsPerRank.keySet()) {

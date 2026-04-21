@@ -15,11 +15,11 @@ import java.math.RoundingMode;
 public class Field {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "organization_id", nullable = false)
-     * private Integer organizationId;
+     * private Long organizationId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -28,7 +28,7 @@ public class Field {
 
     /*
      * @Column(name = "city_id", nullable = false)
-     * private Integer cityId;
+     * private Long cityId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

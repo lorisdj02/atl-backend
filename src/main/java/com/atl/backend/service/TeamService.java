@@ -55,7 +55,7 @@ public class TeamService {
         return teamRequestRepository.findAll();
     }
 
-    private Player getExistingPlayerByPlayerId(Integer playerId) {
+    private Player getExistingPlayerByPlayerId(Long playerId) {
         Optional<Player> playerOpt = playerRepository.findById(playerId);
         if (playerOpt.isEmpty()) {
             throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
@@ -73,7 +73,7 @@ public class TeamService {
         return teamRepository.findAll();
     }
 
-    public Optional<Team> getTeamById(Integer id) {
+    public Optional<Team> getTeamById(Long id) {
         return teamRepository.findById(id);
     }
 
@@ -81,7 +81,7 @@ public class TeamService {
         return teamRepository.save(team);
     }
 
-    public void deleteTeam(Integer id) {
+    public void deleteTeam(Long id) {
         teamRepository.deleteById(id);
     }
 
@@ -89,7 +89,7 @@ public class TeamService {
         return playsAtRepository.save(playsAt);
     }
 
-    public Optional<Team> getTeamByPlayerIdAndSportCategory(Integer playerId, SportCategory sportCategory) {
+    public Optional<Team> getTeamByPlayerIdAndSportCategory(Long playerId, SportCategory sportCategory) {
         Optional<PlaysAt> playsAtOptional = playsAtRepository.findByPlayer_PlayerIdAndSportCategory(playerId,
                 sportCategory);
         if (playsAtOptional.isPresent()) {
@@ -98,13 +98,13 @@ public class TeamService {
         return Optional.empty();
     }
 
-    public List<Integer> getPlayerIdsByTeamId(Integer teamId) {
+    public List<Long> getPlayerIdsByTeamId(Long teamId) {
         List<PlaysAt> playsAts = playsAtRepository.findByTeam_Id(teamId);
         return playsAts.stream().map(playsAt -> playsAt.getPlayer().getPlayerId()).toList();
     }
 
     @Transactional(readOnly = true)
-    private PlaysAt canPlayerLeaveTeam(Team team, Integer playerId, Integer activeTournamentsCount) {
+    private PlaysAt canPlayerLeaveTeam(Team team, Long playerId, Integer activeTournamentsCount) {
         Player player = getExistingPlayerByPlayerId(playerId);
         PlaysAt playsAt = playsAtRepository.findByPlayer_PlayerIdAndTeam_Id(player.getPlayerId(),
                 team.getId()).orElseThrow(() -> new NotFoundException(ErrorsString.PLAYER_NOT_IN_TEAM));
@@ -121,7 +121,7 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    private void removePlayer(Integer teamId, Player player, Integer activeTournamentsCount) {
+    private void removePlayer(Long teamId, Player player, Integer activeTournamentsCount) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
         canPlayerLeaveTeam(team, player.getPlayerId(), activeTournamentsCount);
@@ -146,13 +146,13 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void leaveTeam(Integer teamId, Integer activeTournamentsCount) {
+    public void leaveTeam(Long teamId, Integer activeTournamentsCount) {
         Player player = AccountContext.getActivePlayer();
         removePlayer(teamId, player, activeTournamentsCount);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void expelPlayer(Integer teamId, Integer playerId, Integer activeTournamentsCount) {
+    public void expelPlayer(Long teamId, Long playerId, Integer activeTournamentsCount) {
         Player player = getExistingPlayerByPlayerId(playerId);
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
@@ -170,7 +170,7 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Optional<PlaysAt> joinTeam(Integer playerId, Integer teamId) {
+    public Optional<PlaysAt> joinTeam(Long playerId, Long teamId) {
         checkTeamExists(teamId);
 
         Team team = teamRepository.findById(teamId).get();
@@ -204,7 +204,7 @@ public class TeamService {
         return Optional.of(playsAtRepository.save(playsAt));
     }
 
-    public List<Player> getPlayersByTeamId(Integer teamId) {
+    public List<Player> getPlayersByTeamId(Long teamId) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
@@ -217,7 +217,7 @@ public class TeamService {
         return teamRepository.findBySportCategoryAndVisibleTrue(sportCategory);
     }
 
-    public List<Palmares> getPalmaresByTeamId(Integer teamId) {
+    public List<Palmares> getPalmaresByTeamId(Long teamId) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
@@ -225,7 +225,7 @@ public class TeamService {
         return palmaresRepository.findByTeam_Id(teamId);
     }
 
-    public boolean isPlayerCaptainOrViceCaptain(Integer teamId, Integer playerId) {
+    public boolean isPlayerCaptainOrViceCaptain(Long teamId, Long playerId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TEAM_NOT_FOUND));
 
@@ -241,7 +241,7 @@ public class TeamService {
     }
 
     @Transactional(readOnly = true)
-    public List<FootballTeamStat> getFootballTeamStatsByTeamId(Integer teamId) {
+    public List<FootballTeamStat> getFootballTeamStatsByTeamId(Long teamId) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
@@ -250,7 +250,7 @@ public class TeamService {
     }
 
     @Transactional(readOnly = true)
-    public PlayersInTeamResponse getPlayersInTeamResponse(Integer teamId) {
+    public PlayersInTeamResponse getPlayersInTeamResponse(Long teamId) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
@@ -279,38 +279,38 @@ public class TeamService {
 
     }
 
-    public boolean isPlayerInTeam(Integer teamId, Integer playerId) {
+    public boolean isPlayerInTeam(Long teamId, Long playerId) {
         checkTeamExists(teamId);
         List<PlaysAt> playsAts = playsAtRepository.findByTeam_Id(teamId);
         return playsAts.stream().anyMatch(playsAt -> playsAt.getPlayer().getPlayerId().equals(playerId));
     }
 
-    public boolean isPlayerInATeamBySportCategory(Integer playerId, SportCategory sportCategory) {
+    public boolean isPlayerInATeamBySportCategory(Long playerId, SportCategory sportCategory) {
         Optional<PlaysAt> playsAtOptional = playsAtRepository.findByPlayer_PlayerIdAndSportCategory(playerId,
                 sportCategory);
         return playsAtOptional.isPresent();
     }
 
-    public void checkTeamExists(Integer teamId) {
+    public void checkTeamExists(Long teamId) {
         if (teamRepository.existsById(teamId) == false) {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
         }
     }
 
-    public List<TeamRequest> getTeamRequestsByTeamId(Integer teamId) {
+    public List<TeamRequest> getTeamRequestsByTeamId(Long teamId) {
         return teamRequestRepository.findByTeam_Id(teamId);
     }
 
-    public Optional<TeamRequest> getTeamRequestByTeamIdAndPlayerId(Integer teamId, Integer playerId) {
+    public Optional<TeamRequest> getTeamRequestByTeamIdAndPlayerId(Long teamId, Long playerId) {
         return teamRequestRepository.findByTeam_IdAndPlayer_PlayerId(teamId, playerId);
     }
 
-    public FootballTeamStat getCumulativeFootballTeamStatsByPlayerId(Integer playerId) {
+    public FootballTeamStat getCumulativeFootballTeamStatsByPlayerId(Long playerId) {
         Player player = getExistingPlayerByPlayerId(playerId);
         Team dummyTeam = new Team();
         dummyTeam.setSportCategory(SportCategory.FOOTBALL);
         dummyTeam.setNumPlayers((short) 1);
-        dummyTeam.setId(0);
+        dummyTeam.setId(0L);
         dummyTeam.setCaptainPlayer(playerRepository.findById(playerId).get());
         FootballTeamStat footballTeamStat = new FootballTeamStat();
         footballTeamStat.setPlayer(player);
@@ -341,13 +341,13 @@ public class TeamService {
         return teamRepository.existsByTeamNameAndSportCategory(teamName, sportCategory);
     }
 
-    public void needToBeCaptainOrViceCaptain(Integer teamId, Integer playerId) {
+    public void needToBeCaptainOrViceCaptain(Long teamId, Long playerId) {
         if (!isPlayerCaptainOrViceCaptain(teamId, playerId)) {
             throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
         }
     }
 
-    public void needToBeCaptain(Integer teamId, Integer playerId) {
+    public void needToBeCaptain(Long teamId, Long playerId) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
@@ -358,14 +358,14 @@ public class TeamService {
         }
     }
 
-    public void needToBeInTeam(Integer teamId, Integer playerId) {
+    public void needToBeInTeam(Long teamId, Long playerId) {
         if (!isPlayerInTeam(teamId, playerId)) {
             throw new ConflictException(ErrorsString.PLAYER_NOT_IN_TEAM);
         }
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Team promoteOrDemotePlayerInTeam(Integer teamId, Integer playerId) {
+    public Team promoteOrDemotePlayerInTeam(Long teamId, Long playerId) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
@@ -380,7 +380,7 @@ public class TeamService {
 
         needToBeInTeam(teamId, playerId);
 
-        Integer requestingPlayerId = AccountContext.getPlayerId();
+        Long requestingPlayerId = AccountContext.getPlayerId();
 
         if (team.getCaptainPlayer().equals(player)) {
             throw new ConflictException(ErrorsString.PLAYER_IS_CAPTAIN);
@@ -436,7 +436,7 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void acceptTeamRequest(Integer teamId, Integer playerId, Boolean acceptAll) {
+    public void acceptTeamRequest(Long teamId, Long playerId, Boolean acceptAll) {
         checkTeamExists(teamId);
         needToBeCaptainOrViceCaptain(teamId, playerId);
 
@@ -462,7 +462,7 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void rejectTeamRequest(Integer teamId, Integer playerId, Boolean rejectAll) {
+    public void rejectTeamRequest(Long teamId, Long playerId, Boolean rejectAll) {
         checkTeamExists(teamId);
         needToBeCaptainOrViceCaptain(teamId, playerId);
 
@@ -488,9 +488,9 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void cancelTeamRequest(Integer teamId) {
+    public void cancelTeamRequest(Long teamId) {
         checkTeamExists(teamId);
-        Integer playerId = AccountContext.getPlayerId();
+        Long playerId = AccountContext.getPlayerId();
         Optional<TeamRequest> teamRequestOptional = teamRequestRepository.findByTeam_IdAndPlayer_PlayerId(teamId,
                 playerId);
         if (teamRequestOptional.isEmpty()) {
@@ -502,12 +502,12 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public TeamRequest sendTeamRequest(Integer teamId) {
+    public TeamRequest sendTeamRequest(Long teamId) {
         checkTeamExists(teamId);
         Team team = teamRepository.findById(teamId).get();
 
         Player player = AccountContext.getActivePlayer();
-        Integer playerId = player.getPlayerId();
+        Long playerId = player.getPlayerId();
         if (isPlayerInATeamBySportCategory(playerId, team.getSportCategory())) {
             throw new ConflictException(ErrorsString.PLAYER_ALREADY_IN_TEAM);
         }
@@ -522,11 +522,11 @@ public class TeamService {
         return teamRequestRepository.save(teamRequest);
     }
 
-    public List<PlaysAt> getPlaysAtByPlayerId(Integer playerId) {
+    public List<PlaysAt> getPlaysAtByPlayerId(Long playerId) {
         return playsAtRepository.findByPlayer_PlayerId(playerId);
     }
 
-    public FootballTeamStat updateFootballTeamStat(Integer playerId, Integer teamId, Short goalsDelta, Short motmDelta,
+    public FootballTeamStat updateFootballTeamStat(Long playerId, Long teamId, Short goalsDelta, Short motmDelta,
             Short redCardsDelta, Short yellowCardsDelta) {
         Optional<FootballTeamStat> footballTeamStatOptional = footballTeamStatRepository
                 .findByTeam_IdAndPlayer_PlayerId(teamId, playerId);

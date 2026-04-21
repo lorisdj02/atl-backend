@@ -12,11 +12,11 @@ import java.time.LocalDateTime;
 public class LobbyBookingParticipate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "player_id", nullable = false)
-     * private Integer playerId;
+     * private Long playerId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -25,7 +25,7 @@ public class LobbyBookingParticipate {
 
     /*
      * @Column(name = "lobby_booking_id", nullable = false)
-     * private Integer lobbyBookingId;
+     * private Long lobbyBookingId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -40,7 +40,7 @@ public class LobbyBookingParticipate {
 
     /*
      * @Column(name = "transaction_group", nullable = false)
-     * private Integer transactionGroup;
+     * private Long transactionGroup;
      */
 
     @Column(name = "joined_at", nullable = false)

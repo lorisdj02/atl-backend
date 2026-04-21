@@ -5,6 +5,6 @@ import java.io.Serializable;
 
 @Data
 public class FavoriteTournamentId implements Serializable {
-    private Integer account;
-    private Integer tournament;
+    private Long account;
+    private Long tournament;
 }

@@ -12,7 +12,7 @@ import lombok.Data;
 public class WalletDTO {
     @NotNull
     @JsonProperty("accountId")
-    private Integer accountId;
+    private Long accountId;
 
     @NotNull
     @JsonProperty("prizeBalance")

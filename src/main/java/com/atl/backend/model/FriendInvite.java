@@ -10,7 +10,7 @@ import lombok.Data;
 @Table(name = "friend_invite")
 public class FriendInvite {
     @Id
-    private Integer invitedAccountId;
+    private Long invitedAccountId;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
@@ -19,7 +19,7 @@ public class FriendInvite {
 
     /*
      * @Column(name = "inviter_account_id", nullable = false)
-     * private Integer inviterAccountId;
+     * private Long inviterAccountId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

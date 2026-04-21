@@ -10,7 +10,7 @@ import lombok.Data;
 @Table(name = "sport")
 public class Sport {
     @Id
-    private Integer id;
+    private Long id;
 
     @Column(nullable = false, length = 31)
     private String name;

@@ -11,11 +11,11 @@ import lombok.Data;
 public class FinalStageBracketDTO {
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @NotNull
     @JsonProperty("tournamentId")
-    private Integer tournamentId;
+    private Long tournamentId;
 
     @NotNull
     @JsonProperty("groupName")
@@ -30,7 +30,7 @@ public class FinalStageBracketDTO {
     private Short aggregateScoreAway = 0;
 
     @JsonProperty("nextFinalStageBracketId")
-    private Integer nextFinalStageBracketId;
+    private Long nextFinalStageBracketId;
 
     @JsonProperty
     private String nextFinalStageBracketSlot;

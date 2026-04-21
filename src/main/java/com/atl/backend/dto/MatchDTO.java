@@ -15,7 +15,7 @@ public class MatchDTO {
 
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @JsonProperty("scheduledStart")
     private LocalDateTime scheduledStart;
@@ -28,10 +28,10 @@ public class MatchDTO {
 
     @NotNull
     @JsonProperty("tournamentId")
-    private Integer tournamentId;
+    private Long tournamentId;
 
     @JsonProperty("motmPlayerId")
-    private Integer motmPlayerId;
+    private Long motmPlayerId;
 
     @JsonProperty("groupName")
     private String groupName;
@@ -48,7 +48,7 @@ public class MatchDTO {
     private String coordinatorStatus;
 
     @JsonProperty("finalStageBracketId")
-    private Integer finalStageBracketId;
+    private Long finalStageBracketId;
 
     public static MatchDTO fromMatch(Match match) {
         if (match == null) {

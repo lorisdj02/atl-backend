@@ -18,14 +18,14 @@ import com.atl.backend.config.ApiJsonKeys;
 public class AssignPrizesTournamentRequest {
     @NotNull
     @JsonProperty(ApiJsonKeys.tournamentId)
-    private Integer tournamentId;
+    private Long tournamentId;
 
     @NotNull
     @JsonProperty(ApiJsonKeys.teamId)
-    private Integer teamId;
+    private Long teamId;
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.prizePerPlayer)
-    private Map<Integer, BigDecimal> prizePerPlayer = new HashMap<>(); // playerId -> prizeAmount
+    private Map<Long, BigDecimal> prizePerPlayer = new HashMap<>(); // playerId -> prizeAmount
 }

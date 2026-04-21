@@ -13,11 +13,11 @@ import lombok.Data;
 public class FailedTournamentParticipation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "tournament_id")
-     * private Integer tournamentId;
+     * private Long tournamentId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,7 +26,7 @@ public class FailedTournamentParticipation {
 
     /*
      * @Column(name = "team_id")
-     * private Integer teamId;
+     * private Long teamId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

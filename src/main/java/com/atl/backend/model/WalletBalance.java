@@ -20,7 +20,7 @@ import lombok.Data;
 public class WalletBalance {
     @Id
     @Column(name = "account_id", nullable = false)
-    private Integer accountId;
+    private Long accountId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", unique = true, nullable = false)

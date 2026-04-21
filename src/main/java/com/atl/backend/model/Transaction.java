@@ -13,11 +13,11 @@ import java.time.LocalDateTime;
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "account_id", nullable = false)
-     * private Integer accountId;
+     * private Long accountId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -61,7 +61,7 @@ public class Transaction {
 
     /*
      * @Column(name = "transaction_group_id", nullable = false)
-     * private Integer transactionGroupId;
+     * private Long transactionGroupId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -70,7 +70,7 @@ public class Transaction {
 
     /*
      * @Column(name = "related_transaction_id")
-     * private Integer relatedTransactionId;
+     * private Long relatedTransactionId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

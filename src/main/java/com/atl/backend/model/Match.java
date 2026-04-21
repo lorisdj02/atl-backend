@@ -12,11 +12,11 @@ import java.time.LocalDateTime;
 public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "tournament_id", nullable = false)
-     * private Integer tournamentId;
+     * private Long tournamentId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -25,7 +25,7 @@ public class Match {
 
     /*
      * @Column(name = "motm_player_id")
-     * private Integer motmPlayerId;
+     * private Long motmPlayerId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -54,7 +54,7 @@ public class Match {
 
     /*
      * @Column(name = "final_stage_bracket_id")
-     * private Integer finalStageBracketId;
+     * private Long finalStageBracketId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

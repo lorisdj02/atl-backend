@@ -16,13 +16,13 @@ import com.atl.backend.config.ApiJsonKeys;
 public class ConfirmCallupsRequest {
     @NotNull
     @JsonProperty(ApiJsonKeys.selectedPlayerIds)
-    private List<Integer> selectedPlayerIds;
+    private List<Long> selectedPlayerIds;
 
     @NotNull
     @JsonProperty(ApiJsonKeys.tournamentId)
-    private Integer tournamentId;
+    private Long tournamentId;
 
     @NotNull
     @JsonProperty(ApiJsonKeys.teamId)
-    private Integer teamId;
+    private Long teamId;
 }

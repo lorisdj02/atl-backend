@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface SportRepository extends JpaRepository<Sport, Integer> {
+public interface SportRepository extends JpaRepository<Sport, Long> {
 
     Optional<Sport> findByName(String name);
 

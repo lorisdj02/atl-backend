@@ -12,16 +12,16 @@ import lombok.Data;
 public class CheckoutPayload {
 
     @JsonProperty("tournamentId")
-    private Integer tournamentId;
+    private Long tournamentId;
 
     @JsonProperty("lobbyId")
-    private Integer lobbyId;
+    private Long lobbyId;
 
     @JsonProperty("playersPaid")
     private Short playersPaid;
 
     @JsonProperty("ownerPlayerId")
-    private Integer ownerPlayerId;
+    private Long ownerPlayerId;
 
     @JsonProperty("startTime")
     private String startTime;
@@ -36,7 +36,7 @@ public class CheckoutPayload {
     private Short playersToFind;
 
     @JsonProperty("fieldId")
-    private Integer fieldId;
+    private Long fieldId;
 
     @JsonProperty("sportCategory")
     private String sportCategory;

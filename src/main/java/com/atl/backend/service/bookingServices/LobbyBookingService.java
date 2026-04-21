@@ -46,11 +46,11 @@ public class LobbyBookingService {
     @Autowired
     private BookingUtilitiesService bookingUtilitiesService;
 
-    public List<LobbyBooking> getLobbyBookingsByOwnerPlayerId(Integer ownerPlayerId) {
+    public List<LobbyBooking> getLobbyBookingsByOwnerPlayerId(Long ownerPlayerId) {
         return lobbyBookingRepository.findByOwnerPlayer_PlayerId(ownerPlayerId);
     }
 
-    public List<LobbyBooking> getLobbyBookingsByPlayerId(Integer playerId) {
+    public List<LobbyBooking> getLobbyBookingsByPlayerId(Long playerId) {
         List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
                 .findByPlayer_PlayerId(playerId);
         List<LobbyBooking> lobbyBookings = List.of();
@@ -60,7 +60,7 @@ public class LobbyBookingService {
         return lobbyBookings;
     }
 
-    public List<LobbyBooking> getActiveLobbyBookingsByPlayerId(Integer playerId) {
+    public List<LobbyBooking> getActiveLobbyBookingsByPlayerId(Long playerId) {
         List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
                 .findByPlayer_PlayerId(playerId);
         List<LobbyBooking> lobbyBookings = List.of();
@@ -73,16 +73,16 @@ public class LobbyBookingService {
         return lobbyBookings;
     }
 
-    public List<LobbyBooking> getLobbyBookingsByFieldId(Integer fieldId) {
+    public List<LobbyBooking> getLobbyBookingsByFieldId(Long fieldId) {
         return lobbyBookingRepository.findByBooking_Field_Id(fieldId);
     }
 
-    public Optional<LobbyBooking> getLobbyBookingByBookingId(Integer bookingId) {
+    public Optional<LobbyBooking> getLobbyBookingByBookingId(Long bookingId) {
         return lobbyBookingRepository.findById(bookingId);
     }
 
     public List<LobbyBooking> getBookedLobbyBookings(SportCategory sportCategory, Short totalPlayers,
-            Integer selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
+            Long selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
         List<LobbyBooking> lobbyBookings = lobbyBookingRepository
                 .findBookedByBooking_SportCategory(
                         sportCategory);
@@ -108,8 +108,8 @@ public class LobbyBookingService {
         return lobbyBookings;
     }
 
-    public Optional<LobbyBookingParticipate> getLobbyBookingParticipateByPlayerIdAndLobbyBookingId(Integer playerId,
-            Integer lobbyBookingId) {
+    public Optional<LobbyBookingParticipate> getLobbyBookingParticipateByPlayerIdAndLobbyBookingId(Long playerId,
+            Long lobbyBookingId) {
         Optional<LobbyBookingParticipate> lobbyBookingParticipateOptional = lobbyBookingParticipateRepository
                 .findByPlayer_PlayerIdAndLobbyBooking_Booking_Id(playerId, lobbyBookingId);
 
@@ -117,7 +117,7 @@ public class LobbyBookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public LobbyBookingParticipate createLobbyBookingParticipate(Integer lobbyBookingId, Short playersPaid) {
+    public LobbyBookingParticipate createLobbyBookingParticipate(Long lobbyBookingId, Short playersPaid) {
 
         LobbyBooking lobbyBooking = lobbyBookingRepository.findById(lobbyBookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
@@ -152,7 +152,7 @@ public class LobbyBookingService {
         return lobbyBookingParticipate;
     }
 
-    public Boolean isLobbyParticipationRefundedByBookingIdAndAccountId(Integer bookingId, Integer accountId) {
+    public Boolean isLobbyParticipationRefundedByBookingIdAndAccountId(Long bookingId, Long accountId) {
         List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
                 CheckoutType.LOBBY_BOOKING_PARTICIPATE,
                 bookingId, accountId, PurchaseStatus.REFUNDED);
@@ -163,7 +163,7 @@ public class LobbyBookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundLobbyBooking(Integer bookingId) {
+    public void refundLobbyBooking(Long bookingId) {
         Player activePlayer = AccountContext.getActivePlayer();
         LobbyBooking lobbyBooking = lobbyBookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
@@ -177,7 +177,7 @@ public class LobbyBookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void leaveLobbyBooking(Integer bookingId) {
+    public void leaveLobbyBooking(Long bookingId) {
         Player activePlayer = AccountContext.getActivePlayer();
         LobbyBookingParticipate lobbyBookingParticipate = lobbyBookingParticipateRepository
                 .findByPlayer_PlayerIdAndLobbyBooking_Booking_Id(activePlayer.getPlayerId(), bookingId)
@@ -218,7 +218,7 @@ public class LobbyBookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Integer createLobbyBookingFromCheckoutPayload(CheckoutPayload checkoutPayload) {
+    public Long createLobbyBookingFromCheckoutPayload(CheckoutPayload checkoutPayload) {
 
         LobbyBookingDTO lobbyBookingDTO = new LobbyBookingDTO();
         lobbyBookingDTO.setFieldId(checkoutPayload.getFieldId());
@@ -233,7 +233,7 @@ public class LobbyBookingService {
         return newLobby.getId();
     }
 
-    public Integer countLobbyParticipationByPlayerIdAndSportCategory(Integer playerId, SportCategory sportCategory) {
+    public Integer countLobbyParticipationByPlayerIdAndSportCategory(Long playerId, SportCategory sportCategory) {
         List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
                 .findByPlayer_PlayerId(playerId);
         List<LobbyBookingParticipate> filteredParticipations = participations.stream()
@@ -241,7 +241,7 @@ public class LobbyBookingService {
         return filteredParticipations.size();
     }
 
-    public Short getPlayersPaidInLobbyBookingPerPlayerId(Integer bookingId, Integer playerId) {
+    public Short getPlayersPaidInLobbyBookingPerPlayerId(Long bookingId, Long playerId) {
         List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
                 .findByLobbyBooking_IdAndPlayer_PlayerId(bookingId,
                         playerId)
@@ -258,7 +258,7 @@ public class LobbyBookingService {
         return playersPaid;
     }
 
-    public LobbyInfoResponse getLobbyInfo(Integer lobbyId, Integer playerId) {
+    public LobbyInfoResponse getLobbyInfo(Long lobbyId, Long playerId) {
         Optional<LobbyBooking> lobbyBookingOptional = getLobbyBookingByBookingId(lobbyId);
         if (lobbyBookingOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.BOOKING_NOT_FOUND);

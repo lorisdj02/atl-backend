@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 @Data
 public class RefereeRoleId implements Serializable {
-    private Integer sport;
+    private Long sport;
     private String name;
     private Short level;
 }

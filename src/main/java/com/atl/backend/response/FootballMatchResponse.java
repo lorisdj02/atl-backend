@@ -50,7 +50,7 @@ public class FootballMatchResponse {
     private List<String> availableRefereeRoles;
 
     @JsonProperty(ApiJsonKeys.playersPerTeam)
-    private Map<Integer, List<PlayerDTO>> playersPerTeam;
+    private Map<Long, List<PlayerDTO>> playersPerTeam;
 
     @JsonProperty(ApiJsonKeys.assignmentPerRefereeNameSurname)
     private Map<String, String> assignmentPerRefereeNameSurname;
@@ -62,7 +62,7 @@ public class FootballMatchResponse {
     private String cityName;
 
     @JsonProperty(ApiJsonKeys.coordinatorId)
-    private Integer coordinatorId;
+    private Long coordinatorId;
 
     @JsonProperty(ApiJsonKeys.refereeCheck)
     private Boolean refereeCheck;

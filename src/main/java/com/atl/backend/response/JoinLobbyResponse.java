@@ -24,7 +24,7 @@ public class JoinLobbyResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.usernamePerBooking)
-    private Map<Integer, String> usernamePerBooking = new HashMap<>();
+    private Map<Long, String> usernamePerBooking = new HashMap<>();
 
     @NotNull
     @Builder.Default
@@ -34,27 +34,27 @@ public class JoinLobbyResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.maxPlayersPerLobby)
-    private Map<Integer, Short> maxPlayersPerLobby = new HashMap<>();
+    private Map<Long, Short> maxPlayersPerLobby = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.currentPlayersPerLobby)
-    private Map<Integer, Short> currentPlayersPerLobby = new HashMap<>();
+    private Map<Long, Short> currentPlayersPerLobby = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.playersPaidPerBooking)
-    private Map<Integer, Short> playersPaidPerBooking = new HashMap<>();
+    private Map<Long, Short> playersPaidPerBooking = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.fieldsCache)
-    private Map<Integer, FieldDTO> fieldsCache = new HashMap<>();
+    private Map<Long, FieldDTO> fieldsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.completeAddressPerField)
-    private Map<Integer, String> completeAddressPerField = new HashMap<>();
+    private Map<Long, String> completeAddressPerField = new HashMap<>();
 
     @NotNull
     @Builder.Default

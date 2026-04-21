@@ -63,7 +63,7 @@ public class TeamDetailsResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.cityNamePerField)
-    private Map<Integer, String> cityNamePerField = new HashMap<>();
+    private Map<Long, String> cityNamePerField = new HashMap<>();
 
     @NotNull
     @Builder.Default

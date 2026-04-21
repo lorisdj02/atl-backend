@@ -15,11 +15,11 @@ import java.time.LocalDateTime;
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "field_id", nullable = false)
-     * private Integer fieldId;
+     * private Long fieldId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

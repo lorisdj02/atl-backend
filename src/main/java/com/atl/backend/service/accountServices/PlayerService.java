@@ -32,15 +32,15 @@ public class PlayerService {
         playerRepository.deleteAll();
     }
 
-    public void deletePlayerByAccountId(Integer accountId) {
+    public void deletePlayerByAccountId(Long accountId) {
         playerRepository.deleteByAccount_Id(accountId);
     }
 
-    public Optional<Player> getPlayerByAccountId(Integer accountId) {
+    public Optional<Player> getPlayerByAccountId(Long accountId) {
         return playerRepository.findByAccount_Id(accountId);
     }
 
-    public Optional<Player> getPlayerByPlayerId(Integer playerId) {
+    public Optional<Player> getPlayerByPlayerId(Long playerId) {
         return playerRepository.findByPlayerId(playerId);
     }
 

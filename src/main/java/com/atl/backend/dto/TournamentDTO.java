@@ -18,7 +18,7 @@ public class TournamentDTO {
 
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @NotNull
     @JsonProperty("name")
@@ -30,19 +30,19 @@ public class TournamentDTO {
 
     @NotNull
     @JsonProperty("coordinatorId")
-    private Integer coordinatorId;
+    private Long coordinatorId;
 
     @NotNull
     @JsonProperty("fieldId")
-    private Integer fieldId;
+    private Long fieldId;
 
     @NotNull
     @JsonProperty("cityId")
-    private Integer cityId;
+    private Long cityId;
 
     @NotNull
     @JsonProperty("sportId")
-    private Integer sportId;
+    private Long sportId;
 
     @NotNull
     @JsonProperty("isFavorite")

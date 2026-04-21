@@ -5,6 +5,6 @@ import java.io.Serializable;
 
 @Data
 public class RefereeLicenseId implements Serializable {
-    private Integer sport;
-    private Integer referee;
+    private Long sport;
+    private Long referee;
 }

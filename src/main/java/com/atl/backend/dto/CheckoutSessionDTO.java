@@ -13,11 +13,11 @@ import lombok.Data;
 public class CheckoutSessionDTO {
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @NotNull
     @JsonProperty("accountId")
-    private Integer accountId;
+    private Long accountId;
 
     @NotNull
     @JsonProperty("type")

@@ -13,11 +13,11 @@ public class FootballStandingDTO {
 
     @NotNull
     @JsonProperty("tournamentId")
-    private Integer tournamentId;
+    private Long tournamentId;
 
     @NotNull
     @JsonProperty("teamId")
-    private Integer teamId;
+    private Long teamId;
 
     @NotNull
     @JsonProperty("groupName")

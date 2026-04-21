@@ -10,11 +10,11 @@ public class Coordinator {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "coordinator_id")
-    private Integer coordinatorId;
+    private Long coordinatorId;
 
     /*
      * @Column(name = "account_id", unique = true, nullable = false)
-     * private Integer accountId;
+     * private Long accountId;
      */
     
     @OneToOne(fetch = FetchType.LAZY)

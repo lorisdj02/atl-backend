@@ -42,12 +42,12 @@ public class FootballTournamentResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.teamsCache)
-    private Map<Integer, TeamDTO> teamsCache = new HashMap<>();
+    private Map<Long, TeamDTO> teamsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.footballPlayerStatsCache)
-    private Map<Integer, FootballTeamStatDTO> footballPlayerStatsCache = new HashMap<>();
+    private Map<Long, FootballTeamStatDTO> footballPlayerStatsCache = new HashMap<>();
 
     @NotNull
     @JsonProperty(ApiJsonKeys.minutesPerRound)

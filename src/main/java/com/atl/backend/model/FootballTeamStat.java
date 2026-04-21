@@ -11,7 +11,7 @@ import lombok.Data;
 @Table(name = "football_team_stat")
 public class FootballTeamStat {
     @Id
-    private Integer playerId;
+    private Long playerId;
 
     @MapsId("playerId")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -19,7 +19,7 @@ public class FootballTeamStat {
     private Player player;
 
     @Id
-    private Integer teamId;
+    private Long teamId;
 
     @MapsId("teamId")
     @ManyToOne(fetch = FetchType.LAZY)

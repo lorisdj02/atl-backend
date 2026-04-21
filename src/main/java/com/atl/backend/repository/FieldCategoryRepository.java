@@ -17,13 +17,13 @@ public interface FieldCategoryRepository extends JpaRepository<FieldCategory, Fi
         FieldCategory findBySportCategory(SportCategory sportCategory);
 
         @Query("SELECT MAX(fc.field.closingTime) FROM FieldCategory fc WHERE fc.field.city.id = :id AND fc.sportCategory = :sportCategory")
-        public LocalTime findMaxClosingTimeByCity_IdAndSportCategory(Integer id, SportCategory sportCategory);
+        public LocalTime findMaxClosingTimeByCity_IdAndSportCategory(Long id, SportCategory sportCategory);
 
         @Query("SELECT MIN(fc.field.openingTime) FROM FieldCategory fc WHERE fc.field.city.id = :id AND fc.sportCategory = :sportCategory")
-        public LocalTime findMinOpeningTimeByCity_IdAndSportCategory(Integer id, SportCategory sportCategory);
+        public LocalTime findMinOpeningTimeByCity_IdAndSportCategory(Long id, SportCategory sportCategory);
 
-        public List<FieldCategory> findByMaxPlayersAndField_City_IdAndSportCategory(Integer maxPlayers, Integer cityId,
+        public List<FieldCategory> findByMaxPlayersAndField_City_IdAndSportCategory(Short maxPlayers, Long cityId,
                         SportCategory sportCategory);
 
-        public FieldCategory findByField_IdAndSportCategory(Integer fieldId, SportCategory sportCategory);
+        public FieldCategory findByField_IdAndSportCategory(Long fieldId, SportCategory sportCategory);
 }

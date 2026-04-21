@@ -12,7 +12,7 @@ import lombok.Data;
 public class CityDTO {
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    private Long id;
 
     @NotNull
     @JsonProperty("name")

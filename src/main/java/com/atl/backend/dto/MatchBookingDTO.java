@@ -13,11 +13,11 @@ public class MatchBookingDTO extends BookingDTO {
 
     @NotNull
     @JsonProperty("coordinatorId")
-    private Integer coordinatorId;
+    private Long coordinatorId;
 
     @NotNull
     @JsonProperty("matchId")
-    private Integer matchId;
+    private Long matchId;
 
     public static MatchBookingDTO fromMatchBooking(MatchBooking matchBooking) {
         if (matchBooking == null) {

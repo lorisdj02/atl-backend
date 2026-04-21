@@ -18,11 +18,11 @@ import lombok.Data;
 public class Team {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "city_id")
-     * private Integer cityId;
+     * private Long cityId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,7 +31,7 @@ public class Team {
 
     /*
      * @Column(name = "captain_player_id")
-     * private Integer captainPlayerId;
+     * private Long captainPlayerId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -40,7 +40,7 @@ public class Team {
 
     /*
      * @Column(name = "vice1_player_id")
-     * private Integer vice1PlayerId;
+     * private Long vice1PlayerId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -49,7 +49,7 @@ public class Team {
 
     /*
      * @Column(name = "vice2_player_id")
-     * private Integer vice2PlayerId;
+     * private Long vice2PlayerId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)

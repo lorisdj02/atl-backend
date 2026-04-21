@@ -10,11 +10,11 @@ import java.time.LocalDateTime;
 public class Wallet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     /*
      * @Column(name = "account_id", unique = true, nullable = false)
-     * private Integer accountId;
+     * private Long accountId;
      */
 
     @OneToOne(fetch = FetchType.LAZY)

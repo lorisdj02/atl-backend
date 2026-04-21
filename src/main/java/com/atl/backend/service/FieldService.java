@@ -51,11 +51,11 @@ public class FieldService {
         return fieldCategoryRepository.save(fieldCategory);
     }
 
-    public Optional<Field> getFieldById(Integer id) {
+    public Optional<Field> getFieldById(Long id) {
         return fieldRepository.findById(id);
     }
 
-    public Optional<City> getCityById(Integer id) {
+    public Optional<City> getCityById(Long id) {
         return cityRepository.findById(id);
     }
 
@@ -67,7 +67,7 @@ public class FieldService {
         return cityRepository.findAll();
     }
 
-    public void deleteFieldById(Integer id) {
+    public void deleteFieldById(Long id) {
         fieldRepository.deleteById(id);
     }
 
@@ -76,22 +76,22 @@ public class FieldService {
         fieldRepository.deleteAll();
     }
 
-    public List<Field> getFieldsByOrganizationId(Integer organizationId) {
+    public List<Field> getFieldsByOrganizationId(Long organizationId) {
         return fieldRepository.findByOrganization_OrganizationId(organizationId);
     }
 
-    public LocalTime getMinOpeningTimeByCityId(Integer cityId, SportCategory sportCategory) {
+    public LocalTime getMinOpeningTimeByCityId(Long cityId, SportCategory sportCategory) {
         return fieldCategoryRepository.findMinOpeningTimeByCity_IdAndSportCategory(cityId, sportCategory);
     }
 
-    public LocalTime getMaxClosingTimeByCityId(Integer cityId, SportCategory sportCategory) {
+    public LocalTime getMaxClosingTimeByCityId(Long cityId, SportCategory sportCategory) {
         return fieldCategoryRepository.findMaxClosingTimeByCity_IdAndSportCategory(cityId, sportCategory);
     }
 
-    public FieldsAndMaxPlayersPerFieldResponse getFieldsByMaxPlayersAndCityAndSportCategory(Integer maxPlayers,
-            Integer cityId, SportCategory sportCategory) {
+    public FieldsAndMaxPlayersPerFieldResponse getFieldsByMaxPlayersAndCityAndSportCategory(Short maxPlayers,
+            Long cityId, SportCategory sportCategory) {
                 List<FieldCategory> fieldCategories = fieldCategoryRepository.findByMaxPlayersAndField_City_IdAndSportCategory(maxPlayers, cityId, sportCategory);
-                Map<Integer, Short> maxPlayersPerField = new HashMap<>();
+                Map<Long, Short> maxPlayersPerField = new HashMap<>();
                 List<Field> fields = fieldCategories.stream().map(FieldCategory::getField).toList();
                 for (FieldCategory field : fieldCategories) {
                     maxPlayersPerField.put(field.getField().getId(), field.getMaxPlayers());
@@ -102,11 +102,11 @@ public class FieldService {
                         .build();
     }
 
-    public List<Field> getFieldsByCityId(Integer cityId) {
+    public List<Field> getFieldsByCityId(Long cityId) {
         return fieldRepository.findByCity_Id(cityId);
     }
 
-    public Short getMaxPlayersByFieldIdAndSportCategory(Integer fieldId, SportCategory sportCategory) {
+    public Short getMaxPlayersByFieldIdAndSportCategory(Long fieldId, SportCategory sportCategory) {
         FieldCategory fieldCategory = fieldCategoryRepository.findByField_IdAndSportCategory(fieldId, sportCategory);
         if (fieldCategory == null) {
             return 0;
@@ -114,13 +114,13 @@ public class FieldService {
         return fieldCategory.getMaxPlayers();
     }
 
-    public void checkFieldExists(Integer fieldId) {
+    public void checkFieldExists(Long fieldId) {
         if (!fieldRepository.existsById(fieldId)) {
             throw new NotFoundException(ErrorsString.FIELD_NOT_FOUND);
         }
     }
 
-    public void checkCityExists(Integer cityId) {
+    public void checkCityExists(Long cityId) {
         if (!cityRepository.existsById(cityId)) {
             throw new NotFoundException(ErrorsString.CITY_NOT_FOUND);
         }

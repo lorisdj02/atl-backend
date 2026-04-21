@@ -10,11 +10,11 @@ import jakarta.validation.constraints.*;
 public class FootballTeamStatDTO {
     @NotNull
     @JsonProperty("teamId")
-    private Integer teamId;
+    private Long teamId;
 
     @NotNull
     @JsonProperty("playerId")
-    private Integer playerId;
+    private Long playerId;
 
     @NotNull
     @JsonProperty("goals")

@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface AccountRestrictionRepository extends JpaRepository<AccountRestriction, Integer> {
+public interface AccountRestrictionRepository extends JpaRepository<AccountRestriction, Long> {
 }

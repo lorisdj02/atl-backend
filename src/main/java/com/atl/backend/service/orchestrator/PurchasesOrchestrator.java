@@ -80,7 +80,7 @@ public class PurchasesOrchestrator {
     private BookingUtilitiesService bookingUtilitiesService;
 
     @Transactional(rollbackFor = Exception.class)
-    public void deleteCallups(Integer tournamentId, Integer teamId) {
+    public void deleteCallups(Long tournamentId, Long teamId) {
         tournamentParticipantService.deleteCallupsCheck(tournamentId, teamId);
 
         // Devono essere rimborsati tutti i giocatori, perchè anche chi non è convocato
@@ -94,13 +94,13 @@ public class PurchasesOrchestrator {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void startBooking(Integer bookingId) {
+    public void startBooking(Long bookingId) {
         bookingService.startBooking(bookingId);
         paymentRedeemService.redeemBookingPurchasesByBookingId(bookingId);
         paymentService.payOrganizationByBookingId(bookingId);
-        Set<Integer> playerIds = bookingService.getPlayerIdsByBookingId(bookingId);
+        Set<Long> playerIds = bookingService.getPlayerIdsByBookingId(bookingId);
 
-        for (Integer playerId : playerIds) {
+        for (Long playerId : playerIds) {
             Player player = playerService.getPlayerByPlayerId(playerId)
                     .orElseThrow(() -> new BadRequestException(ErrorsString.PLAYER_NOT_FOUND));
             Optional<FriendInvite> friendInvite = accountService.redeemInvite(player.getAccount());
@@ -114,21 +114,21 @@ public class PurchasesOrchestrator {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundLobbyBooking(Integer bookingId) {
+    public void refundLobbyBooking(Long bookingId) {
         lobbyBookingService.refundLobbyBooking(bookingId);
         paymentRefundService.refundLobbyCreationByBookingId(bookingId);
         bookingService.setBookingRefunded(bookingId);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundPrivateBooking(Integer bookingId) {
+    public void refundPrivateBooking(Long bookingId) {
         privateBookingService.refundPrivateBooking(bookingId);
         paymentRefundService.refundPrivateBookingByBookingId(bookingId);
         bookingService.setBookingRefunded(bookingId);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void leaveLobbyBooking(Integer bookingId) {
+    public void leaveLobbyBooking(Long bookingId) {
         Player activePlayer = AccountContext.getActivePlayer();
         lobbyBookingService.leaveLobbyBooking(bookingId);
         // paymentRefundService.refundLobbyCreationByBookingId(bookingId);
@@ -292,7 +292,7 @@ public class PurchasesOrchestrator {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Purchase payCheckoutSession(Integer sessionId, Boolean useWallet) {
+    public Purchase payCheckoutSession(Long sessionId, Boolean useWallet) {
         CheckoutSession session = paymentService.getCheckoutSessionById(sessionId)
                 .orElseThrow(() -> new BadRequestException(ErrorsString.CHECKOUT_SESSION_NOT_FOUND));
 
@@ -342,12 +342,12 @@ public class PurchasesOrchestrator {
                 purchase.setObjectId(payload.getLobbyId());
                 break;
             case LOBBY_BOOKING_CREATE:
-                Integer lobbyId = lobbyBookingService
+                Long lobbyId = lobbyBookingService
                         .createLobbyBookingFromCheckoutPayload(payload);
                 purchase.setObjectId(lobbyId);
                 break;
             case PRIVATE_BOOKING:
-                Integer privateBookingId = privateBookingService
+                Long privateBookingId = privateBookingService
                         .createPrivateBookingFromCheckoutPayload(payload);
                 purchase.setObjectId(privateBookingId);
                 break;

@@ -60,15 +60,15 @@ public class MatchScreenService {
     public AvailableMatchesResponse getAvailableMatchesScreen(SportCategory sportCategory) {
         AccountContext.isReferee();
         List<Sport> sports = sportService.getSportsBySportCategory(sportCategory);
-        Map<Integer, String> sportNames = new HashMap<>();
-        Map<Integer, Team> teamsCache = new HashMap<>();
-        Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
-        Map<Integer, Short> minutesPausePerTournament = new HashMap<>();
+        Map<Long, String> sportNames = new HashMap<>();
+        Map<Long, Team> teamsCache = new HashMap<>();
+        Map<Long, Short> minutesRoundPerTournament = new HashMap<>();
+        Map<Long, Short> minutesPausePerTournament = new HashMap<>();
 
         switch (sportCategory) {
             case FOOTBALL -> {
                 List<FootballMatch> footballMatches = matchService.getScheduledFootballMatches();
-                Map<Integer, List<FootballMatch>> matchesPerSport = new HashMap<>();
+                Map<Long, List<FootballMatch>> matchesPerSport = new HashMap<>();
                 for (Sport sport : sports) {
                     sportNames.put(sport.getId(), sport.getName());
                     matchesPerSport.put(sport.getId(), footballMatches.stream()
@@ -113,9 +113,9 @@ public class MatchScreenService {
     @Transactional(readOnly = true)
     public PastAssignedMatchesResponse getPastAssignedMatchesScreen(SportCategory sportCategory) {
         Referee referee = AccountContext.getActiveReferee();
-        Map<Integer, Team> teamsCache = new HashMap<>();
-        Map<Integer, Short> minutesRoundPerTournament = new HashMap<>();
-        Map<Integer, Short> minutesPausePerTournament = new HashMap<>();
+        Map<Long, Team> teamsCache = new HashMap<>();
+        Map<Long, Short> minutesRoundPerTournament = new HashMap<>();
+        Map<Long, Short> minutesPausePerTournament = new HashMap<>();
         switch (sportCategory) {
             case FOOTBALL -> {
                 List<FootballMatch> footballMatches = matchRefereeService
@@ -153,7 +153,7 @@ public class MatchScreenService {
 
     }
 
-    public Optional<?> getMatchScreen(Integer matchId) {
+    public Optional<?> getMatchScreen(Long matchId) {
         Optional<Match> matchOpt = matchService.getMatchById(matchId);
         if (matchOpt.isEmpty()) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
@@ -169,7 +169,7 @@ public class MatchScreenService {
         }
     }
 
-    public FootballMatchResponse getFootballMatchScreen(Integer matchId) {
+    public FootballMatchResponse getFootballMatchScreen(Long matchId) {
         Optional<FootballMatch> footballMatchOpt = matchService.getFootballMatchById(matchId);
         if (footballMatchOpt.isEmpty()) {
             throw new NotFoundException(ErrorsString.MATCH_NOT_FOUND);
@@ -177,7 +177,7 @@ public class MatchScreenService {
         FootballMatch footballMatch = footballMatchOpt.get();
         Tournament tournament = footballMatch.getMatch().getTournament();
         List<String> requiredRoles = new ArrayList<>();
-        Integer sportId = footballMatch.getMatch().getTournament().getSport().getId();
+        Long sportId = footballMatch.getMatch().getTournament().getSport().getId();
         if (sportId == 1 || sportId == 2 || sportId == 3) {
             requiredRoles.add("MAIN");
         } else if (sportId == 4) {
@@ -202,14 +202,14 @@ public class MatchScreenService {
                     refereeAssignment.getRole());
         }
 
-        Map<Integer, List<PlayerDTO>> playersPerTeam = new HashMap<>();
+        Map<Long, List<PlayerDTO>> playersPerTeam = new HashMap<>();
         if (footballMatch.getHomeTeam() != null) {
             Team homeTeam = footballMatch.getHomeTeam();
-            List<Integer> calluppedPlayerIds = tournamentParticipantService
+            List<Long> calluppedPlayerIds = tournamentParticipantService
                     .getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(),
                             homeTeam.getId());
             List<PlayerDTO> calluppedPlayers = new ArrayList<>();
-            for (Integer playerId : calluppedPlayerIds) {
+            for (Long playerId : calluppedPlayerIds) {
                 Optional<Player> optionalPlayer = playerService.getPlayerByPlayerId(playerId);
                 if (optionalPlayer.isEmpty()) {
                     throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);
@@ -222,11 +222,11 @@ public class MatchScreenService {
         }
         if (footballMatch.getAwayTeam() != null) {
             Team awayTeam = footballMatch.getAwayTeam();
-            List<Integer> calluppedPlayerIds = tournamentParticipantService
+            List<Long> calluppedPlayerIds = tournamentParticipantService
                     .getCalluppedPlayerIdsByTournamentIdAndTeamId(tournament.getId(),
                             awayTeam.getId());
             List<PlayerDTO> calluppedPlayers = new ArrayList<>();
-            for (Integer playerId : calluppedPlayerIds) {
+            for (Long playerId : calluppedPlayerIds) {
                 Optional<Player> optionalPlayer = playerService.getPlayerByPlayerId(playerId);
                 if (optionalPlayer.isEmpty()) {
                     throw new NotFoundException(ErrorsString.PLAYER_NOT_FOUND);

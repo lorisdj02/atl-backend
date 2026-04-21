@@ -32,7 +32,7 @@ public class TournamentStandingService {
     @Autowired
     private TournamentRepository tournamentRepository;
 
-    public List<FootballStanding> getFootballStandingsByTournamentId(Integer tournamentId) {
+    public List<FootballStanding> getFootballStandingsByTournamentId(Long tournamentId) {
         return footballStandingRepository.findByTournament_Id(tournamentId);
     }
 
@@ -40,7 +40,7 @@ public class TournamentStandingService {
         footballStandingRepository.deleteAll();
     }
 
-    private Tournament getExistingTournament(Integer tournamentId) {
+    private Tournament getExistingTournament(Long tournamentId) {
         Optional<Tournament> tournamentOptional = tournamentRepository.findById(tournamentId);
         if (tournamentOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
@@ -49,7 +49,7 @@ public class TournamentStandingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public FootballStanding updateFootballStanding(Integer tournamentId, Integer teamId, Short ptsDelta,
+    public FootballStanding updateFootballStanding(Long tournamentId, Long teamId, Short ptsDelta,
             Short goalsScoredDelta, Short goalsConcededDelta, Short wonDelta, Short drawnDelta, Short lostDelta) {
 
         Optional<FootballStanding> footballStandingOptional = footballStandingRepository
@@ -89,13 +89,13 @@ public class TournamentStandingService {
             case FOOTBALL:
                 for (int groupIndex = 1; groupIndex <= tournament.getNumGroups(); groupIndex++) {
                     String groupName = "" + (char) ('A' + groupIndex - 1);
-                    List<Integer> teamIds = matchService.getTeamIdsByTournamentIdAndGroupStage(tournament.getId(),
+                    List<Long> teamIds = matchService.getTeamIdsByTournamentIdAndGroupStage(tournament.getId(),
                             groupName);
 
                     System.out.println(
                             "[DEBUG - TournamentService] - Generating standings for tournament " + tournament.getId()
                                     + " and group " + groupName + " with teams " + teamIds);
-                    for (Integer teamId : teamIds) {
+                    for (Long teamId : teamIds) {
                         FootballStanding footballStanding = new FootballStanding();
                         footballStanding.setTournament(tournament);
                         footballStanding.setTeam(teamService.getTeamById(teamId).get());
@@ -189,7 +189,7 @@ public class TournamentStandingService {
         }
     }
 
-    public void orderStandingsForTournament(Integer tournamentId) {
+    public void orderStandingsForTournament(Long tournamentId) {
         Tournament tournament = getExistingTournament(tournamentId);
         switch (tournament.getSport().getSportCategory()) {
             case FOOTBALL:

@@ -15,10 +15,10 @@ import jakarta.validation.constraints.*;
 public class FootballMatchDTO extends MatchDTO {
 
     @JsonProperty("homeTeamId")
-    private Integer homeTeamId;
+    private Long homeTeamId;
 
     @JsonProperty("awayTeamId")
-    private Integer awayTeamId;
+    private Long awayTeamId;
 
     @JsonProperty("scoreHome")
     private Short scoreHome;

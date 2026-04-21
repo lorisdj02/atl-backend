@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,12 +55,12 @@ public class PaymentRefundService {
         return refundTransaction;
     }
 
-    private Purchase getExistingPurchase(Integer purchaseId) {
+    private Purchase getExistingPurchase(Long purchaseId) {
         return purchaseRepository.findById(purchaseId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND));
     }
 
-    private void checkTransactionGroup(Integer transactionGroupId) {
+    private void checkTransactionGroup(Long transactionGroupId) {
         Optional<TransactionGroup> optTransactionGroup = transactionGroupRepository.findById(transactionGroupId);
         if (optTransactionGroup.isEmpty()) {
             throw new PaymentRequiredException(ErrorsString.PAYMENT_REQUIRED);
@@ -67,7 +68,7 @@ public class PaymentRefundService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public BigDecimal refundPurchase(Integer purchaseId) {
+    public BigDecimal refundPurchase(Long purchaseId) {
         Purchase purchase = getExistingPurchase(purchaseId);
 
         if (purchase.getStatus() != PurchaseStatus.CONFIRMED) {
@@ -97,6 +98,7 @@ public class PaymentRefundService {
                 numberOfRefundedTransactions++;
             }
         }
+        wallet.setUpdatedAt(LocalDateTime.now());
         walletRepository.save(wallet);
         if (numberOfRefundedTransactions == 0) {
             throw new PaymentRequiredException(ErrorsString.PURCHASE_NOT_REFUNDABLE);
@@ -107,14 +109,16 @@ public class PaymentRefundService {
             transactionGroup.setStatus(TransactionStatus.REFUNDED);
             purchase.setStatus(PurchaseStatus.REFUNDED);
         }
+        purchase.setUpdatedAt(LocalDateTime.now());
+        transactionGroup.setUpdatedAt(LocalDateTime.now());
         transactionGroupRepository.save(transactionGroup);
         purchaseRepository.save(purchase);
         return totalRefundedAmount;
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundPurchaseForPlayerIds(Integer tournamentId, List<Integer> calluppedAccountIds) {
-        for (Integer accountId : calluppedAccountIds) {
+    public void refundPurchaseForPlayerIds(Long tournamentId, List<Long> calluppedAccountIds) {
+        for (Long accountId : calluppedAccountIds) {
             List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
                     CheckoutType.TOURNAMENT_FEE, tournamentId, accountId, PurchaseStatus.CONFIRMED);
             for (Purchase purchase : purchases) {
@@ -124,7 +128,7 @@ public class PaymentRefundService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundLobbyParticipationByBookingIdAndAccountId(Integer bookingId, Integer accountId) {
+    public void refundLobbyParticipationByBookingIdAndAccountId(Long bookingId, Long accountId) {
         List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
                 CheckoutType.LOBBY_BOOKING_PARTICIPATE, bookingId, accountId, PurchaseStatus.CONFIRMED);
         if (purchases.isEmpty()) {
@@ -136,7 +140,7 @@ public class PaymentRefundService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundLobbyCreationByBookingId(Integer bookingId) {
+    public void refundLobbyCreationByBookingId(Long bookingId) {
         List<Purchase> purchases = new ArrayList<>();
 
         List<Purchase> lobbyBookingCreate = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
@@ -161,7 +165,7 @@ public class PaymentRefundService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundLobbyParticipationByAccountId(Integer bookingId, Integer accountId) {
+    public void refundLobbyParticipationByAccountId(Long bookingId, Long accountId) {
         List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
                 CheckoutType.LOBBY_BOOKING_PARTICIPATE, bookingId, accountId, PurchaseStatus.CONFIRMED);
         if (purchases.isEmpty()) {
@@ -173,7 +177,7 @@ public class PaymentRefundService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundPrivateBookingByBookingId(Integer bookingId) {
+    public void refundPrivateBookingByBookingId(Long bookingId) {
         List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndStatus(
                 CheckoutType.PRIVATE_BOOKING, bookingId, PurchaseStatus.CONFIRMED);
         if (purchases.isEmpty()) {
@@ -185,7 +189,7 @@ public class PaymentRefundService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void setTransactionsNotRefundableByTransactionGroupId(Integer transactionGroupId) {
+    public void setTransactionsNotRefundableByTransactionGroupId(Long transactionGroupId) {
         checkTransactionGroup(transactionGroupId);
         List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroupId);
         for (Transaction transaction : transactions) {
@@ -195,7 +199,7 @@ public class PaymentRefundService {
         }
     }
 
-    public Boolean isLobbyParticipationRefundedByBookingIdAndAccountId(Integer bookingId, Integer accountId) {
+    public Boolean isLobbyParticipationRefundedByBookingIdAndAccountId(Long bookingId, Long accountId) {
         List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
                 CheckoutType.LOBBY_BOOKING_PARTICIPATE,
                 bookingId, accountId, PurchaseStatus.REFUNDED);
@@ -205,7 +209,7 @@ public class PaymentRefundService {
         return true;
     }
 
-    public BigDecimal refundTournamentFeeByTournamentIdAndAccountId(Integer tournamentId, Integer accountId) {
+    public BigDecimal refundTournamentFeeByTournamentIdAndAccountId(Long tournamentId, Long accountId) {
         List<Purchase> purchases = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
                 CheckoutType.TOURNAMENT_FEE, tournamentId, accountId, PurchaseStatus.CONFIRMED);
         BigDecimal totalRefundedAmount = BigDecimal.ZERO;

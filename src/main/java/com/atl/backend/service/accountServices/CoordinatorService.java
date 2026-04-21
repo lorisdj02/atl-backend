@@ -34,7 +34,7 @@ public class CoordinatorService {
         return coordinatorRepository.save(coordinator);
     }
 
-    public Short getCoordinatorLevelByAccountId(Integer accountId) {
+    public Short getCoordinatorLevelByAccountId(Long accountId) {
         Coordinator coordinator = coordinatorRepository.findByAccount_Id(accountId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND));
         return coordinator.getLevel();
@@ -44,15 +44,15 @@ public class CoordinatorService {
         coordinatorRepository.deleteAll();
     }
 
-    public void deleteCoordinatorByAccountId(Integer accountId) {
+    public void deleteCoordinatorByAccountId(Long accountId) {
         coordinatorRepository.deleteByAccount_Id(accountId);
     }
 
-    public Optional<Coordinator> getCoordinatorByAccountId(Integer accountId) {
+    public Optional<Coordinator> getCoordinatorByAccountId(Long accountId) {
         return coordinatorRepository.findByAccount_Id(accountId);
     }
 
-    public Optional<Coordinator> getCoordinatorByCoordinatorId(Integer coordinatorId) {
+    public Optional<Coordinator> getCoordinatorByCoordinatorId(Long coordinatorId) {
         return coordinatorRepository.findById(coordinatorId);
     }
 
@@ -60,7 +60,7 @@ public class CoordinatorService {
         return coordinatorRepository.findAll();
     }
 
-    public BigDecimal getCoordinatorPayPerMatchByCoordinatorId(Integer coordinatorId) {
+    public BigDecimal getCoordinatorPayPerMatchByCoordinatorId(Long coordinatorId) {
         Optional<Coordinator> coordinatorOptional = getCoordinatorByCoordinatorId(coordinatorId);
         if (coordinatorOptional.isEmpty()) {
             throw new NotFoundException(ErrorsString.COORDINATOR_NOT_FOUND);
@@ -82,7 +82,7 @@ public class CoordinatorService {
         }
     }
 
-    public Boolean hasCoordinatorActiveTournamentsByCoordinatorId(Integer coordinatorId) {
+    public Boolean hasCoordinatorActiveTournamentsByCoordinatorId(Long coordinatorId) {
         List<Tournament> activeTournaments = tournamentRepository
                 .findByCoordinator_CoordinatorId(coordinatorId);
         for (Tournament tournament : activeTournaments) {

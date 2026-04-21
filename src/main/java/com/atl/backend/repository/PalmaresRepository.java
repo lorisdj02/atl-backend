@@ -11,5 +11,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PalmaresRepository extends JpaRepository<Palmares, PalmaresId> {
 
-    List<Palmares> findByTeam_Id(Integer teamId);
+    List<Palmares> findByTeam_Id(Long teamId);
 }

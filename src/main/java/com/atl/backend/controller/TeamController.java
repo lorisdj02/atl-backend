@@ -61,31 +61,31 @@ public class TeamController {
     }
 
     @GetMapping("/team/{teamId}/players")
-    public ResponseEntity<PlayersInTeamResponse> getPlayersInTeam(@PathVariable Integer teamId) {
+    public ResponseEntity<PlayersInTeamResponse> getPlayersInTeam(@PathVariable Long teamId) {
         PlayersInTeamResponse response = teamService.getPlayersInTeamResponse(teamId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/team/{teamId}/abstract")
-    public ResponseEntity<AbstractTeamResponse> getAbstractTeamScreen(@PathVariable Integer teamId) {
+    public ResponseEntity<AbstractTeamResponse> getAbstractTeamScreen(@PathVariable Long teamId) {
         AbstractTeamResponse response = teamScreenService.getAbstractTeamScreen(teamId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/team/{teamId}/pay-participation")
-    public ResponseEntity<PayParticipationResponse> getPayParticipationScreen(@PathVariable Integer teamId) {
+    public ResponseEntity<PayParticipationResponse> getPayParticipationScreen(@PathVariable Long teamId) {
         PayParticipationResponse response = teamScreenService.getPayParticipationScreen(teamId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/team/{teamId}/manage/view-player-requests")
-    public ResponseEntity<PlayerRequestsResponse> getPlayerRequestsScreen(@PathVariable Integer teamId) {
+    public ResponseEntity<PlayerRequestsResponse> getPlayerRequestsScreen(@PathVariable Long teamId) {
         PlayerRequestsResponse response = teamScreenService.getPlayerRequestsScreen(teamId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/team/{teamId}/details")
-    public ResponseEntity<TeamDetailsResponse> getTeamDetailScreen(@PathVariable Integer teamId) {
+    public ResponseEntity<TeamDetailsResponse> getTeamDetailScreen(@PathVariable Long teamId) {
         TeamDetailsResponse response = teamScreenService.getTeamDetailsScreen(teamId);
         return ResponseEntity.ok(response);
     }
@@ -102,13 +102,13 @@ public class TeamController {
     }
 
     @GetMapping("/team/{teamId}/not-paid-participations")
-    public ResponseEntity<List<TournamentParticipationDTO>> getNotPaidTeamParticipations(@PathVariable Integer teamId) {
+    public ResponseEntity<List<TournamentParticipationDTO>> getNotPaidTeamParticipations(@PathVariable Long teamId) {
         List<TournamentParticipationDTO> response = tournamentParticipantService.getNotPaidTeamParticipations(teamId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/search-by-id/{teamId}")
-    public ResponseEntity<TeamDTO> getTeamById(@PathVariable Integer teamId) {
+    public ResponseEntity<TeamDTO> getTeamById(@PathVariable Long teamId) {
         Optional<Team> response = teamService.getTeamById(teamId);
         if (response.isEmpty()) {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
@@ -117,7 +117,7 @@ public class TeamController {
     }
 
     @PatchMapping("/team/{teamId}/promote-or-demote/{playerId}")
-    public ResponseEntity<TeamDTO> promoteOrDemotePlayer(@PathVariable Integer teamId, @PathVariable Integer playerId) {
+    public ResponseEntity<TeamDTO> promoteOrDemotePlayer(@PathVariable Long teamId, @PathVariable Long playerId) {
         Team team = teamService.promoteOrDemotePlayerInTeam(teamId, playerId);
         return ResponseEntity.ok(TeamDTO.fromTeam(team));
     }
@@ -130,8 +130,8 @@ public class TeamController {
 
     // Si usa così: /team/1/requests/accept?playerId=2&acceptAll=false
     @PostMapping("/team/{teamId}/manage/requests/accept")
-    public ResponseEntity<Void> acceptTeamRequest(@PathVariable Integer teamId,
-            @RequestParam(required = false) Integer playerId,
+    public ResponseEntity<Void> acceptTeamRequest(@PathVariable Long teamId,
+            @RequestParam(required = false) Long playerId,
             @RequestParam(required = false) Boolean acceptAll) {
         Boolean acceptAllValue = (acceptAll != null) ? acceptAll : false;
         teamService.acceptTeamRequest(teamId, playerId, acceptAllValue);
@@ -140,8 +140,8 @@ public class TeamController {
 
     // Si usa così: /team/1/requests/reject?playerId=2&rejectAll=false
     @PostMapping("/team/{teamId}/manage/requests/reject")
-    public ResponseEntity<Void> rejectTeamRequest(@PathVariable Integer teamId,
-            @RequestParam(required = false) Integer playerId,
+    public ResponseEntity<Void> rejectTeamRequest(@PathVariable Long teamId,
+            @RequestParam(required = false) Long playerId,
             @RequestParam(required = false) Boolean rejectAll) {
         Boolean rejectAllValue = (rejectAll != null) ? rejectAll : false;
         teamService.rejectTeamRequest(teamId, playerId, rejectAllValue);
@@ -149,25 +149,25 @@ public class TeamController {
     }
 
     @PostMapping("/team/{teamId}/requests/send")
-    public ResponseEntity<TeamRequestDTO> sendTeamRequest(@PathVariable Integer teamId) {
+    public ResponseEntity<TeamRequestDTO> sendTeamRequest(@PathVariable Long teamId) {
         TeamRequest teamRequest = teamService.sendTeamRequest(teamId);
         return ResponseEntity.ok(TeamRequestDTO.fromTeamRequest(teamRequest));
     }
 
     @DeleteMapping("/team/{teamId}/requests/cancel")
-    public ResponseEntity<Void> cancelTeamRequest(@PathVariable Integer teamId) {
+    public ResponseEntity<Void> cancelTeamRequest(@PathVariable Long teamId) {
         teamService.cancelTeamRequest(teamId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/team/{teamId}/leave")
-    public ResponseEntity<Void> leaveTeam(@PathVariable Integer teamId) {
+    public ResponseEntity<Void> leaveTeam(@PathVariable Long teamId) {
         tournamentTeamMatchOrchestrator.leaveTeam(teamId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/team/{teamId}/expel/{playerId}")
-    public ResponseEntity<Void> expelPlayer(@PathVariable Integer teamId, @PathVariable Integer playerId) {
+    public ResponseEntity<Void> expelPlayer(@PathVariable Long teamId, @PathVariable Long playerId) {
         tournamentTeamMatchOrchestrator.expelPlayer(teamId, playerId);
         return ResponseEntity.ok().build();
     }

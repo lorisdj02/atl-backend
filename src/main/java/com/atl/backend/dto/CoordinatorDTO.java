@@ -12,7 +12,7 @@ import lombok.Data;
 public class CoordinatorDTO {
     @NotNull
     @JsonProperty("coordinatorId")
-    private Integer coordinatorId;
+    private Long coordinatorId;
 
     @NotNull
     @JsonProperty("name")
@@ -24,7 +24,7 @@ public class CoordinatorDTO {
 
     @NotNull
     @JsonProperty("accountId")
-    private Integer accountId;
+    private Long accountId;
 
     @NotNull
     @JsonProperty("username")

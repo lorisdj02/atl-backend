@@ -8,10 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface MatchRepository extends JpaRepository<Match, Integer> {
-    List<Match> findByTournament_IdAndGroupName(Integer tournamentId, String groupName);
+public interface MatchRepository extends JpaRepository<Match, Long> {
+    List<Match> findByTournament_IdAndGroupName(Long tournamentId, String groupName);
 
-    List<Match> findByTournament_Id(Integer tournamentId);
+    List<Match> findByTournament_Id(Long tournamentId);
 
-    List<Match> findByFinalStageBracket_Id(Integer finalStageBracketId);
+    List<Match> findByFinalStageBracket_Id(Long finalStageBracketId);
 }

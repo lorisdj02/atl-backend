@@ -13,7 +13,7 @@ import java.time.LocalDate;
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(name = "firebase_uid", unique = true)
     private String firebaseUid;
@@ -59,14 +59,12 @@ public class Account {
 
     /*
      * @Column(name = "preferred_city_id")
-     * private Integer preferredCityId;
+     * private Long preferredCityId;
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "preferred_city_id")
     private City preferredCity;
-
-    
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;

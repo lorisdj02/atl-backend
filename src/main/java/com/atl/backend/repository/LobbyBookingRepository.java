@@ -10,11 +10,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface LobbyBookingRepository extends JpaRepository<LobbyBooking, Integer> {
+public interface LobbyBookingRepository extends JpaRepository<LobbyBooking, Long> {
 
-    List<LobbyBooking> findByOwnerPlayer_PlayerId(Integer ownerPlayerId);
+    List<LobbyBooking> findByOwnerPlayer_PlayerId(Long ownerPlayerId);
 
-    List<LobbyBooking> findByBooking_Field_Id(Integer fieldId);
+    List<LobbyBooking> findByBooking_Field_Id(Long fieldId);
 
     @Query("SELECT lb FROM LobbyBooking lb WHERE lb.booking.status = 'BOOKED' AND lb.booking.sportCategory = :sportCategory")
     List<LobbyBooking> findBookedByBooking_SportCategory(

@@ -22,7 +22,7 @@ public class FootballTournamentStat {
 
     /*
     @Column(name = "team_id", nullable = false)
-    private Integer teamId;
+    private Long teamId;
     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id", nullable = false)
