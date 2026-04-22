@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -105,10 +106,16 @@ public class MatchController {
     }
 
     // Qui c'è anche penaltyshootout
-    @PostMapping("/match/{matchId}/insert-football-event")
+    @PostMapping("/match/{matchId}/football-event/insert")
     public ResponseEntity<FootballMatchEventDTO> insertFootballMatchEvent(@PathVariable Long matchId,
             @RequestBody FootballMatchEventDTO footballMatchEventDTO) {
         FootballMatchEvent event = footballMatchEventService.insertFootballMatchEvent(matchId, footballMatchEventDTO);
         return ResponseEntity.ok(FootballMatchEventDTO.fromFootballMatchEvent(event));
+    }
+
+    @DeleteMapping("/match/event/{eventId}/delete")
+    public ResponseEntity<Void> deleteFootballMatchEvent(@PathVariable Long eventId) {
+        footballMatchEventService.deleteFootballMatchEvent(eventId);
+        return ResponseEntity.ok().build();
     }
 }

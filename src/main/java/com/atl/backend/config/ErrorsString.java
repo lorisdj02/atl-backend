@@ -57,6 +57,8 @@ public class ErrorsString {
 
     static final public String FINALIST_TEAM_NOT_FOUND = "FINALIST_TEAM_NOT_FOUND";
 
+    static final public String MATCH_EVENT_NOT_FOUND = "MATCH_EVENT_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -232,6 +234,12 @@ public class ErrorsString {
     static final public String PENALTY_SHOOTOUT_FINISHED = "PENALTY_SHOOTOUT_FINISHED";
 
     static final public String CANNOT_START_SECOND_LEG_BEFORE_FIRST_LEG_FINISHED = "CANNOT_START_SECOND_LEG_BEFORE_FIRST_LEG_FINISHED";
+
+    static final public String CANNOT_DELETE_EVENT = "CANNOT_DELETE_EVENT";
+
+    static final public String CAN_ONLY_DELETE_LAST_EVENT = "CAN_ONLY_DELETE_LAST_EVENT";
+
+    static final public String CANNOT_DELETE_CHRONOLOGICAL_EVENT = "CANNOT_DELETE_CHRONOLOGICAL_EVENT";
 
     // Authentication errors
 

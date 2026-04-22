@@ -438,7 +438,7 @@ CREATE TABLE
     "type" varchar(31) NOT NULL,
     "minute" smallint NOT NULL,
     "additional_minute" smallint NOT NULL,
-    "modified_table" JSONB,
+    "modified_values" JSONB,
     "created_at" timestamp NOT NULL DEFAULT NOW (),
     "updated_at" timestamp
   );

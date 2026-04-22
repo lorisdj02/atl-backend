@@ -5,7 +5,9 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import com.atl.backend.dto.FootballMatchEventModifiedValues;
 import com.atl.backend.model.enums.*;
+import com.atl.backend.util.FootballMatchEventModifiedTablesConverter;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -56,8 +58,9 @@ public class FootballMatchEvent {
     private Short additionalMinute;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "modified_table", columnDefinition = "jsonb")
-    private String modifiedTable;
+    @Column(name = "modified_values", columnDefinition = "jsonb")
+    @Convert(converter = FootballMatchEventModifiedTablesConverter.class)
+    private FootballMatchEventModifiedValues modifiedValues;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

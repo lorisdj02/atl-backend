@@ -86,4 +86,24 @@ public class FootballMatch {
     public Boolean isDraw() {
         return scoreHome != null && scoreAway != null && scoreHome.equals(scoreAway);
     }
+
+    public Boolean isFinished(){
+        return match.getFinishMatch() != null;
+    }
+
+    public Boolean isStarted(){
+        return match.getStartMatch() != null;
+    }
+
+    public Boolean isHalftime(){
+        return halftime != null && !isSecondHalfStarted();
+    }
+
+    public Boolean isSecondHalfStarted(){
+        return startHalf != null;
+    }
+
+    public Boolean isPenaltyShootOut(){
+        return status == FootballMatchStatus.PENALTY_SHOOT_OUT;
+    }
 }

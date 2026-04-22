@@ -5,15 +5,17 @@ import java.time.temporal.ChronoUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.FootballMatchEventDTO;
+import com.atl.backend.dto.FootballMatchEventModifiedValues;
 import com.atl.backend.exception.BadRequestException;
+import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Callup;
-import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballMatchEvent;
 import com.atl.backend.model.Player;
@@ -72,6 +74,7 @@ public class FootballMatchEventService {
                         FootballEventType.RED_YELLOW_CARD);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public FootballMatchEvent insertFootballMatchEvent(Long matchId, FootballMatchEventDTO footballMatchEventDTO) {
         FootballMatch footballMatch = footballMatchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
@@ -89,7 +92,7 @@ public class FootballMatchEventService {
 
         FootballMatchEvent event = new FootballMatchEvent();
         EventMinuteData eventMinuteData = calculateEventMinuteData(footballMatch, eventType);
-
+        FootballMatchEventModifiedValues modifiedValues = null;
         event.setMatch(footballMatch);
 
         switch (eventType) {
@@ -135,12 +138,12 @@ public class FootballMatchEventService {
                 }
                 Team playerTeam = getPlayerTeam(player.getPlayerId(), tournament.getId());
 
-                if (hasPlayerReceivedYellowCard(footballMatch.getId(), player.getPlayerId())
+                if (hasPlayerReceivedYellowCard(footballMatch.getMatch().getId(), player.getPlayerId())
                         && eventType == FootballEventType.YELLOW_CARD) {
                     eventType = FootballEventType.RED_YELLOW_CARD;
                 }
 
-                handlePlayerEvent(footballMatch, eventType, player, playerTeam);
+                modifiedValues = handlePlayerEvent(footballMatch, eventType, player, playerTeam);
                 event.setPlayer(player);
                 event.setTeam(playerTeam);
         }
@@ -148,6 +151,7 @@ public class FootballMatchEventService {
         event.setMinute(eventMinuteData.minute());
         event.setAdditionalMinute(eventMinuteData.additionalMinute());
         event.setType(eventType);
+        event.setModifiedValues(modifiedValues);
         return footballMatchEventRepository.save(event);
     }
 
@@ -186,11 +190,11 @@ public class FootballMatchEventService {
     private record EventMinuteData(short minute, short additionalMinute) {
     }
 
-    private void handlePlayerEvent(FootballMatch footballMatch, FootballEventType eventType, Player player,
+    private FootballMatchEventModifiedValues handlePlayerEvent(FootballMatch footballMatch, FootballEventType eventType,
+            Player player,
             Team playerTeam) {
-        Tournament tournament = footballMatch.getMatch().getTournament();
 
-        if (hasPlayerReceivedRedCard(footballMatch.getId(), player.getPlayerId())) {
+        if (hasPlayerReceivedRedCard(footballMatch.getMatch().getId(), player.getPlayerId())) {
             throw new BadRequestException(ErrorsString.PLAYER_HAS_RED_CARD);
         }
 
@@ -203,14 +207,12 @@ public class FootballMatchEventService {
 
         Boolean isPenaltyShootOut = footballMatch.getStatus() == FootballMatchStatus.PENALTY_SHOOT_OUT;
 
-        Boolean isMatchStarted = footballMatch.getMatch().getStartMatch() != null;
-        Boolean isMatchFinished = footballMatch.getMatch().getFinishMatch() != null;
         // Se è halftime, non è ancora iniziata la seconda metà, quindi non si possono
         // aggiungere eventi
-        Boolean isHalftime = footballMatch.getHalftime() != null;
-        Boolean isSecondHalfStarted = footballMatch.getStartHalf() != null;
 
-        if (!isMatchStarted || isMatchFinished || (isHalftime && !isSecondHalfStarted)) {
+        FootballMatchEventModifiedValues modifiedValues = new FootballMatchEventModifiedValues();
+
+        if (!footballMatch.isStarted() || footballMatch.isFinished() || footballMatch.isHalftime()) {
             throw new BadRequestException(ErrorsString.CANNOT_ADD_EVENT_TO_MATCH);
         }
 
@@ -223,56 +225,63 @@ public class FootballMatchEventService {
 
                 Boolean isYellowCard = eventType == FootballEventType.YELLOW_CARD;
 
-                tournamentStatService.updateFootballTournamentStats(tournament.getId(), player.getPlayerId(),
-                        playerTeam.getId(), (short) 0, (short) 0, (short) (isYellowCard ? 0 : 1),
-                        (short) (isYellowCard ? 1 : 0));
-
-                teamService.updateFootballTeamStat(player.getPlayerId(),
-                        playerTeam.getId(), (short) 0, (short) 0, (short) (isYellowCard ? 0 : 1),
-                        (short) (isYellowCard ? 1 : 0));
+                updatePlayerStat(footballMatch.getMatch().getTournament(), player, playerTeam, null, null,
+                        isYellowCard ? (short) 1 : null, !isYellowCard ? (short) 1 : null);
                 break;
 
             case GOAL, OWN_GOAL:
                 if (isPenaltyShootOut) {
                     throw new BadRequestException(ErrorsString.CANNOT_ADD_EVENT_TO_MATCH);
                 }
-                if (matchService.isMatchInGroupStage(footballMatch.getId())) {
-                    handleGoalInGroupStage(footballMatch, eventType, player, playerTeam, isPlayerInHomeTeam);
+                if (matchService.isMatchInGroupStage(footballMatch.getMatch().getId())) {
+                    modifiedValues = handleGoalInGroupStage(footballMatch, eventType, player, playerTeam,
+                            isPlayerInHomeTeam);
                 } else {
-                    handleGoalInFinalStage(footballMatch, eventType, player, playerTeam, isPlayerInHomeTeam);
+                    modifiedValues = handleGoalInFinalStage(footballMatch, eventType, player, playerTeam,
+                            isPlayerInHomeTeam);
                 }
 
                 break;
             case PENALTY:
 
-                if (matchService.isMatchInGroupStage(footballMatch.getId())) {
-                    handleGoalInGroupStage(footballMatch, eventType, player, playerTeam, isPlayerInHomeTeam);
+                if (matchService.isMatchInGroupStage(footballMatch.getMatch().getId())) {
+                    modifiedValues = handleGoalInGroupStage(footballMatch, eventType, player, playerTeam,
+                            isPlayerInHomeTeam);
                 } else {
                     if (!isPenaltyShootOut) {
-                        handleGoalInFinalStage(footballMatch, eventType, player, playerTeam, isPlayerInHomeTeam);
+                        modifiedValues = handleGoalInFinalStage(footballMatch, eventType, player, playerTeam,
+                                isPlayerInHomeTeam);
                     } else {
-                        matchService.updateFootballMatch(footballMatch.getId(), null,
-                                null, isPlayerInHomeTeam ? (short) 1 : (short) 0,
-                                isPlayerInHomeTeam ? (short) 0 : (short) 1, null,
-                                null, null);
+                        Short penaltyScoreHomeDelta = isPlayerInHomeTeam ? (short) 1 : null;
+                        Short penaltyScoreAwayDelta = !isPlayerInHomeTeam ? (short) 1 : null;
+                        updateResultAndBracketInFinalStage(footballMatch, null, null, penaltyScoreHomeDelta,
+                                penaltyScoreAwayDelta, null, null);
+                        modifiedValues.setPenaltyScoreHomeDelta(penaltyScoreHomeDelta);
+                        modifiedValues.setPenaltyScoreAwayDelta(penaltyScoreAwayDelta);
                     }
                 }
 
                 break;
             case MISSED_PENALTY:
                 if (isPenaltyShootOut) {
-                    matchService.updateFootballMatch(footballMatch.getId(), null,
-                            null, null, null, isPlayerInHomeTeam ? (short) 1 : (short) 0,
-                            isPlayerInHomeTeam ? (short) 0 : (short) 1,
+                    Short missedPenaltyHomeDelta = isPlayerInHomeTeam ? (short) 1 : null;
+                    Short missedPenaltyAwayDelta = !isPlayerInHomeTeam ? (short) 1 : null;
+                    matchService.updateFootballMatch(footballMatch.getMatch().getId(), null,
+                            null, null, null, missedPenaltyHomeDelta,
+                            missedPenaltyAwayDelta,
                             null);
+                    modifiedValues.setMissedPenaltyHomeDelta(missedPenaltyHomeDelta);
+                    modifiedValues.setMissedPenaltyAwayDelta(missedPenaltyAwayDelta);
                 }
                 break;
             default:
                 throw new BadRequestException(ErrorsString.INVALID_FOOTBALL_EVENT_TYPE);
         }
+        return modifiedValues;
     }
 
-    private void handleGoalInGroupStage(FootballMatch footballMatch, FootballEventType eventType, Player player,
+    private FootballMatchEventModifiedValues handleGoalInGroupStage(FootballMatch footballMatch,
+            FootballEventType eventType, Player player,
             Team playerTeam, Boolean isPlayerInHomeTeam) {
         Boolean isOwnGoal = eventType == FootballEventType.OWN_GOAL;
         Boolean isHomeTeamGoal = isPlayerInHomeTeam && !isOwnGoal || !isPlayerInHomeTeam && isOwnGoal;
@@ -332,7 +341,59 @@ public class FootballMatchEventService {
             awayPtsDelta = 0;
         }
 
-        matchService.updateFootballMatch(footballMatch.getId(), homeScoreDelta,
+        FootballMatchEventModifiedValues modifiedValues = new FootballMatchEventModifiedValues();
+
+        modifiedValues.setHomeScoreDelta(homeScoreDelta);
+        modifiedValues.setAwayScoreDelta(awayScoreDelta);
+        modifiedValues.setHomePtsDelta(homePtsDelta);
+        modifiedValues.setAwayPtsDelta(awayPtsDelta);
+        modifiedValues.setHomeWonDelta(homeWonDelta);
+        modifiedValues.setAwayWonDelta(awayWonDelta);
+        modifiedValues.setHomeDrawnDelta(homeDrawnDelta);
+        modifiedValues.setAwayDrawnDelta(awayDrawnDelta);
+        modifiedValues.setHomeLostDelta(homeLostDelta);
+        modifiedValues.setAwayLostDelta(awayLostDelta);
+
+        updateResultAndStandings(footballMatch, homeTeam, awayTeam, homeScoreDelta, awayScoreDelta,
+                homePtsDelta, awayPtsDelta, homeWonDelta, awayWonDelta, homeDrawnDelta, awayDrawnDelta, homeLostDelta,
+                awayLostDelta);
+
+        if (!isOwnGoal) {
+            updatePlayerStat(footballMatch.getMatch().getTournament(), player, playerTeam, (short) 1, null, null, null);
+        }
+
+        return modifiedValues;
+    }
+
+    private FootballMatchEventModifiedValues handleGoalInFinalStage(FootballMatch footballMatch,
+            FootballEventType eventType, Player player,
+            Team playerTeam, Boolean isPlayerInHomeTeam) {
+
+        Boolean isOwnGoal = eventType == FootballEventType.OWN_GOAL;
+        Boolean isHomeTeamGoal = isPlayerInHomeTeam && !isOwnGoal || !isPlayerInHomeTeam && isOwnGoal;
+
+        Short homeScoreDelta = isHomeTeamGoal ? (short) 1 : 0;
+        Short awayScoreDelta = isHomeTeamGoal ? (short) 0 : 1;
+
+        FootballMatchEventModifiedValues modifiedValues = new FootballMatchEventModifiedValues();
+        modifiedValues.setHomeScoreDelta(homeScoreDelta);
+        modifiedValues.setAwayScoreDelta(awayScoreDelta);
+
+        updateResultAndBracketInFinalStage(footballMatch, homeScoreDelta, awayScoreDelta, null, null, null, null);
+
+        if (isOwnGoal) {
+            return modifiedValues;
+        }
+
+        updatePlayerStat(footballMatch.getMatch().getTournament(), player, playerTeam, (short) 1, null, null, null);
+        return modifiedValues;
+    }
+
+    private void updateResultAndStandings(FootballMatch footballMatch, Team homeTeam, Team awayTeam,
+            Short homeScoreDelta, Short awayScoreDelta,
+            Short homePtsDelta, Short awayPtsDelta, Short homeWonDelta, Short awayWonDelta,
+            Short homeDrawnDelta, Short awayDrawnDelta, Short homeLostDelta, Short awayLostDelta) {
+        matchService.updateFootballMatch(footballMatch.getMatch().getId(), homeScoreDelta,
                 awayScoreDelta, null, null, null,
                 null, null);
 
@@ -343,43 +404,143 @@ public class FootballMatchEventService {
         tournamentStandingService.updateFootballStanding(footballMatch.getMatch().getTournament().getId(),
                 awayTeam.getId(), awayPtsDelta, awayScoreDelta, homeScoreDelta, awayWonDelta,
                 awayDrawnDelta, awayLostDelta);
-
-        if (isOwnGoal) {
-            return;
-        }
-
-        tournamentStatService.updateFootballTournamentStats(footballMatch.getMatch().getTournament().getId(),
-                player.getPlayerId(),
-                playerTeam.getId(), (short) 1, (short) 0, (short) 0,
-                (short) 0);
-
-        teamService.updateFootballTeamStat(player.getPlayerId(),
-                playerTeam.getId(), (short) 1, (short) 0, (short) 0,
-                (short) 0);
     }
 
-    private void handleGoalInFinalStage(FootballMatch footballMatch, FootballEventType eventType, Player player,
-            Team playerTeam, Boolean isPlayerInHomeTeam) {
-
-        Boolean isOwnGoal = eventType == FootballEventType.OWN_GOAL;
-        Boolean isHomeTeamGoal = isPlayerInHomeTeam && !isOwnGoal || !isPlayerInHomeTeam && isOwnGoal;
-        matchService.updateFootballMatch(footballMatch.getId(), isHomeTeamGoal ? (short) 1 : (short) 0,
-                isHomeTeamGoal ? (short) 0 : (short) 1, null, null, null,
-                null, null);
+    private void updateResultAndBracketInFinalStage(FootballMatch footballMatch, Short homeScoreDelta,
+            Short awayScoreDelta, Short penaltyScoreHomeDelta, Short penaltyScoreAwayDelta,
+            Short missedPenaltyHomeDelta, Short missedPenaltyAwayDelta) {
+        matchService.updateFootballMatch(footballMatch.getMatch().getId(), homeScoreDelta,
+                awayScoreDelta, penaltyScoreHomeDelta, penaltyScoreAwayDelta,
+                missedPenaltyHomeDelta, missedPenaltyAwayDelta, null);
 
         matchService.handleFinalStageBracketUpdate(footballMatch.getMatch().getId());
+    }
 
-        if (isOwnGoal) {
-            return;
-        }
-
-        tournamentStatService.updateFootballTournamentStats(footballMatch.getMatch().getTournament().getId(),
+    private void updatePlayerStat(Tournament tournament, Player player, Team playerTeam, Short goalsDelta,
+            Short motmDelta, Short yellowCardsDelta, Short redCardsDelta) {
+        tournamentStatService.updateFootballTournamentStats(tournament.getId(),
                 player.getPlayerId(),
-                playerTeam.getId(), (short) 1, (short) 0, (short) 0,
-                (short) 0);
+                playerTeam.getId(), goalsDelta, motmDelta, yellowCardsDelta,
+                redCardsDelta);
 
         teamService.updateFootballTeamStat(player.getPlayerId(),
-                playerTeam.getId(), (short) 1, (short) 0, (short) 0,
-                (short) 0);
+                playerTeam.getId(), goalsDelta, motmDelta, yellowCardsDelta,
+                redCardsDelta);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteFootballMatchEvent(Long eventId) {
+        FootballMatchEvent event = footballMatchEventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_EVENT_NOT_FOUND));
+
+        Tournament tournament = event.getMatch().getMatch().getTournament();
+        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
+            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
+        }
+
+        FootballMatchEvent lastEvent = getLastFootballMatchEvent(event.getMatch().getMatch().getId());
+        if (!lastEvent.getId().equals(event.getId())) {
+            throw new ConflictException(ErrorsString.CAN_ONLY_DELETE_LAST_EVENT);
+        }
+
+        FootballMatch footballMatch = event.getMatch();
+        if (footballMatch.isFinished() || footballMatch.isHalftime() || !footballMatch.isStarted()) {
+            throw new ConflictException(ErrorsString.CANNOT_DELETE_EVENT);
+        }
+
+        FootballEventType eventType = event.getType();
+        Player player = event.getPlayer();
+        Team playerTeam = event.getTeam();
+        if (player == null || playerTeam == null) {
+            throw new ConflictException(ErrorsString.CANNOT_DELETE_EVENT);
+        }
+
+        switch (eventType) {
+            case YELLOW_CARD, RED_CARD, RED_YELLOW_CARD -> {
+                Boolean isYellowCard = eventType == FootballEventType.YELLOW_CARD;
+                updatePlayerStat(tournament, player, playerTeam, null, null, isYellowCard ? (short) -1 : null,
+                        !isYellowCard ? (short) -1 : null);
+            }
+            case GOAL, OWN_GOAL, PENALTY, MISSED_PENALTY -> {
+                Team homeTeam = footballMatch.getHomeTeam();
+                Team awayTeam = footballMatch.getAwayTeam();
+
+                if (event.getModifiedValues() == null) {
+                    throw new ConflictException(ErrorsString.CANNOT_DELETE_EVENT);
+                }
+
+                Short homeScoreDelta = event.getModifiedValues().getHomeScoreDelta() != null
+                        ? (short) -event.getModifiedValues().getHomeScoreDelta()
+                        : null;
+                Short awayScoreDelta = event.getModifiedValues().getAwayScoreDelta() != null
+                        ? (short) -event.getModifiedValues().getAwayScoreDelta()
+                        : null;
+                Short homePtsDelta = event.getModifiedValues().getHomePtsDelta() != null
+                        ? (short) -event.getModifiedValues().getHomePtsDelta()
+                        : null;
+                Short awayPtsDelta = event.getModifiedValues().getAwayPtsDelta() != null
+                        ? (short) -event.getModifiedValues().getAwayPtsDelta()
+                        : null;
+                Short homeWonDelta = event.getModifiedValues().getHomeWonDelta() != null
+                        ? (short) -event.getModifiedValues().getHomeWonDelta()
+                        : null;
+                Short awayWonDelta = event.getModifiedValues().getAwayWonDelta() != null
+                        ? (short) -event.getModifiedValues().getAwayWonDelta()
+                        : null;
+                Short homeDrawnDelta = event.getModifiedValues().getHomeDrawnDelta() != null
+                        ? (short) -event.getModifiedValues().getHomeDrawnDelta()
+                        : null;
+                Short awayDrawnDelta = event.getModifiedValues().getAwayDrawnDelta() != null
+                        ? (short) -event.getModifiedValues().getAwayDrawnDelta()
+                        : null;
+                Short homeLostDelta = event.getModifiedValues().getHomeLostDelta() != null
+                        ? (short) -event.getModifiedValues().getHomeLostDelta()
+                        : null;
+                Short awayLostDelta = event.getModifiedValues().getAwayLostDelta() != null
+                        ? (short) -event.getModifiedValues().getAwayLostDelta()
+                        : null;
+                Short penaltyScoreHomeDelta = event.getModifiedValues().getPenaltyScoreHomeDelta() != null
+                        ? (short) -event.getModifiedValues().getPenaltyScoreHomeDelta()
+                        : null;
+                Short penaltyScoreAwayDelta = event.getModifiedValues().getPenaltyScoreAwayDelta() != null
+                        ? (short) -event.getModifiedValues().getPenaltyScoreAwayDelta()
+                        : null;
+                Short missedPenaltyHomeDelta = event.getModifiedValues().getMissedPenaltyHomeDelta() != null
+                        ? (short) -event.getModifiedValues().getMissedPenaltyHomeDelta()
+                        : null;
+                Short missedPenaltyAwayDelta = event.getModifiedValues().getMissedPenaltyAwayDelta() != null
+                        ? (short) -event.getModifiedValues().getMissedPenaltyAwayDelta()
+                        : null;
+
+                Short goalsDelta = event.getType() != FootballEventType.OWN_GOAL
+                        && event.getType() != FootballEventType.MISSED_PENALTY
+                        && ((awayScoreDelta != null && awayScoreDelta != 0)
+                                || (homeScoreDelta != null && homeScoreDelta != 0)) ? (short) -1 : null;
+
+                Boolean isGroupStage = matchService.isMatchInGroupStage(footballMatch.getMatch().getId());
+
+                if (isGroupStage && eventType != FootballEventType.MISSED_PENALTY) {
+                    updateResultAndStandings(footballMatch, homeTeam, awayTeam,
+                            homeScoreDelta, awayScoreDelta, homePtsDelta, awayPtsDelta, homeWonDelta, awayWonDelta,
+                            homeDrawnDelta, awayDrawnDelta, homeLostDelta, awayLostDelta);
+                } else {
+                    updateResultAndBracketInFinalStage(footballMatch, homeScoreDelta, awayScoreDelta,
+                            penaltyScoreHomeDelta,
+                            penaltyScoreAwayDelta, missedPenaltyHomeDelta, missedPenaltyAwayDelta);
+                }
+
+                if (goalsDelta != null) {
+                    updatePlayerStat(tournament, player, playerTeam, goalsDelta, null, null, null);
+                }
+            }
+            default -> throw new BadRequestException(ErrorsString.CANNOT_DELETE_CHRONOLOGICAL_EVENT);
+        }
+
+        footballMatchEventRepository.delete(event);
+    }
+
+    public FootballMatchEvent getLastFootballMatchEvent(Long matchId) {
+        return footballMatchEventRepository.findTopByMatch_IdOrderByIdDesc(matchId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_EVENT_NOT_FOUND));
     }
 }
