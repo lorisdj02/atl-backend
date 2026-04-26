@@ -60,4 +60,7 @@ public class FootballTournamentResponse {
     @NotNull
     @JsonProperty(ApiJsonKeys.finalStageBrackets)
     private List<FinalStageBracketDTO> finalStageBrackets;
+
+    @JsonProperty(ApiJsonKeys.canContinue)
+    private Boolean canContinue;
 }

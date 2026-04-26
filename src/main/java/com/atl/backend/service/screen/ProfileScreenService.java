@@ -41,7 +41,6 @@ import com.atl.backend.response.RefereeLicensesResponse;
 import com.atl.backend.response.ReviewsResponse;
 import com.atl.backend.response.WalletResponse;
 import com.atl.backend.service.SportService;
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.CoordinatorService;
 import com.atl.backend.service.accountServices.RefereeService;
@@ -49,6 +48,7 @@ import com.atl.backend.service.bookingServices.LobbyBookingService;
 import com.atl.backend.service.bookingServices.PrivateBookingService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.paymentServices.PaymentService;
+import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 
 import org.springframework.beans.factory.annotation.Autowired;

@@ -8,21 +8,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.NotFoundException;
-import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.repository.FootballStandingRepository;
 import com.atl.backend.repository.TournamentRepository;
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.util.StandingsComparators;
 
 @Service
 public class TournamentStandingService {
 
+    @Autowired
+    private TournamentAuthService tournamentAuthService;
     @Autowired
     private FootballStandingRepository footballStandingRepository;
     @Autowired
@@ -81,9 +81,7 @@ public class TournamentStandingService {
     @Transactional(rollbackFor = Exception.class)
     public void generateStandingsForTournament(Tournament tournament) {
 
-        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
+        tournamentAuthService.checkManageTournament(tournament.getId());
 
         switch (tournament.getSport().getSportCategory()) {
             case FOOTBALL:
@@ -111,9 +109,6 @@ public class TournamentStandingService {
 
     @Transactional(rollbackFor = Exception.class)
     public void updateTeamsQualifiedInTournament(Tournament tournament, Boolean needToOrder) {
-        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
 
         final short qualifiedPerGroup = (short) (tournament.getNumTeamsQualified() / tournament.getNumGroups());
         final short numTeamsPerGroup = (short) (tournament.getNumTeams() / tournament.getNumGroups());

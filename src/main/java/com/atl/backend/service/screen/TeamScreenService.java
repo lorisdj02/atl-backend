@@ -22,7 +22,7 @@ import com.atl.backend.dto.TeamDTO;
 import com.atl.backend.dto.TeamRequestDTO;
 import com.atl.backend.dto.TournamentDTO;
 import com.atl.backend.dto.TournamentParticipationDTO;
-import com.atl.backend.exception.UnauthorizedException;
+import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.FootballTeamStat;
 import com.atl.backend.model.Palmares;
@@ -40,7 +40,8 @@ import com.atl.backend.response.PlayerRequestsResponse;
 import com.atl.backend.response.PlayersInTeamResponse;
 import com.atl.backend.response.TeamDetailsResponse;
 import com.atl.backend.response.TeamsResponse;
-import com.atl.backend.service.TeamService;
+import com.atl.backend.service.teamServices.TeamAuthService;
+import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 
 @Service
@@ -49,6 +50,8 @@ public class TeamScreenService {
     private TeamService teamService;
     @Autowired
     private TournamentParticipantService tournamentParticipantService;
+    @Autowired
+    private TeamAuthService teamAuthService;
 
     @Transactional(readOnly = true)
     public TeamsResponse getTeamsScreen(SportCategory sportCategory) {
@@ -119,7 +122,7 @@ public class TeamScreenService {
 
         Player player = AccountContext.getActivePlayer();
         if (teamService.isPlayerInTeam(teamId, player.getPlayerId()) == false) {
-            throw new UnauthorizedException(ErrorsString.NEED_TO_BE_IN_TEAM);
+            throw new ForbiddenException(ErrorsString.NEED_TO_BE_IN_TEAM);
         }
 
         List<TournamentParticipation> tournamentParticipations = tournamentParticipantService
@@ -146,16 +149,7 @@ public class TeamScreenService {
     @Transactional(readOnly = true)
     public PlayerRequestsResponse getPlayerRequestsScreen(Long teamId) {
         teamService.checkTeamExists(teamId);
-        Team team = teamService.getTeamById(teamId).get();
-        Player activePlayer = AccountContext.getActivePlayer();
-
-        if (!teamService.isPlayerInTeam(teamId, activePlayer.getPlayerId())) {
-            throw new UnauthorizedException(ErrorsString.NEED_TO_BE_IN_TEAM);
-        }
-
-        if (!team.getViceCaptainPlayers().contains(activePlayer) && !team.getCaptainPlayer().equals(activePlayer)) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
-        }
+        teamAuthService.checkManageTeam(teamId);
 
         List<TeamRequest> teamRequests = teamService.getTeamRequestsByTeamId(teamId);
         Map<Long, Player> playersCache = new HashMap<>();

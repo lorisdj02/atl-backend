@@ -2,12 +2,12 @@ package com.atl.backend.config;
 
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.SportService;
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.CoordinatorService;
 import com.atl.backend.service.accountServices.OrganizationService;
 import com.atl.backend.service.accountServices.PlayerService;
 import com.atl.backend.service.orchestrator.ReviewsOrchestrator;
+import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 

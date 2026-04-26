@@ -16,7 +16,7 @@ import com.atl.backend.model.Tournament;
 import com.atl.backend.repository.CallupRepository;
 import com.atl.backend.repository.FootballTournamentStatRepository;
 import com.atl.backend.repository.PlayerRepository;
-import com.atl.backend.service.TeamService;
+import com.atl.backend.service.teamServices.TeamService;
 
 @Service
 public class TournamentStatService {

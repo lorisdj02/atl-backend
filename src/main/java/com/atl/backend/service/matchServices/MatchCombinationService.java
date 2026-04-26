@@ -13,11 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.NotFoundException;
-import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.FinalStageBracket;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballStanding;
@@ -32,7 +30,8 @@ import com.atl.backend.repository.FootballMatchRepository;
 import com.atl.backend.repository.FootballStandingRepository;
 import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.TournamentRepository;
-import com.atl.backend.service.TeamService;
+import com.atl.backend.service.teamServices.TeamService;
+import com.atl.backend.service.tournamentServices.TournamentAuthService;
 
 @Service
 public class MatchCombinationService {
@@ -50,6 +49,9 @@ public class MatchCombinationService {
     @Autowired
     private FootballStandingRepository footballStandingRepository;
 
+    @Autowired
+    private TournamentAuthService tournamentAuthService;
+
     private Tournament getExistingTournamentByTournamentId(Long tournamentId) {
         return tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
@@ -64,9 +66,7 @@ public class MatchCombinationService {
     @Transactional(rollbackFor = Exception.class)
     public void generateMatchesForTournament(Tournament tournament, List<Long> teamIds) {
 
-        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
+        tournamentAuthService.canManageTournament(tournament.getId());
 
         System.out
                 .println("[DEBUG - MatchService] - Retrieved team IDs for tournament " + tournament.getId() + ": "

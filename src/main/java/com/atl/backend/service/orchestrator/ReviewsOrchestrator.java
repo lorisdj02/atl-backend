@@ -35,7 +35,6 @@ import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.model.enums.TransactionType;
 import com.atl.backend.request.AssignPrizesTournamentRequest;
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.CoordinatorService;
 import com.atl.backend.service.accountServices.PlayerService;
@@ -43,11 +42,15 @@ import com.atl.backend.service.accountServices.ReviewService;
 import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.paymentServices.PaymentService;
+import com.atl.backend.service.teamServices.TeamAuthService;
+import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 
 @Service
 public class ReviewsOrchestrator {
+        @Autowired
+        private TeamAuthService teamAuthService;
         @Autowired
         private ReviewService reviewService;
         @Autowired
@@ -183,7 +186,7 @@ public class ReviewsOrchestrator {
                         throw new ConflictException(ErrorsString.PLAYER_NOT_IN_WINNING_OR_FINALIST_TEAM);
                 }
 
-                teamService.needToBeCaptainOrViceCaptain(consideredTeam.getId(), requestingPlayer.getPlayerId());
+                teamAuthService.checkManageTeamInTournament(consideredTeam.getId(), tournament.getId());
 
                 Boolean isWinningTeam = consideredTeam.getId() == winningTeam.getId();
 
@@ -230,14 +233,16 @@ public class ReviewsOrchestrator {
 
                 tournamentService.assignPrizeInTournament(request.getTournamentId(), isWinningTeam, !isWinningTeam);
 
-                if (tournamentService.arePrizesAsssignedInTournament(request.getTournamentId())) {
+                if (tournamentService.arePrizesAssignedInTournament(request.getTournamentId())) {
                         tournamentService.closeTournament(request.getTournamentId());
                 }
         }
 
         @Transactional(rollbackFor = Exception.class)
-        public void startMatch(Long matchId) {
-                Match match = matchService.startMatch(matchId);
+        public void startMatchReviews(Long matchId) {
+                //Match match = matchService.startMatch(matchId);
+                Match match = matchService.getMatchById(matchId)
+                                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
                 Tournament tournament = match.getTournament();
                 Coordinator tournamentCoordinator = tournament.getCoordinator();
                 List<RefereeAssignment> refereeAssignments = matchRefereeService.getRefereeAssignmentsForMatch(matchId);
@@ -284,8 +289,10 @@ public class ReviewsOrchestrator {
         }
 
         @Transactional(rollbackFor = Exception.class)
-        public void finishMatch(Long matchId) {
-                Match match = matchService.finishMatch(matchId);
+        public void finishMatchReviews(Long matchId) {
+                //Match match = matchService.finishMatch(matchId);
+                Match match = matchService.getMatchById(matchId)
+                                .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
                 Tournament tournament = match.getTournament();
                 Coordinator tournamentCoordinator = tournament.getCoordinator();
                 List<RefereeAssignment> refereeAssignments = matchRefereeService.getRefereeAssignmentsForMatch(matchId);
@@ -313,4 +320,5 @@ public class ReviewsOrchestrator {
                         reviewService.saveReview(coordinatorToRefereeReview);
                 }
         }
+
 }

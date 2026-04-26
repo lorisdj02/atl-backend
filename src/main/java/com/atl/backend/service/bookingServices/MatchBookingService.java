@@ -8,13 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.MatchBookingDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
-import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Booking;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.Match;
@@ -26,10 +24,13 @@ import com.atl.backend.model.enums.TournamentPhase;
 import com.atl.backend.repository.FootballMatchRepository;
 import com.atl.backend.repository.MatchBookingRepository;
 import com.atl.backend.repository.MatchRepository;
+import com.atl.backend.service.tournamentServices.TournamentAuthService;
 
 @Service
 public class MatchBookingService {
 
+    @Autowired
+    private TournamentAuthService tournamentAuthService;
     @Autowired
     private BookingUtilitiesService bookingUtilitiesService;
     @Autowired
@@ -89,9 +90,7 @@ public class MatchBookingService {
             throw new ConflictException(ErrorsString.TOURNAMENT_NOT_ACTIVE);
         }
 
-        if (!tournament.getCoordinator().equals(AccountContext.getActiveCoordinator())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
+        tournamentAuthService.canManageTournament(tournament.getId());
 
         Short minutesPerRound = tournament.getSport().getMinutesPerRound();
         Short minutesPerPause = tournament.getSport().getMinutesPerPause();

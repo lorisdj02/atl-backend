@@ -1,10 +1,12 @@
 package com.atl.backend.service.screen;
 
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.accountServices.CoordinatorService;
 import com.atl.backend.service.accountServices.PlayerService;
 import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.teamServices.TeamAuthService;
+import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
+import com.atl.backend.service.tournamentServices.TournamentPhaseService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 import com.atl.backend.service.tournamentServices.TournamentStandingService;
 import com.atl.backend.service.tournamentServices.TournamentStatService;
@@ -36,7 +38,6 @@ import com.atl.backend.dto.TournamentDTO;
 import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
-import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.City;
 import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.Tournament;
@@ -60,6 +61,8 @@ import com.atl.backend.model.Team;
 public class TournamentScreenService {
 
     @Autowired
+    private TeamAuthService teamAuthService;
+    @Autowired
     private TournamentParticipantService tournamentParticipantService;
     @Autowired
     private TournamentService tournamentService;
@@ -67,6 +70,8 @@ public class TournamentScreenService {
     private TournamentStandingService tournamentStandingService;
     @Autowired
     private TournamentStatService tournamentStatService;
+    @Autowired
+    private TournamentPhaseService tournamentPhaseService;
 
     @Autowired
     private TeamService teamService;
@@ -250,9 +255,7 @@ public class TournamentScreenService {
         }
         Team team = accountTeam.get();
 
-        if (!teamService.isPlayerCaptainOrViceCaptain(team.getId(), currentPlayer.getPlayerId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
-        }
+        teamAuthService.checkManageTeam(team.getId());
 
         List<Long> teamIds = tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId);
         if (!teamIds.contains(team.getId())) {
@@ -288,10 +291,7 @@ public class TournamentScreenService {
             throw new ConflictException(ErrorsString.NEED_TO_BE_IN_TEAM);
         }
 
-        if (!teamService.isPlayerCaptainOrViceCaptain(accountTeam.get().getId(),
-                AccountContext.getActivePlayer().getPlayerId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
-        }
+        teamAuthService.checkManageTeam(accountTeam.get().getId());
 
         List<Long> calluppedPlayerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(
                 tournamentId,
@@ -370,6 +370,9 @@ public class TournamentScreenService {
             players.add(stat.getPlayer());
         }
 
+        //TODO: semplificato
+        Boolean canContinue = tournamentPhaseService.canGoToNextPhase(tournamentId);
+
         return FootballTournamentResponse.builder()
                 .matches(matches.stream().map(FootballMatchDTO::fromFootballMatch).toList())
                 .standings(standings.stream().map(FootballStandingDTO::fromFootballStanding).toList())
@@ -383,6 +386,7 @@ public class TournamentScreenService {
                 .minutesPerPause(tournament.getSport().getMinutesPerPause())
                 .finalStageBrackets(
                         finalStageBrackets.stream().map(FinalStageBracketDTO::fromFinalStageBracket).toList())
+                .canContinue(canContinue)
                 .build();
     }
 

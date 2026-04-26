@@ -14,13 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.TournamentParticipationDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
-import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Callup;
 import com.atl.backend.model.FailedTournamentParticipation;
 import com.atl.backend.model.FinalStageBracket;
@@ -41,12 +39,16 @@ import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.TournamentParticipationRepository;
 import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.request.ConfirmCallupsRequest;
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.paymentServices.PaymentRefundService;
+import com.atl.backend.service.teamServices.TeamAuthService;
+import com.atl.backend.service.teamServices.TeamService;
 
 @Service
 public class TournamentParticipantService {
-
+    @Autowired
+    private TeamAuthService teamAuthService;
+    @Autowired
+    private TournamentAuthService tournamentAuthService;
     @Autowired
     private TournamentParticipationRepository tournamentParticipationRepository;
     @Autowired
@@ -268,7 +270,7 @@ public class TournamentParticipantService {
         // TODO: Non sono sicuro che funzioni... tanto è tutto da testare, fare
         // attenzione
         teamService.checkTeamExists(teamId);
-        teamService.needToBeCaptainOrViceCaptain(teamId, AccountContext.getPlayerId());
+        teamAuthService.checkManageTeamInTournament(teamId, tournamentId);
 
         getExistingTournamentByTournamentId(tournamentId);
         Optional<TournamentParticipation> tournamentParticipationOptional = tournamentParticipationRepository
@@ -329,10 +331,7 @@ public class TournamentParticipantService {
 
     @Transactional(rollbackFor = Exception.class)
     public void refundAllExcludedTeamsInTournament(Tournament tournament) {
-
-        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
+        tournamentAuthService.checkManageTournament(tournament.getId());
 
         List<Player> playersToRefund = new ArrayList<>();
         List<TournamentParticipation> participations = tournamentParticipationRepository

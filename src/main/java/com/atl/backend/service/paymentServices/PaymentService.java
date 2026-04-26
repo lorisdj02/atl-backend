@@ -22,7 +22,6 @@ import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.exception.PaymentRequiredException;
-import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.Booking;
 import com.atl.backend.model.CheckoutSession;
@@ -159,7 +158,7 @@ public class PaymentService {
         }
 
         if (!session.getAccount().equals(account)) {
-            throw new UnauthorizedException(ErrorsString.ACCOUNT_NOT_FOUND);
+            throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
         }
 
         Optional<Wallet> walletOpt = walletRepository.findByAccount_Id(account.getId());
@@ -334,7 +333,7 @@ public class PaymentService {
 
         Account account = session.getAccount();
         if (!account.equals(AccountContext.getActiveAccount())) {
-            throw new UnauthorizedException(ErrorsString.ACCOUNT_NOT_FOUND);
+            throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
         }
 
         BigDecimal amountToPay = session.getAmount();

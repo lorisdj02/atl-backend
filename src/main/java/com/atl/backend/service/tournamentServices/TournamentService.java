@@ -1,5 +1,6 @@
 package com.atl.backend.service.tournamentServices;
 
+import com.atl.backend.service.teamServices.TeamAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,6 @@ import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
-import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.Booking;
 import com.atl.backend.model.Callup;
@@ -65,20 +65,24 @@ import com.atl.backend.response.ScheduleMatchResponse;
 import com.atl.backend.response.TournamentParametersResponse;
 import com.atl.backend.service.FieldService;
 import com.atl.backend.service.SportService;
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.bookingServices.BookingService;
 import com.atl.backend.service.matchServices.MatchCombinationService;
 import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.teamServices.TeamService;
 
 @Service
 public class TournamentService {
 
+    @Autowired
+    private TeamAuthService teamAuthService;
     @Autowired
     private TournamentStandingService tournamentStandingService;
     @Autowired
     private TournamentStatService tournamentStatService;
     @Autowired
     private TournamentParticipantService tournamentParticipantService;
+    @Autowired
+    private TournamentAuthService tournamentAuthService;
 
     @Autowired
     private BookingService bookingService;
@@ -208,10 +212,7 @@ public class TournamentService {
         checkTournamentExists(tournamentId);
         Tournament tournament = tournamentRepository.findById(tournamentId).get();
 
-        if (!AccountContext.getCoordinatorId()
-                .equals(tournament.getCoordinator().getCoordinatorId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
+        tournamentAuthService.checkManageTournament(tournamentId);
 
         if (tournament.getStatus() != TournamentStatus.CREATED) {
             throw new IllegalStateException(ErrorsString.TOURNAMENT_NOT_IN_CREATED_STATUS);
@@ -386,9 +387,7 @@ public class TournamentService {
 
     @Transactional(readOnly = true)
     public TournamentParametersResponse getTournamentParameters(TournamentDTO fictitiousTournament) {
-        if (!AccountContext.getCoordinatorId().equals(fictitiousTournament.getCoordinatorId())) {
-            throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
-        }
+        tournamentAuthService.checkCreateTournament(fictitiousTournament);
         // TODO: Implementare in base ai parametri del torneo
         Integer numMatches = matchService.calculateMatchesInTournament(fictitiousTournament);
         Optional<Sport> optionalSport = sportService.getSportById(fictitiousTournament.getSportId());
@@ -464,9 +463,7 @@ public class TournamentService {
         }
         Tournament tournament = tournamentOpt.get();
 
-        if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
-            throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
-        }
+        tournamentAuthService.checkManageTournament(tournamentId);
 
         Short minutesPerRound = tournament.getSport().getMinutesPerRound();
         Short minutesPerPause = tournament.getSport().getMinutesPerPause();
@@ -481,9 +478,7 @@ public class TournamentService {
 
     @Transactional(rollbackFor = Exception.class)
     public TournamentDTO createTournament(TournamentDTO tournamentDTO) {
-        if (!AccountContext.getCoordinatorId().equals(tournamentDTO.getCoordinatorId())) {
-            throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
-        }
+        tournamentAuthService.checkCreateTournament(tournamentDTO);
         sportService.checkSportExists(tournamentDTO.getSportId());
         fieldService.checkFieldExists(tournamentDTO.getFieldId());
         fieldService.checkCityExists(tournamentDTO.getCityId());
@@ -527,16 +522,9 @@ public class TournamentService {
         }
         Team team = teamOptional.get();
         Long teamId = team.getId();
-
-        if (!tournamentParticipantService.isPlayerCalledUpInTournament(activePlayer.getPlayerId(),
-                match.getTournament().getId())) {
-            throw new UnauthorizedException(ErrorsString.PLAYER_NOT_CALLED_UP_IN_TOURNAMENT);
-        }
-
-        teamService.needToBeCaptainOrViceCaptain(team.getId(), activePlayer.getPlayerId());
-
         Tournament tournament = match.getTournament();
 
+        teamAuthService.checkManageTeamInTournament(teamId, tournament.getId());
         switch (tournament.getSport().getSportCategory()) {
             case FOOTBALL:
                 Optional<FootballMatch> footballMatchOptional = matchService.getFootballMatchById(matchId);
@@ -672,7 +660,7 @@ public class TournamentService {
         return tournamentRepository.save(tournament);
     }
 
-    public Boolean arePrizesAsssignedInTournament(Long tournamentId) {
+    public Boolean arePrizesAssignedInTournament(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
 
@@ -700,9 +688,9 @@ public class TournamentService {
         // TODO: controllare secondo
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
-        if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
-            throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
-        }
+
+        tournamentAuthService.checkManageTournament(tournamentId);
+
         if (tournament.getStatus() != TournamentStatus.SCHEDULED) {
             throw new ConflictException(ErrorsString.TOURNAMENT_NOT_ACTIVE);
         }
@@ -716,8 +704,6 @@ public class TournamentService {
         }
 
         tournament.setStatus(TournamentStatus.PENDING_PAYMENTS);
-
-        // TODO: Crea palmares
 
         Map<TournamentPhase, Set<Team>> teamPerPhase = tournamentParticipantService
                 .getTeamsInEachPhaseOfTournament(tournamentId);

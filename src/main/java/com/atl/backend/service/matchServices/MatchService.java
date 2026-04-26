@@ -7,7 +7,8 @@ import com.atl.backend.repository.MatchRepository;
 import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.repository.TournamentRepository;
 import com.atl.backend.response.FootballMatchEventsResponse;
-import com.atl.backend.service.TeamService;
+import com.atl.backend.service.teamServices.TeamService;
+import com.atl.backend.service.tournamentServices.TournamentAuthService;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,8 @@ import com.atl.backend.model.Tournament;
 
 @Service
 public class MatchService {
+    @Autowired
+    private TournamentAuthService tournamentAuthService;
     @Autowired
     private FootballMatchEventRepository footballMatchEventRepository;
     @Autowired
@@ -702,6 +705,8 @@ public class MatchService {
         if (match.getMotmPlayer() != null) {
             throw new ConflictException(ErrorsString.MOTM_ALREADY_ASSIGNED);
         }
+
+        tournamentAuthService.canManageTournament(match.getTournament().getId());
         match.setMotmPlayer(playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.PLAYER_NOT_FOUND)));
 
@@ -716,6 +721,8 @@ public class MatchService {
             throw new ConflictException(ErrorsString.CANNOT_START_PENALTY_SHOOTOUT);
         }
 
+        tournamentAuthService.canManageTournament(footballMatch.getMatch().getTournament().getId());
+
         if (canMatchFinish(matchId)) {
             throw new ConflictException(ErrorsString.CANNOT_START_PENALTY_SHOOTOUT);
         }
@@ -728,6 +735,8 @@ public class MatchService {
     public Match startMatch(Long matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+
+        tournamentAuthService.canManageTournament(match.getTournament().getId());
         if (match.getScheduledStart() == null) {
             throw new ConflictException(ErrorsString.MATCH_NOT_SCHEDULED);
         }
@@ -766,6 +775,8 @@ public class MatchService {
         if (footballMatch.getStatus() != FootballMatchStatus.START_HALF) {
             throw new ConflictException(ErrorsString.CANNOT_GO_HALFTIME);
         }
+
+        tournamentAuthService.canManageTournament(footballMatch.getMatch().getTournament().getId());
         footballMatch.setStatus(FootballMatchStatus.HALFTIME);
         footballMatch.setHalftime(LocalDateTime.now());
         footballMatch.setUpdatedAt(LocalDateTime.now());
@@ -778,6 +789,7 @@ public class MatchService {
         if (footballMatch.getStatus() != FootballMatchStatus.HALFTIME) {
             throw new ConflictException(ErrorsString.CANNOT_START_HALF);
         }
+        tournamentAuthService.canManageTournament(footballMatch.getMatch().getTournament().getId());
         footballMatch.setStatus(FootballMatchStatus.START_HALF);
         footballMatch.setStartHalf(LocalDateTime.now());
         footballMatch.setUpdatedAt(LocalDateTime.now());
@@ -790,6 +802,7 @@ public class MatchService {
         if (!canMatchFinish(matchId)) {
             throw new ConflictException(ErrorsString.CANNOT_FINISH_MATCH);
         }
+        tournamentAuthService.canManageTournament(match.getTournament().getId());
         if (match.getFinishMatch() != null) {
             throw new ConflictException(ErrorsString.MATCH_ALREADY_FINISHED);
         }

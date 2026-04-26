@@ -10,11 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
-import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.FootballStanding;
 import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
@@ -28,6 +26,8 @@ import com.atl.backend.util.StandingsComparators;
 
 @Service
 public class TournamentPhaseService {
+    @Autowired
+    private TournamentAuthService tournamentAuthService;
     @Autowired
     private TournamentStandingService tournamentStandingService;
 
@@ -73,10 +73,7 @@ public class TournamentPhaseService {
 
     @Transactional(rollbackFor = Exception.class)
     public void goToCoordinatorNextPhase(Long tournamentId) {
-        Tournament tournament = getExistingTournament(tournamentId);
-        if (!AccountContext.getCoordinatorId().equals(tournament.getCoordinator().getCoordinatorId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
+        tournamentAuthService.checkManageTournament(tournamentId);
         if (!canGoToNextPhase(tournamentId)) {
             throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
         }
@@ -85,6 +82,7 @@ public class TournamentPhaseService {
 
     @Transactional(rollbackFor = Exception.class)
     public void goToNextPhase(Long tournamentId) {
+        tournamentAuthService.checkManageTournament(tournamentId);
         Tournament tournament = getExistingTournament(tournamentId);
         if (!canGoToNextPhase(tournamentId)) {
             throw new ConflictException(ErrorsString.NOT_ALL_MATCHES_FINISHED);
@@ -117,6 +115,7 @@ public class TournamentPhaseService {
 
     @Transactional(rollbackFor = Exception.class)
     private TournamentPhase handlePostGroupStage(Long tournamentId) {
+        tournamentAuthService.checkManageTournament(tournamentId);
         Tournament tournament = getExistingTournament(tournamentId);
         matchCombinationService.drawKnockoutStageMatches(tournamentId,
                 getQualifiedTeamsPerRankByTournamentId(tournamentId));

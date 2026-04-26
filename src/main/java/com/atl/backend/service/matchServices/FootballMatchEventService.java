@@ -7,14 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.FootballMatchEventDTO;
 import com.atl.backend.dto.FootballMatchEventModifiedValues;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
-import com.atl.backend.exception.UnauthorizedException;
 import com.atl.backend.model.Callup;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballMatchEvent;
@@ -26,14 +24,17 @@ import com.atl.backend.model.enums.FootballMatchStatus;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.repository.FootballMatchEventRepository;
 import com.atl.backend.repository.FootballMatchRepository;
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.accountServices.PlayerService;
+import com.atl.backend.service.teamServices.TeamService;
+import com.atl.backend.service.tournamentServices.TournamentAuthService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentStandingService;
 import com.atl.backend.service.tournamentServices.TournamentStatService;
 
 @Service
 public class FootballMatchEventService {
+    @Autowired
+    private TournamentAuthService tournamentAuthService;
     @Autowired
     private FootballMatchEventRepository footballMatchEventRepository;
     @Autowired
@@ -86,9 +87,7 @@ public class FootballMatchEventService {
         }
 
         Tournament tournament = footballMatch.getMatch().getTournament();
-        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
+        tournamentAuthService.canManageTournament(tournament.getId());
 
         FootballMatchEvent event = new FootballMatchEvent();
         EventMinuteData eventMinuteData = calculateEventMinuteData(footballMatch, eventType);
@@ -434,9 +433,7 @@ public class FootballMatchEventService {
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_EVENT_NOT_FOUND));
 
         Tournament tournament = event.getMatch().getMatch().getTournament();
-        if (!tournament.getCoordinator().getCoordinatorId().equals(AccountContext.getCoordinatorId())) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_TOURNAMENT_COORDINATOR);
-        }
+        tournamentAuthService.canManageTournament(tournament.getId());
 
         FootballMatchEvent lastEvent = getLastFootballMatchEvent(event.getMatch().getMatch().getId());
         if (!lastEvent.getId().equals(event.getId())) {

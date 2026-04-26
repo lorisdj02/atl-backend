@@ -31,9 +31,9 @@ import com.atl.backend.response.PlayersInTeamResponse;
 import com.atl.backend.response.TeamDetailsResponse;
 import com.atl.backend.response.TeamsResponse;
 import com.atl.backend.service.SportService;
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.orchestrator.TournamentTeamMatchOrchestrator;
 import com.atl.backend.service.screen.TeamScreenService;
+import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 
 @RestController

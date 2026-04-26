@@ -1,4 +1,4 @@
-package com.atl.backend.service;
+package com.atl.backend.service.teamServices;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +18,8 @@ import com.atl.backend.repository.PlaysAtRepository;
 import com.atl.backend.repository.TeamRepository;
 import com.atl.backend.repository.TeamRequestRepository;
 import com.atl.backend.response.PlayersInTeamResponse;
+import com.atl.backend.service.FieldService;
+import com.atl.backend.service.SportService;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,8 @@ import java.util.List;
 
 @Service
 public class TeamService {
+    @Autowired
+    private TeamAuthService teamAuthService;
     @Autowired
     private TeamRepository teamRepository;
     @Autowired
@@ -161,7 +165,7 @@ public class TeamService {
             throw new ConflictException(ErrorsString.CAPTAIN_CANNOT_BE_EXPELLED);
         }
 
-        needToBeCaptainOrViceCaptain(teamId, playerId);
+        teamAuthService.checkManageTeam(teamId);
         if (team.getViceCaptainPlayers().contains(player)
                 && !team.getCaptainPlayer().equals(AccountContext.getActivePlayer())) {
             throw new ConflictException(ErrorsString.VICE_CAPTAIN_CANNOT_EXPEL_VICE_CAPTAIN);
@@ -341,23 +345,6 @@ public class TeamService {
         return teamRepository.existsByTeamNameAndSportCategory(teamName, sportCategory);
     }
 
-    public void needToBeCaptainOrViceCaptain(Long teamId, Long playerId) {
-        if (!isPlayerCaptainOrViceCaptain(teamId, playerId)) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN_OR_VICE_CAPTAIN);
-        }
-    }
-
-    public void needToBeCaptain(Long teamId, Long playerId) {
-        Optional<Team> teamOptional = teamRepository.findById(teamId);
-        if (teamOptional.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
-        }
-        Team team = teamOptional.get();
-        if (!team.getCaptainPlayer().getPlayerId().equals(playerId)) {
-            throw new UnauthorizedException(ErrorsString.YOU_MUST_BE_CAPTAIN);
-        }
-    }
-
     public void needToBeInTeam(Long teamId, Long playerId) {
         if (!isPlayerInTeam(teamId, playerId)) {
             throw new ConflictException(ErrorsString.PLAYER_NOT_IN_TEAM);
@@ -380,19 +367,17 @@ public class TeamService {
 
         needToBeInTeam(teamId, playerId);
 
-        Long requestingPlayerId = AccountContext.getPlayerId();
-
         if (team.getCaptainPlayer().equals(player)) {
             throw new ConflictException(ErrorsString.PLAYER_IS_CAPTAIN);
         } else if (team.getVice1Player().equals(player)) {
-            needToBeCaptain(teamId, requestingPlayerId);
+            teamAuthService.checkManageTeamCaptain(teamId);
             team.setVice1Player(team.getVice2Player());
             team.setVice2Player(null);
         } else if (team.getVice2Player().equals(player)) {
-            needToBeCaptain(teamId, requestingPlayerId);
+            teamAuthService.checkManageTeamCaptain(teamId);
             team.setVice2Player(null);
         } else {
-            needToBeCaptainOrViceCaptain(teamId, requestingPlayerId);
+            teamAuthService.checkManageTeam(teamId);
             if (team.getVice1Player() == null) {
                 team.setVice1Player(player);
             } else if (team.getVice2Player() == null) {
@@ -407,15 +392,19 @@ public class TeamService {
 
     @Transactional(rollbackFor = Exception.class)
     public Team createTeam(TeamDTO teamDTO) {
-        Player player = AccountContext.getActivePlayer();
+
+        teamAuthService.checkCreateTeam(teamDTO);
 
         if (!sportService.isSupportedSportCategory(teamDTO.getSportCategory())) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
+        Player captainPlayer = playerRepository.findById(teamDTO.getCaptainPlayerId())
+                .orElseThrow(() -> new NotFoundException(ErrorsString.PLAYER_NOT_FOUND));
+
         SportCategory sportCategory = SportCategory.valueOf(teamDTO.getSportCategory().toUpperCase());
 
-        if (isPlayerInATeamBySportCategory(player.getPlayerId(), sportCategory)) {
+        if (isPlayerInATeamBySportCategory(captainPlayer.getPlayerId(), sportCategory)) {
             throw new ConflictException(ErrorsString.PLAYER_ALREADY_IN_TEAM);
         }
         if (teamDTO.getCityId() != null) {
@@ -424,7 +413,7 @@ public class TeamService {
         Team team = new Team();
         team.setName(teamDTO.getName());
         team.setSportCategory(sportCategory);
-        team.setCaptainPlayer(player);
+        team.setCaptainPlayer(captainPlayer);
         team.setLogoUrl(teamDTO.getLogoUrl());
         team.setCity(teamDTO.getCityId() != null ? fieldService.getCityById(teamDTO.getCityId()).get() : null);
         team.setDescription(teamDTO.getDescription());
@@ -438,7 +427,7 @@ public class TeamService {
     @Transactional(rollbackFor = Exception.class)
     public void acceptTeamRequest(Long teamId, Long playerId, Boolean acceptAll) {
         checkTeamExists(teamId);
-        needToBeCaptainOrViceCaptain(teamId, playerId);
+        teamAuthService.checkManageTeam(teamId);
 
         List<TeamRequest> teamRequests = new ArrayList<>();
         if (playerId == null && acceptAll) {
@@ -464,7 +453,7 @@ public class TeamService {
     @Transactional(rollbackFor = Exception.class)
     public void rejectTeamRequest(Long teamId, Long playerId, Boolean rejectAll) {
         checkTeamExists(teamId);
-        needToBeCaptainOrViceCaptain(teamId, playerId);
+        teamAuthService.checkManageTeam(teamId);
 
         List<TeamRequest> teamRequests = new ArrayList<>();
         if (playerId == null && rejectAll) {

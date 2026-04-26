@@ -18,6 +18,7 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.FootballMatchEventDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.model.FootballMatchEvent;
+import com.atl.backend.model.enums.FootballEventType;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
@@ -25,6 +26,7 @@ import com.atl.backend.service.SportService;
 import com.atl.backend.service.matchServices.FootballMatchEventService;
 import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.orchestrator.ReviewsOrchestrator;
 import com.atl.backend.service.orchestrator.TournamentTeamMatchOrchestrator;
 import com.atl.backend.service.screen.MatchScreenService;
 import com.atl.backend.service.tournamentServices.TournamentService;
@@ -32,6 +34,8 @@ import com.atl.backend.service.tournamentServices.TournamentService;
 @RestController
 @RequestMapping("/api/matches")
 public class MatchController {
+    @Autowired
+    private ReviewsOrchestrator reviewsOrchestrator;
     @Autowired
     private MatchScreenService matchScreenService;
     @Autowired
@@ -110,6 +114,11 @@ public class MatchController {
     public ResponseEntity<FootballMatchEventDTO> insertFootballMatchEvent(@PathVariable Long matchId,
             @RequestBody FootballMatchEventDTO footballMatchEventDTO) {
         FootballMatchEvent event = footballMatchEventService.insertFootballMatchEvent(matchId, footballMatchEventDTO);
+        if (event.getType() == FootballEventType.START) {
+            reviewsOrchestrator.startMatchReviews(matchId);
+        } else if (event.getType() == FootballEventType.FINISH) {
+            reviewsOrchestrator.finishMatchReviews(matchId);
+        }
         return ResponseEntity.ok(FootballMatchEventDTO.fromFootballMatchEvent(event));
     }
 

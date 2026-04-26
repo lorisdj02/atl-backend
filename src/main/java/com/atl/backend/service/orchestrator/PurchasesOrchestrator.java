@@ -33,7 +33,6 @@ import com.atl.backend.model.enums.TransactionType;
 import com.atl.backend.request.RegisterAccountRequest;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.service.FieldService;
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.PlayerService;
 import com.atl.backend.service.bookingServices.BookingService;
@@ -43,6 +42,7 @@ import com.atl.backend.service.bookingServices.PrivateBookingService;
 import com.atl.backend.service.paymentServices.PaymentRedeemService;
 import com.atl.backend.service.paymentServices.PaymentRefundService;
 import com.atl.backend.service.paymentServices.PaymentService;
+import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 

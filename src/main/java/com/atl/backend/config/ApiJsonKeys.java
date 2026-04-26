@@ -136,6 +136,9 @@ public class ApiJsonKeys {
     public static final String minutesPerPause = "minutesPerPause"; // int
     // FootballTournamentScreen,
     public static final String finalStageBrackets = "finalStageBrackets"; // List<FinalStageBracket>
+    // FootballTournamentScreen
+    public static final String canContinue = "canContinue"; // bool
+
 
     // FootballMatchScreen
     public static final String match = "match"; // FootballMatch

@@ -21,13 +21,13 @@ import com.atl.backend.model.enums.*;
 
 import com.atl.backend.response.*;
 import com.atl.backend.service.FieldService;
-import com.atl.backend.service.TeamService;
 import com.atl.backend.service.bookingServices.BookingService;
 import com.atl.backend.service.bookingServices.LobbyBookingService;
 import com.atl.backend.service.bookingServices.MatchBookingService;
 import com.atl.backend.service.bookingServices.PrivateBookingService;
 import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.matchServices.MatchService;
+import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 import com.atl.backend.service.tournamentServices.TournamentStandingService;
