@@ -37,7 +37,7 @@ import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 
 @RestController
-@RequestMapping("/api/teams")
+@RequestMapping("/api/v1/teams")
 public class TeamController {
     @Autowired
     private TeamScreenService teamScreenService;

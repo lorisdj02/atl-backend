@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
-@RequestMapping("/api/bookings")
+@RequestMapping("/api/v1/bookings")
 public class BookingController {
     @Autowired
     private PurchasesOrchestrator purchasesOrchestrator;
@@ -41,7 +41,7 @@ public class BookingController {
     private MatchBookingService matchBookingService;
 
     @GetMapping("/book-a-field/{sportCategory}")
-    public ResponseEntity<BookFieldResponse> getBookFieldResponse(@PathVariable String sportCategory) {
+    public ResponseEntity<BookFieldResponse> getBookFieldScreen(@PathVariable String sportCategory) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
@@ -143,12 +143,14 @@ public class BookingController {
      * }
      */
 
-    @DeleteMapping("/lobby-booking/{bookingId}/refund")
-    public ResponseEntity<Void> refundLobbyBooking(@PathVariable Long bookingId) {
-        purchasesOrchestrator.refundLobbyBooking(bookingId);
-        return ResponseEntity.noContent().build();
-    }
-
+    /*
+     * @DeleteMapping("/lobby-booking/{bookingId}/refund")
+     * public ResponseEntity<Void> refundLobbyBooking(@PathVariable Long bookingId)
+     * {
+     * purchasesOrchestrator.refundLobbyBooking(bookingId);
+     * return ResponseEntity.noContent().build();
+     * }
+     */
     @DeleteMapping("/lobby-booking/{bookingId}/leave")
     public ResponseEntity<Void> leaveLobbyBooking(@PathVariable Long bookingId) {
         purchasesOrchestrator.leaveLobbyBooking(bookingId);

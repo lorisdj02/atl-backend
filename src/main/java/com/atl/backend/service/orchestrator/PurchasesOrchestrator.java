@@ -130,6 +130,13 @@ public class PurchasesOrchestrator {
     @Transactional(rollbackFor = Exception.class)
     public void leaveLobbyBooking(Long bookingId) {
         Player activePlayer = AccountContext.getActivePlayer();
+        LobbyBooking lobbyBooking = lobbyBookingService.getLobbyBookingByBookingId(bookingId)
+                .orElseThrow(() -> new BadRequestException(ErrorsString.BOOKING_NOT_FOUND));
+
+        if (lobbyBooking.getOwnerPlayer().getPlayerId().equals(activePlayer.getPlayerId())) {
+            refundLobbyBooking(bookingId);
+            return;
+        }
         lobbyBookingService.leaveLobbyBooking(bookingId);
         // paymentRefundService.refundLobbyCreationByBookingId(bookingId);
         paymentRefundService.refundLobbyParticipationByBookingIdAndAccountId(bookingId,

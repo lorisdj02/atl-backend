@@ -15,7 +15,7 @@ import com.atl.backend.response.FieldsAndMaxPlayersPerFieldResponse;
 import com.atl.backend.service.FieldService;
 
 @RestController
-@RequestMapping("/api/fields")
+@RequestMapping("/api/v1/fields")
 public class FieldController {
     @Autowired
     private FieldService fieldService;

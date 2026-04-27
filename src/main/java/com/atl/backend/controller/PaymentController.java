@@ -23,7 +23,7 @@ import com.atl.backend.service.orchestrator.PurchasesOrchestrator;
 import com.atl.backend.service.paymentServices.PaymentService;
 
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("/api/v1/payments")
 public class PaymentController {
     @Autowired
     private PaymentService paymentService;

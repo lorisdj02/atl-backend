@@ -18,7 +18,6 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.FootballMatchEventDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.model.FootballMatchEvent;
-import com.atl.backend.model.enums.FootballEventType;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
@@ -32,7 +31,7 @@ import com.atl.backend.service.screen.MatchScreenService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 
 @RestController
-@RequestMapping("/api/matches")
+@RequestMapping("/api/v1/matches")
 public class MatchController {
     @Autowired
     private ReviewsOrchestrator reviewsOrchestrator;
@@ -52,6 +51,7 @@ public class MatchController {
     private TournamentTeamMatchOrchestrator tournamentTeamMatchOrchestrator;
 
     @GetMapping("/{sportCategory}/referee/available-matches")
+    // Aggiungere cityId e sportId
     public ResponseEntity<AvailableMatchesResponse> getAvailableMatchesScreen(@PathVariable String sportCategory) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -103,28 +103,23 @@ public class MatchController {
     }
 
     @PostMapping("/match/{matchId}/insert-referee-assignment/{refereeRoleName}")
-    public ResponseEntity<Void> insertRefereeAssignment(@PathVariable Long matchId,
+    public ResponseEntity<Long> insertRefereeAssignment(@PathVariable Long matchId,
             @PathVariable String refereeRoleName) {
-        matchRefereeService.insertRefereeAssignment(matchId, refereeRoleName);
-        return ResponseEntity.ok().build();
+        Long response = matchRefereeService.insertRefereeAssignment(matchId, refereeRoleName);
+        return ResponseEntity.ok(response);
     }
 
     // Qui c'è anche penaltyshootout
     @PostMapping("/match/{matchId}/football-event/insert")
     public ResponseEntity<FootballMatchEventDTO> insertFootballMatchEvent(@PathVariable Long matchId,
             @RequestBody FootballMatchEventDTO footballMatchEventDTO) {
-        FootballMatchEvent event = footballMatchEventService.insertFootballMatchEvent(matchId, footballMatchEventDTO);
-        if (event.getType() == FootballEventType.START) {
-            reviewsOrchestrator.startMatchReviews(matchId);
-        } else if (event.getType() == FootballEventType.FINISH) {
-            reviewsOrchestrator.finishMatchReviews(matchId);
-        }
+        FootballMatchEvent event = reviewsOrchestrator.insertFootballMatchEvent(matchId, footballMatchEventDTO);
         return ResponseEntity.ok(FootballMatchEventDTO.fromFootballMatchEvent(event));
     }
 
-    @DeleteMapping("/match/event/{eventId}/delete")
-    public ResponseEntity<Void> deleteFootballMatchEvent(@PathVariable Long eventId) {
-        footballMatchEventService.deleteFootballMatchEvent(eventId);
+    @DeleteMapping("/match/{matchId}/football-event/{eventId}/delete")
+    public ResponseEntity<Void> deleteFootballMatchEvent(@PathVariable Long matchId, @PathVariable Long eventId) {
+        footballMatchEventService.deleteFootballMatchEvent(matchId, eventId);
         return ResponseEntity.ok().build();
     }
 }

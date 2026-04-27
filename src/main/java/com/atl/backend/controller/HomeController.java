@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/homes")
+@RequestMapping("/api/v1/homes")
 public class HomeController {
     @Autowired
     private HomeScreenService homeService;
@@ -29,7 +29,7 @@ public class HomeController {
     private SportService sportService;
 
     @GetMapping("/player/{sportCategory}")
-    public ResponseEntity<PlayerHomeResponse> getPlayerHomeResponse(@PathVariable String sportCategory) {
+    public ResponseEntity<PlayerHomeResponse> getPlayerHomeScreen(@PathVariable String sportCategory) {
 
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -42,7 +42,7 @@ public class HomeController {
     }
 
     @GetMapping("/coordinator/{sportCategory}")
-    public ResponseEntity<CoordinatorHomeResponse> getCoordinatorHomeResponse(@PathVariable String sportCategory) {
+    public ResponseEntity<CoordinatorHomeResponse> getCoordinatorHomeScreen(@PathVariable String sportCategory) {
 
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -54,7 +54,7 @@ public class HomeController {
     }
 
     @GetMapping("/referee/{sportCategory}")
-    public ResponseEntity<RefereeHomeResponse> getRefereeHomeResponse(@PathVariable String sportCategory) {
+    public ResponseEntity<RefereeHomeResponse> getRefereeHomeScreen(@PathVariable String sportCategory) {
 
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -67,7 +67,7 @@ public class HomeController {
     }
 
     @GetMapping("/organization/{sportCategory}")
-    public ResponseEntity<OrganizationHomeResponse> getOrganizationHomeResponse(@PathVariable String sportCategory) {
+    public ResponseEntity<OrganizationHomeResponse> getOrganizationHomeScreen(@PathVariable String sportCategory) {
 
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);

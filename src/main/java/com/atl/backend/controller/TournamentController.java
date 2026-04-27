@@ -41,7 +41,7 @@ import com.atl.backend.service.tournamentServices.TournamentPhaseService;
 import com.atl.backend.service.tournamentServices.TournamentService;
 
 @RestController
-@RequestMapping("/api/tournaments")
+@RequestMapping("/api/v1/tournaments")
 public class TournamentController {
     @Autowired
     private TournamentScreenService tournamentScreenService;

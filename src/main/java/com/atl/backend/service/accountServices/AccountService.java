@@ -5,7 +5,6 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.AccountDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
-import com.atl.backend.exception.ForbiddenException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.FriendInvite;
@@ -83,14 +82,15 @@ public class AccountService {
         return Optional.of(friendInviteRepository.save(friendInvite));
     }
 
-    public Optional<FriendInvite> redeemInvite(Account InvitedAccount){
-        Optional<FriendInvite> friendInviteOptional = friendInviteRepository.findByInvitedAccount_IdAndRedeemedFalse(InvitedAccount.getId());
+    public Optional<FriendInvite> redeemInvite(Account InvitedAccount) {
+        Optional<FriendInvite> friendInviteOptional = friendInviteRepository
+                .findByInvitedAccount_IdAndRedeemedFalse(InvitedAccount.getId());
         if (friendInviteOptional.isEmpty()) {
             return Optional.empty();
         }
         FriendInvite friendInvite = friendInviteOptional.get();
         // Se l'invito è già stato riscattato, non facciamo nulla
-        if(friendInvite.getRedeemed() == true){
+        if (friendInvite.getRedeemed() == true) {
             return Optional.empty();
         }
         friendInvite.setRedeemed(true);
@@ -216,7 +216,9 @@ public class AccountService {
             case REFEREE -> {
                 return refereeService.getRefereeLevelByAccountId(accountId);
             }
-            default -> throw new ForbiddenException(ErrorsString.INVALID_ACCOUNT_ROLE);
+            default -> {
+                return Short.valueOf("0");
+            }
         }
     }
 

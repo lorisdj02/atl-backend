@@ -15,7 +15,7 @@ import com.atl.backend.response.WalletResponse;
 import com.atl.backend.service.screen.ProfileScreenService;
 
 @RestController
-@RequestMapping("/api/profiles")
+@RequestMapping("/api/v1/profiles")
 public class ProfileController {
     @Autowired
     private ProfileScreenService profileScreenService;

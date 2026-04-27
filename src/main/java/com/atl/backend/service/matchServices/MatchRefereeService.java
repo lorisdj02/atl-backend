@@ -82,7 +82,7 @@ public class MatchRefereeService {
         return refereeIds;
     }
 
-    public void insertRefereeAssignment(Long matchId, String refereeRoleName) {
+    public Long insertRefereeAssignment(Long matchId, String refereeRoleName) {
         Referee referee = AccountContext.getActiveReferee();
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
@@ -102,7 +102,7 @@ public class MatchRefereeService {
         refereeAssignment.setReferee(referee);
         refereeAssignment.setRole(refereeRoleName);
         refereeAssignment.setPay(payPerMatch);
-        refereeAssignmentRepository.save(refereeAssignment);
+        return match.getId();
     }
 
     public List<FootballMatch> getAssignedFootballMatchesByRefereeId(Long refereeId) {

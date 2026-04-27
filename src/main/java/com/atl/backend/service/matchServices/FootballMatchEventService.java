@@ -428,14 +428,18 @@ public class FootballMatchEventService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void deleteFootballMatchEvent(Long eventId) {
+    public void deleteFootballMatchEvent(Long matchId, Long eventId) {
         FootballMatchEvent event = footballMatchEventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_EVENT_NOT_FOUND));
+
+        if (!event.getMatch().getId().equals(matchId)) {
+            throw new NotFoundException(ErrorsString.MATCH_EVENT_NOT_FOUND);
+        }
 
         Tournament tournament = event.getMatch().getMatch().getTournament();
         tournamentAuthService.canManageTournament(tournament.getId());
 
-        FootballMatchEvent lastEvent = getLastFootballMatchEvent(event.getMatch().getMatch().getId());
+        FootballMatchEvent lastEvent = getLastFootballMatchEvent(matchId);
         if (!lastEvent.getId().equals(event.getId())) {
             throw new ConflictException(ErrorsString.CAN_ONLY_DELETE_LAST_EVENT);
         }

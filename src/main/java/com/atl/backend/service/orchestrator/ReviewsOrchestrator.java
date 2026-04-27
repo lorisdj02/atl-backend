@@ -12,12 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.dto.FootballMatchEventDTO;
 import com.atl.backend.dto.ReviewDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Callup;
 import com.atl.backend.model.Coordinator;
+import com.atl.backend.model.FootballMatchEvent;
 import com.atl.backend.model.FriendInvite;
 import com.atl.backend.model.Match;
 import com.atl.backend.model.Player;
@@ -28,6 +30,7 @@ import com.atl.backend.model.Team;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.Transaction;
 import com.atl.backend.model.TransactionGroup;
+import com.atl.backend.model.enums.FootballEventType;
 import com.atl.backend.model.enums.ReviewStatus;
 import com.atl.backend.model.enums.ReviewType;
 import com.atl.backend.model.enums.TransactionPendingReason;
@@ -39,6 +42,7 @@ import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.CoordinatorService;
 import com.atl.backend.service.accountServices.PlayerService;
 import com.atl.backend.service.accountServices.ReviewService;
+import com.atl.backend.service.matchServices.FootballMatchEventService;
 import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.paymentServices.PaymentService;
@@ -49,6 +53,8 @@ import com.atl.backend.service.tournamentServices.TournamentService;
 
 @Service
 public class ReviewsOrchestrator {
+        @Autowired
+        private FootballMatchEventService footballMatchEventService;
         @Autowired
         private TeamAuthService teamAuthService;
         @Autowired
@@ -240,7 +246,7 @@ public class ReviewsOrchestrator {
 
         @Transactional(rollbackFor = Exception.class)
         public void startMatchReviews(Long matchId) {
-                //Match match = matchService.startMatch(matchId);
+                // Match match = matchService.startMatch(matchId);
                 Match match = matchService.getMatchById(matchId)
                                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
                 Tournament tournament = match.getTournament();
@@ -290,7 +296,7 @@ public class ReviewsOrchestrator {
 
         @Transactional(rollbackFor = Exception.class)
         public void finishMatchReviews(Long matchId) {
-                //Match match = matchService.finishMatch(matchId);
+                // Match match = matchService.finishMatch(matchId);
                 Match match = matchService.getMatchById(matchId)
                                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
                 Tournament tournament = match.getTournament();
@@ -321,4 +327,15 @@ public class ReviewsOrchestrator {
                 }
         }
 
+        @Transactional(rollbackFor = Exception.class)
+        public FootballMatchEvent insertFootballMatchEvent(Long matchId, FootballMatchEventDTO footballMatchEventDTO) {
+                FootballMatchEvent event = footballMatchEventService.insertFootballMatchEvent(matchId,
+                                footballMatchEventDTO);
+                if (event.getType() == FootballEventType.START) {
+                        startMatchReviews(matchId);
+                } else if (event.getType() == FootballEventType.FINISH) {
+                        finishMatchReviews(matchId);
+                }
+                return event;
+        }
 }
