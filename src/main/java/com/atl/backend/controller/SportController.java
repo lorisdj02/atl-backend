@@ -23,7 +23,7 @@ public class SportController {
     private SportService sportService;
 
     @GetMapping("/{sportCategory}")
-    public ResponseEntity<List<SportDTO>> getSportByCategory(@PathVariable String sportCategory) {
+    public ResponseEntity<List<SportDTO>> getSportsByCategory(@PathVariable String sportCategory) {
         if(!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }

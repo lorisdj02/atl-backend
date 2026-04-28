@@ -79,13 +79,13 @@ public class TeamController {
     }
 
     @GetMapping("/team/{teamId}/manage/view-player-requests")
-    public ResponseEntity<PlayerRequestsResponse> getPlayerRequestsScreen(@PathVariable Long teamId) {
-        PlayerRequestsResponse response = teamScreenService.getPlayerRequestsScreen(teamId);
+    public ResponseEntity<PlayerRequestsResponse> getTeamRequestsScreen(@PathVariable Long teamId) {
+        PlayerRequestsResponse response = teamScreenService.getTeamRequestsScreen(teamId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/team/{teamId}/details")
-    public ResponseEntity<TeamDetailsResponse> getTeamDetailScreen(@PathVariable Long teamId) {
+    public ResponseEntity<TeamDetailsResponse> getTeamDetailsScreen(@PathVariable Long teamId) {
         TeamDetailsResponse response = teamScreenService.getTeamDetailsScreen(teamId);
         return ResponseEntity.ok(response);
     }
@@ -169,6 +169,13 @@ public class TeamController {
     @DeleteMapping("/team/{teamId}/expel/{playerId}")
     public ResponseEntity<Void> expelPlayer(@PathVariable Long teamId, @PathVariable Long playerId) {
         tournamentTeamMatchOrchestrator.expelPlayer(teamId, playerId);
+        return ResponseEntity.ok().build();
+    }
+
+    // Viene fatto con leaveTeam
+    @DeleteMapping("/team/{teamId}/delete")
+    public ResponseEntity<Void> deleteTeam(@PathVariable Long teamId) {
+        teamService.softDeleteTeam(teamId);
         return ResponseEntity.ok().build();
     }
 }

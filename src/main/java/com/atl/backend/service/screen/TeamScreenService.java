@@ -147,7 +147,7 @@ public class TeamScreenService {
     }
 
     @Transactional(readOnly = true)
-    public PlayerRequestsResponse getPlayerRequestsScreen(Long teamId) {
+    public PlayerRequestsResponse getTeamRequestsScreen(Long teamId) {
         teamService.checkTeamExists(teamId);
         teamAuthService.checkManageTeam(teamId);
 

@@ -35,7 +35,7 @@ public class Team {
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "captain_player_id", nullable = false)
+    @JoinColumn(name = "captain_player_id")
     private Player captainPlayer;
 
     /*

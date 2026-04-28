@@ -117,7 +117,8 @@ public class TeamService {
             throw new ConflictException(ErrorsString.PLAYER_IS_IN_ACTIVE_TOURNAMENTS);
         }
 
-        if (team.getCaptainPlayer().equals(player) && team.getViceCaptainPlayers().isEmpty()) {
+        if (team.getCaptainPlayer().equals(player) && team.getViceCaptainPlayers().isEmpty()
+                && team.getNumPlayers() > 1) {
             throw new ConflictException(ErrorsString.CAPTAIN_CANNOT_LEAVE_TEAM_WITHOUT_VICE_CAPTAIN);
         }
 
@@ -146,6 +147,9 @@ public class TeamService {
         team.setUpdatedAt(LocalDateTime.now());
 
         teamRepository.save(team);
+        if (team.getNumPlayers() == 0) {
+            softDeleteTeam(teamId);
+        }
         playsAtRepository.delete(playsAt);
     }
 
@@ -538,4 +542,19 @@ public class TeamService {
 
     }
 
+    public void softDeleteTeam(Long teamId) {
+        Optional<Team> teamOptional = teamRepository.findById(teamId);
+        if (teamOptional.isEmpty()) {
+            throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
+        }
+        Team team = teamOptional.get();
+        if (team.getNumPlayers() != 0) {
+            throw new ConflictException(ErrorsString.CANNOT_DELETE_TEAM_WITH_PLAYERS);
+        }
+        team.setNumPlayers((short) 0);
+        team.setCaptainPlayer(null);
+        team.setVisible(false);
+        team.setUpdatedAt(LocalDateTime.now());
+        teamRepository.save(team);
+    }
 }

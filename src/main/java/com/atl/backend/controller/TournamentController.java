@@ -93,6 +93,7 @@ public class TournamentController {
         return ResponseEntity.ok(response.get());
     }
 
+    // da rivedere per i cuoricini
     // Funziona così:
     // /football/filters?cityId=1&numTeams=4&minFee=10&maxFee=50&minPrize=100&maxPrize=500&name=summer
     @GetMapping("/{sportCategory}/filters")

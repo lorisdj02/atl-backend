@@ -241,6 +241,8 @@ public class ErrorsString {
 
     static final public String CANNOT_DELETE_CHRONOLOGICAL_EVENT = "CANNOT_DELETE_CHRONOLOGICAL_EVENT";
 
+    static final public String CANNOT_DELETE_TEAM_WITH_PLAYERS = "CANNOT_DELETE_TEAM_WITH_PLAYERS";
+
     // Authentication errors
 
     static final public String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
