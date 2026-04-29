@@ -78,7 +78,7 @@ public class MatchController {
         if (response.isEmpty()) {
             throw new BadRequestException(ErrorsString.MATCH_NOT_FOUND);
         }
-        return ResponseEntity.ok(matchScreenService.getMatchScreen(matchId).get());
+        return ResponseEntity.ok(response.get());
     }
 
     @GetMapping("/match/{matchId}/events")

@@ -40,7 +40,7 @@ public class Account {
     private Boolean vip = false;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "vip_type", length = 15)
+    @Column(name = "vip_type", length = 15, nullable = false)
     private VipType vipType = VipType.NONE;
 
     @Column(name = "vip_start")

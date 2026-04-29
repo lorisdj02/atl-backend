@@ -33,6 +33,7 @@ public class MatchDTO {
     @JsonProperty("motmPlayerId")
     private Long motmPlayerId;
 
+    @NotNull
     @JsonProperty("groupName")
     private String groupName;
 

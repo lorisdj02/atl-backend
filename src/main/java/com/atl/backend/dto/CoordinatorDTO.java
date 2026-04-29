@@ -33,6 +33,13 @@ public class CoordinatorDTO {
     @JsonProperty("imageUrl")
     private String imageUrl;
 
+    @JsonProperty("preferredCityId")
+    private Long preferredCityId;
+
+    @NotNull
+    @JsonProperty("level")
+    private Short level;
+
     public static CoordinatorDTO fromCoordinator(Coordinator coordinator) {
         if (coordinator == null) {
             return null;
@@ -45,6 +52,10 @@ public class CoordinatorDTO {
         dto.setAccountId(coordinator.getAccount().getId());
         dto.setUsername(coordinator.getAccount().getUsername());
         dto.setImageUrl(coordinator.getAccount().getImageUrl());
+        dto.setPreferredCityId(coordinator.getAccount().getPreferredCity() != null
+                ? coordinator.getAccount().getPreferredCity().getId()
+                : null);
+        dto.setLevel(coordinator.getLevel());
         return dto;
     }
 }

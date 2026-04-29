@@ -44,6 +44,23 @@ public class FieldDTO {
     @JsonProperty("hourCostPrivate")
     private BigDecimal hourCostPrivate;
 
+    @NotNull
+    @JsonProperty("organizationId")
+    private Long organizationId;
+
+    @NotNull
+    @JsonProperty("closedDays")
+    private String closedDays;
+
+    @NotNull
+    @JsonProperty("openingTime")
+    private String openingTime;
+
+    @NotNull
+    @JsonProperty("closingTime")
+    private String closingTime;
+
+
     public static FieldDTO fromField(Field field) {
         if (field == null) {
             return null;
@@ -58,6 +75,10 @@ public class FieldDTO {
         dto.setCityId(field.getCity().getId());
         dto.setHourCostTournament(field.getHourCostTournament());
         dto.setHourCostPrivate(field.getHourCostPrivate());
+        dto.setOrganizationId(field.getOrganization().getOrganizationId());
+        dto.setClosedDays(field.getClosedDays());
+        dto.setOpeningTime(field.getOpeningTime().toString());
+        dto.setClosingTime(field.getClosingTime().toString());
         return dto;
     }
 }

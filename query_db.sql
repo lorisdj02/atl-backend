@@ -29,7 +29,7 @@ CREATE TABLE
     "name" varchar(31) NOT NULL,
     "surname" varchar(31) NOT NULL,
     "vip" bool DEFAULT false NOT NULL,
-    "vip_type" varchar(15) DEFAULT 'NONE',
+    "vip_type" varchar(15) DEFAULT 'NONE' NOT NULL,
     "vip_start" date,
     "vip_end" date,
     "role" varchar(15) NOT NULL,

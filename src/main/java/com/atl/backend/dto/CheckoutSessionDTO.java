@@ -27,6 +27,10 @@ public class CheckoutSessionDTO {
     @JsonProperty("amount")
     private BigDecimal amount;
 
+    @NotNull
+    @JsonProperty("payload")
+    private String payload;
+
     public static CheckoutSessionDTO fromCheckoutSession(CheckoutSession session) {
         if (session == null) {
             return null;
@@ -36,6 +40,7 @@ public class CheckoutSessionDTO {
         dto.setAccountId(session.getAccount().getId());
         dto.setType(session.getType().toString());
         dto.setAmount(session.getAmount());
+        dto.setPayload(session.getPayload() != null ? session.getPayload().toString() : "");
         return dto;
     }
 }

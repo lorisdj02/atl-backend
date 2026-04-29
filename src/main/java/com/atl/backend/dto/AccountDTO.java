@@ -1,6 +1,5 @@
 package com.atl.backend.dto;
 
-
 import com.atl.backend.model.Account;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
@@ -34,7 +33,6 @@ public class AccountDTO {
     @JsonProperty("phone")
     private String phone;
 
-    @NotNull
     @JsonProperty("imageUrl")
     private String imageUrl;
 
@@ -45,6 +43,21 @@ public class AccountDTO {
     @NotNull
     @JsonProperty("birthdate")
     private String birthdate;
+
+    @JsonProperty("vip")
+    private boolean vip;
+
+    @JsonProperty("vipType")
+    private String vipType;
+
+    @JsonProperty("vipStart")
+    private String vipStart;
+
+    @JsonProperty("vipEnd")
+    private String vipEnd;
+
+    @JsonProperty("preferredCityId")
+    private Long preferredCityId;
 
     public static AccountDTO fromAccount(Account account) {
         if (account == null) {
@@ -60,6 +73,11 @@ public class AccountDTO {
         dto.setImageUrl(account.getImageUrl());
         dto.setRole(account.getRole().toString());
         dto.setBirthdate(account.getBirthdate() != null ? account.getBirthdate().toString() : null);
+        dto.setVip(account.getVip());
+        dto.setVipType(account.getVipType().toString());
+        dto.setVipStart(account.getVipStart() != null ? account.getVipStart().toString() : null);
+        dto.setVipEnd(account.getVipEnd() != null ? account.getVipEnd().toString() : null);
+        dto.setPreferredCityId(account.getPreferredCity() != null ? account.getPreferredCity().getId() : null);
         return dto;
     }
 }

@@ -36,6 +36,10 @@ public class FootballMatchEventDTO {
     @JsonProperty("additionalMinute")
     private Short additionalMinute;
 
+    @NotNull
+    @JsonProperty("createdAt")
+    private String createdAt;
+
     public static FootballMatchEventDTO fromFootballMatchEvent(FootballMatchEvent event) {
         if (event == null) {
             return null;
@@ -49,6 +53,7 @@ public class FootballMatchEventDTO {
         dto.setType(event.getType().toString());
         dto.setMinute(event.getMinute());
         dto.setAdditionalMinute(event.getAdditionalMinute());
+        dto.setCreatedAt(event.getCreatedAt().toString());
         return dto;
     }
 }
