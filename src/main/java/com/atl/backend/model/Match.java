@@ -52,6 +52,9 @@ public class Match {
     @Column(name = "sport_category", nullable = false, length = 15)
     private SportCategory sportCategory;
 
+    @Column(name = "day")
+    private Short day;
+
     /*
      * @Column(name = "final_stage_bracket_id")
      * private Long finalStageBracketId;

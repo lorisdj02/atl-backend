@@ -6,6 +6,7 @@ import com.atl.backend.model.enums.SportCategory;
 
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -25,5 +26,5 @@ public interface FieldCategoryRepository extends JpaRepository<FieldCategory, Fi
         public List<FieldCategory> findByMaxPlayersAndField_City_IdAndSportCategory(Short maxPlayers, Long cityId,
                         SportCategory sportCategory);
 
-        public FieldCategory findByField_IdAndSportCategory(Long fieldId, SportCategory sportCategory);
+        public Optional<FieldCategory> findByField_IdAndSportCategory(Long fieldId, SportCategory sportCategory);
 }

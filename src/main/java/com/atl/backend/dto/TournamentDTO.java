@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 
 import com.atl.backend.model.Tournament;
+import com.atl.backend.model.enums.TournamentPhase;
 import com.atl.backend.model.enums.TournamentStatus;
 
 @Data
@@ -80,7 +81,6 @@ public class TournamentDTO {
     @JsonProperty("prize2")
     private BigDecimal prize2 = BigDecimal.ZERO;
 
-    @NotNull
     @JsonProperty("startDate")
     private LocalDate startDate;
 
@@ -88,6 +88,7 @@ public class TournamentDTO {
     @JsonProperty("fee")
     private BigDecimal fee;
 
+    @JsonProperty("photoUrl")
     private String photoUrl;
 
     @JsonProperty("round2GroupStage")
@@ -102,10 +103,12 @@ public class TournamentDTO {
     @NotNull
     private Short numTeamsQualified;
 
-    @JsonProperty("public")
+    @JsonProperty("isPublic")
     @NotNull
     private Boolean isPublic = false;
 
+    @JsonProperty("phase")
+    private String phase;
 
     public static TournamentDTO fromTournament(Tournament tournament) {
         TournamentDTO dto = new TournamentDTO();
@@ -131,6 +134,7 @@ public class TournamentDTO {
 
         dto.setPhotoUrl(tournament.getPhotoUrl() != null ? tournament.getPhotoUrl() : null);
         dto.setIsPublic(tournament.getIsPublic());
+        dto.setPhase(tournament.getPhase().toString());
         return dto;
     }
 
@@ -152,6 +156,8 @@ public class TournamentDTO {
         tournament.setRound2FinalStage(dto.getRound2FinalStage());
         tournament.setNumTeamsQualified(dto.getNumTeamsQualified());
         tournament.setIsPublic(dto.getIsPublic());
+        tournament.setPhotoUrl(dto.getPhotoUrl());
+        tournament.setPhase(TournamentPhase.valueOf(dto.getPhase()));
         return tournament;
     }
 }

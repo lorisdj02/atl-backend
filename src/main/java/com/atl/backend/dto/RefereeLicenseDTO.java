@@ -1,7 +1,6 @@
 package com.atl.backend.dto;
 
 import com.atl.backend.model.RefereeLicense;
-import com.atl.backend.model.Sport;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -40,6 +39,10 @@ public class RefereeLicenseDTO {
     @JsonProperty("verifiedAt")
     private String verifiedAt;
 
+    @NotNull
+    @JsonProperty("id")
+    private String licenseId;
+
     public static RefereeLicenseDTO fromRefereeLicense(RefereeLicense refereeLicense) {
         if (refereeLicense == null) {
             return null;
@@ -53,6 +56,7 @@ public class RefereeLicenseDTO {
         dto.setIssuedAt(refereeLicense.getIssuedAt().toString());
         dto.setExpiresAt(refereeLicense.getExpiresAt() != null ? refereeLicense.getExpiresAt().toString() : null);
         dto.setVerifiedAt(refereeLicense.getVerifiedAt() != null ? refereeLicense.getVerifiedAt().toString() : null);
+        dto.setLicenseId(refereeLicense.getLicenseId());
         return dto;
     }
 

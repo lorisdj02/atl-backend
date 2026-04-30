@@ -9,6 +9,11 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SportDTO {
+
+    @NotNull
+    @JsonProperty("id")
+    private Long id;
+
     @NotNull
     @JsonProperty("name")
     private String name;
@@ -44,6 +49,7 @@ public class SportDTO {
 
         SportDTO dto = new SportDTO();
         dto.setName(sport.getName());
+        dto.setId(sport.getId());
         dto.setSportCategory(sport.getSportCategory().name());
         dto.setMinPlayersPerTeam(sport.getMinPlayersPerTeam());
         dto.setMaxPlayersPerTeam(sport.getMaxPlayersPerTeam());

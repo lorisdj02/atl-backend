@@ -24,6 +24,10 @@ public class FootballStandingDTO {
     private String groupName;
 
     @NotNull
+    @JsonProperty("pts")
+    private Short pts = 0;
+
+    @NotNull
     @JsonProperty("won")
     private Short won = 0;
 
@@ -67,6 +71,7 @@ public class FootballStandingDTO {
         dto.setGoalsConceded(footballStanding.getGoalsConceded());
         dto.setRankPos(footballStanding.getRankPos());
         dto.setQualified(footballStanding.getQualified());
+        dto.setPts(footballStanding.getPts());
         return dto;
     }
 }

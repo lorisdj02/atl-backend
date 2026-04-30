@@ -243,6 +243,8 @@ public class ErrorsString {
 
     static final public String CANNOT_DELETE_TEAM_WITH_PLAYERS = "CANNOT_DELETE_TEAM_WITH_PLAYERS";
 
+    static final public String CATEGORY_NOT_COMATIBLE_WITH_FIELD = "CATEGORY_NOT_COMATIBLE_WITH_FIELD";
+
     // Authentication errors
 
     static final public String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";

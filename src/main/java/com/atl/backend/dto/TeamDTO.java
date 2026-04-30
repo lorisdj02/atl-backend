@@ -16,7 +16,6 @@ public class TeamDTO {
     @JsonProperty("cityId")
     private Long cityId;
 
-    @NotNull
     @JsonProperty("captainPlayerId")
     private Long captainPlayerId;
 

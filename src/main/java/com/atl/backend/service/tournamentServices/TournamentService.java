@@ -209,6 +209,7 @@ public class TournamentService {
 
     @Transactional(rollbackFor = Exception.class)
     public Tournament startTournament(Long tournamentId) {
+        
         checkTournamentExists(tournamentId);
         Tournament tournament = tournamentRepository.findById(tournamentId).get();
 
@@ -229,6 +230,7 @@ public class TournamentService {
 
         System.out.println("\n\n[DEBUG - TournamentService] - Starting tournament " + tournamentId);
 
+        // TODO: aggiungi i day!
         matchGenerationService.generateMatchesForTournament(tournament,
                 tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId));
 
@@ -395,7 +397,6 @@ public class TournamentService {
             throw new NotFoundException(ErrorsString.SPORT_NOT_FOUND);
         }
         Sport sport = optionalSport.get();
-
         BigDecimal hoursPerMatch;
 
         switch (sport.getSportCategory()) {
@@ -425,6 +426,11 @@ public class TournamentService {
         }
 
         Field fieldEntity = field.get();
+        fieldService.checkFieldCategoryCompatibility(fieldEntity.getId(), sport.getSportCategory());
+        if (fieldEntity.getCity().getId() != fictitiousTournament.getCityId()) {
+            throw new BadRequestException(ErrorsString.FIELD_NOT_IN_CITY);
+        }
+
         BigDecimal fieldCost = fieldEntity
                 .calculateTournamentCost(hoursPerMatch.multiply(BigDecimal.valueOf(numMatches)))
                 .setScale(2, RoundingMode.HALF_UP);

@@ -59,6 +59,9 @@ public class AccountDTO {
     @JsonProperty("preferredCityId")
     private Long preferredCityId;
 
+    @JsonProperty("createdAt")
+    private String createdAt;
+
     public static AccountDTO fromAccount(Account account) {
         if (account == null) {
             return null;
@@ -78,6 +81,7 @@ public class AccountDTO {
         dto.setVipStart(account.getVipStart() != null ? account.getVipStart().toString() : null);
         dto.setVipEnd(account.getVipEnd() != null ? account.getVipEnd().toString() : null);
         dto.setPreferredCityId(account.getPreferredCity() != null ? account.getPreferredCity().getId() : null);
+        dto.setCreatedAt(account.getCreatedAt().toString());
         return dto;
     }
 }

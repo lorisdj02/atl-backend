@@ -81,6 +81,7 @@ public class FootballMatchDTO extends MatchDTO {
         dto.setHalftime(footballMatch.getHalftime());
         dto.setStartHalf(footballMatch.getStartHalf());
         dto.setStatus(footballMatch.getStatus().toString());
+        dto.setDay(footballMatch.getMatch().getDay());
         return dto;
     }
 }

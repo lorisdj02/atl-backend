@@ -51,6 +51,9 @@ public class MatchDTO {
     @JsonProperty("finalStageBracketId")
     private Long finalStageBracketId;
 
+    @JsonProperty("day")
+    private Short day;
+
     public static MatchDTO fromMatch(Match match) {
         if (match == null) {
             return null;
@@ -68,7 +71,7 @@ public class MatchDTO {
         dto.setCoordinatorStatus(match.getCoordinatorStatus() != null ? match.getCoordinatorStatus().toString() : null);
         dto.setFinalStageBracketId(
                 match.getFinalStageBracket() != null ? match.getFinalStageBracket().getId() : null);
-
+        dto.setDay(match.getDay());
         return dto;
     }
 }

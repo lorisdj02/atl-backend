@@ -32,6 +32,9 @@ public class RefereeLicense {
     @Column(name = "issued_at", nullable = false)
     private LocalDate issuedAt;
 
+    @Column(name = "license_id", nullable = false)
+    private String licenseId;
+
     @Column(name = "verified_at")
     private LocalDateTime verifiedAt;
 

@@ -29,10 +29,6 @@ public class PlayerDTO {
     @JsonProperty("surname")
     private String surname;
 
-    @NotNull
-    @JsonProperty("email")
-    private String email;
-
     @JsonProperty("imageUrl")
     private String imageUrl;
 
@@ -43,6 +39,19 @@ public class PlayerDTO {
     @NotNull
     @JsonProperty("vipType")
     private String vipType;
+
+    @JsonProperty("vipStart")
+    private String vipStart;
+
+    @JsonProperty("vipEnd")
+    private String vipEnd;
+
+    @JsonProperty("preferredCityId")
+    private Long preferredCityId;
+
+    @NotNull
+    @JsonProperty("birthdate")
+    private String birthdate;
 
     public static PlayerDTO fromPlayer(Player player) {
         if (player == null) {
@@ -55,10 +64,17 @@ public class PlayerDTO {
         dto.setUsername(player.getAccount().getUsername());
         dto.setName(player.getAccount().getName());
         dto.setSurname(player.getAccount().getSurname());
-        dto.setEmail(player.getAccount().getEmail());
         dto.setImageUrl(player.getAccount().getImageUrl());
         dto.setVip(player.getAccount().getVip());
         dto.setVipType(player.getAccount().getVipType() != null ? player.getAccount().getVipType().toString() : null);
+        dto.setVipStart(
+                player.getAccount().getVipStart() != null ? player.getAccount().getVipStart().toString() : null);
+        dto.setVipEnd(player.getAccount().getVipEnd() != null ? player.getAccount().getVipEnd().toString() : null);
+        dto.setPreferredCityId(
+                player.getAccount().getPreferredCity() != null ? player.getAccount().getPreferredCity().getId() : null);
+        dto.setBirthdate(
+                player.getAccount().getBirthdate() != null ? player.getAccount().getBirthdate().toString() : null);
+
         return dto;
     }
 

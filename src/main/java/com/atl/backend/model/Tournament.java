@@ -52,7 +52,7 @@ public class Tournament {
     @JoinColumn(name = "sport_id", nullable = false)
     private Sport sport;
 
-    @Column(name = "\"public\"", nullable = false)
+    @Column(name = "is_public", nullable = false)
     private Boolean isPublic = true;
 
     @Column(nullable = false)

@@ -26,7 +26,6 @@ public class WalletDTO {
     @JsonProperty("inviteBalance")
     private BigDecimal inviteBalance;
 
-    @NotNull
     @JsonProperty("prizeLastWithdraw")
     private String prizeLastWithdraw;
 

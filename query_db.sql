@@ -149,6 +149,7 @@ CREATE TABLE
     "photo_url" varchar(255),
     "status" varchar(31) DEFAULT 'NOT_VERIFIED',
     "issued_at" date NOT NULL,
+    "license_id" varchar(255) NOT NULL,
     "verified_at" timestamp,
     "expires_at" date,
     "created_at" timestamp NOT NULL DEFAULT NOW (),
@@ -383,6 +384,7 @@ CREATE TABLE
     "sport_category" varchar(15) NOT NULL,
     "final_stage_bracket_id" BIGINT,
     "leg_order" varchar(15) DEFAULT 'FIRST_LEG',
+    "day" smallint,
     "created_at" timestamp NOT NULL DEFAULT NOW (),
     "updated_at" timestamp
   );

@@ -6,6 +6,8 @@ import lombok.Data;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 
+import java.math.BigDecimal;
+
 import com.atl.backend.model.TournamentParticipation;
 
 @Data
@@ -21,14 +23,14 @@ public class TournamentParticipationDTO {
     
     @NotNull
     @JsonProperty("toPay")
-    private String toPay;
+    private BigDecimal toPay;
 
 
     public static TournamentParticipationDTO fromTournamentParticipation(TournamentParticipation tournamentParticipation) {
         TournamentParticipationDTO dto = new TournamentParticipationDTO();
         dto.setTournamentId(tournamentParticipation.getTournament().getId());
         dto.setTeamId(tournamentParticipation.getTeam().getId());
-        dto.setToPay(tournamentParticipation.getToPay().toPlainString());
+        dto.setToPay(tournamentParticipation.getToPay());
         return dto;
     }
 }

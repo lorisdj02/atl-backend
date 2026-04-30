@@ -107,11 +107,11 @@ public class FieldService {
     }
 
     public Short getMaxPlayersByFieldIdAndSportCategory(Long fieldId, SportCategory sportCategory) {
-        FieldCategory fieldCategory = fieldCategoryRepository.findByField_IdAndSportCategory(fieldId, sportCategory);
-        if (fieldCategory == null) {
+        Optional<FieldCategory> fieldCategory = fieldCategoryRepository.findByField_IdAndSportCategory(fieldId, sportCategory);
+        if (fieldCategory.isEmpty()) {
             return 0;
         }
-        return fieldCategory.getMaxPlayers();
+        return fieldCategory.get().getMaxPlayers();
     }
 
     public void checkFieldExists(Long fieldId) {
@@ -123,6 +123,13 @@ public class FieldService {
     public void checkCityExists(Long cityId) {
         if (!cityRepository.existsById(cityId)) {
             throw new NotFoundException(ErrorsString.CITY_NOT_FOUND);
+        }
+    }
+
+    public void checkFieldCategoryCompatibility(Long fieldId, SportCategory sportCategory) {
+        Optional<FieldCategory> fieldCategory = fieldCategoryRepository.findByField_IdAndSportCategory(fieldId, sportCategory);
+        if (fieldCategory.isEmpty()) {
+            throw new NotFoundException(ErrorsString.CATEGORY_NOT_COMATIBLE_WITH_FIELD);
         }
     }
 }
