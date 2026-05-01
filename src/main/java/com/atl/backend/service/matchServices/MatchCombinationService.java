@@ -143,6 +143,8 @@ public class MatchCombinationService {
                             case FOOTBALL -> matchEntity.setSportCategory(sportCategory);
                             default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
                         }
+                        Short dayShort = (short) (day + 1);
+                        matchEntity.setDay(dayShort);
                         Match savedMatch = matchRepository.save(matchEntity);
 
                         switch (sportCategory) {
@@ -170,6 +172,8 @@ public class MatchCombinationService {
                                 case FOOTBALL -> matchEntity2.setSportCategory(sportCategory);
                                 default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
                             }
+                            dayShort = (short) (day + 1 + numDays);
+                            matchEntity2.setDay(dayShort);
                             Match savedMatch2 = matchRepository.save(matchEntity2);
 
                             switch (sportCategory) {

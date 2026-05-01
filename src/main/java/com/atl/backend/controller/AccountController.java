@@ -41,7 +41,7 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getAccountLevel());
     }
 
-    @PostMapping("/account/login")
+    @PostMapping("/login")
     public ResponseEntity<LoginResponse> handleLogin() {
         return ResponseEntity.ok(accountService.handleLogin());
     }

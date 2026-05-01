@@ -26,7 +26,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-
 //TODO: implementare la logica reale. Adesso token = Username
 @Component
 public class AuthFilter extends OncePerRequestFilter {
@@ -47,6 +46,7 @@ public class AuthFilter extends OncePerRequestFilter {
         try {
             // Ottieni l'header di autenticazione
             String authHeader = request.getHeader("Authorization");
+            //System.out.println("[DEBUG AUTH] Auth Header: " + authHeader); // Debug: stampa l'header di autenticazione
             AccountContextData contextData = new AccountContextData();
             contextData.setAccountService(accountService);
             contextData.setPlayerService(playerService);
@@ -59,12 +59,18 @@ public class AuthFilter extends OncePerRequestFilter {
                 String firebaseUid = validateAndExtractUid(token);
 
                 // Recupera l'account associato al Firebase UID, attento al metodo
-                // validateAndExtractUid che deve restituire il Firebase UID
+                // TODO validateAndExtractUid che deve restituire il Firebase UID
                 Optional<Account> accountOpt = accountService.getAccountByUsername(firebaseUid);
+                Account account;
                 if (accountOpt.isEmpty()) {
-                    throw new ForbiddenException(ErrorsString.AUTHENTICATION_REQUIRED);
+                    Optional<Account> accountOpt2 = accountService.getAccountByEmail(firebaseUid);
+                    if (accountOpt2.isEmpty()) {
+                        throw new ForbiddenException(ErrorsString.AUTHENTICATION_REQUIRED);
+                    }
+                    account = accountOpt2.get();
+                } else {
+                    account = accountOpt.get();
                 }
-                Account account = accountOpt.get();
 
                 contextData.setAccountId(account.getId());
                 contextData.setAccountRole(account.getRole());

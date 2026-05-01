@@ -79,8 +79,10 @@ public class HomeScreenService {
 
                 accountTeam = teamService.getTeamByPlayerIdAndSportCategory(playerId, sportCategory);
 
-                final List<PrivateBooking> finalBookings = privateBookingService.getActivePrivateBookingsByPlayerId(playerId);
-                final List<LobbyBooking> finalLobbyBookings = lobbyBookingService.getActiveLobbyBookingsByPlayerId(playerId);
+                final List<PrivateBooking> finalBookings = privateBookingService
+                                .getActivePrivateBookingsByPlayerId(playerId);
+                final List<LobbyBooking> finalLobbyBookings = lobbyBookingService
+                                .getActiveLobbyBookingsByPlayerId(playerId);
 
                 for (PrivateBooking booking : finalBookings) {
                         fieldsCache.put(booking.getBooking().getField().getId(), booking.getBooking().getField());
@@ -99,7 +101,8 @@ public class HomeScreenService {
                                         (lobbyBooking.getBooking().getField().getAddress() + " - "
                                                         + (lobbyBooking.getBooking().getField().getCity().getName())));
                         playersPaidPerBooking.put(lobbyBooking.getId(),
-                                        lobbyBookingService.getPlayersPaidInLobbyBookingPerPlayerId(lobbyBooking.getId(),
+                                        lobbyBookingService.getPlayersPaidInLobbyBookingPerPlayerId(
+                                                        lobbyBooking.getId(),
                                                         playerId));
                         currentPlayersPerLobby.put(lobbyBooking.getId(),
                                         Short.valueOf((short) lobbyBooking.getCurrentPlayers()));
@@ -253,7 +256,8 @@ public class HomeScreenService {
 
                 switch (sportCategory) {
                         case FOOTBALL:
-                                assignedFootballMatches = matchRefereeService.getAssignedFootballMatchesByRefereeId(refereeId);
+                                assignedFootballMatches = matchRefereeService
+                                                .getAssignedFootballMatchesByRefereeId(refereeId);
                                 for (FootballMatch footballMatch : assignedFootballMatches) {
                                         List<Team> teams = matchService
                                                         .getTeamsByMatchId(footballMatch.getMatch().getId());

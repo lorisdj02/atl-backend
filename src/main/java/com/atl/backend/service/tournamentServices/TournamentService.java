@@ -230,7 +230,6 @@ public class TournamentService {
 
         System.out.println("\n\n[DEBUG - TournamentService] - Starting tournament " + tournamentId);
 
-        // TODO: aggiungi i day!
         matchGenerationService.generateMatchesForTournament(tournament,
                 tournamentParticipantService.getTeamIdsParticipatingInTournament(tournamentId));
 

@@ -10,8 +10,8 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AccountDTO {
     @NotNull
-    @JsonProperty("accountId")
-    private Long accountId;
+    @JsonProperty("id")
+    private Long id;
 
     @NotNull
     @JsonProperty("username")
@@ -67,7 +67,7 @@ public class AccountDTO {
             return null;
         }
         AccountDTO dto = new AccountDTO();
-        dto.setAccountId(account.getId());
+        dto.setId(account.getId());
         dto.setUsername(account.getUsername());
         dto.setName(account.getName());
         dto.setSurname(account.getSurname());
