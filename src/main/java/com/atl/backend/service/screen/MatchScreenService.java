@@ -17,6 +17,7 @@ import com.atl.backend.dto.FootballMatchDTO;
 import com.atl.backend.dto.FootballMatchEventDTO;
 import com.atl.backend.dto.PlayerDTO;
 import com.atl.backend.dto.TeamDTO;
+import com.atl.backend.model.City;
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballMatchEvent;
 import com.atl.backend.model.Match;
@@ -32,6 +33,7 @@ import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.response.AvailableMatchesResponse;
 import com.atl.backend.response.FootballMatchResponse;
 import com.atl.backend.response.PastAssignedMatchesResponse;
+import com.atl.backend.service.FieldService;
 import com.atl.backend.service.SportService;
 import com.atl.backend.service.accountServices.PlayerService;
 import com.atl.backend.service.matchServices.MatchRefereeService;
@@ -55,19 +57,36 @@ public class MatchScreenService {
     private TournamentParticipantService tournamentParticipantService;
     @Autowired
     private PlayerService playerService;
+    @Autowired
+    private FieldService fieldService;
 
     @Transactional(readOnly = true)
-    public AvailableMatchesResponse getAvailableMatchesScreen(SportCategory sportCategory) {
+    public AvailableMatchesResponse getAvailableMatchesScreen(SportCategory sportCategory, Long cityId, Long sportId) {
         AccountContext.isReferee();
         List<Sport> sports = sportService.getSportsBySportCategory(sportCategory);
         Map<Long, String> sportNames = new HashMap<>();
         Map<Long, Team> teamsCache = new HashMap<>();
         Map<Long, Short> minutesRoundPerTournament = new HashMap<>();
         Map<Long, Short> minutesPausePerTournament = new HashMap<>();
+        City selectedCity = cityId != null ? fieldService.getCityById(cityId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.CITY_NOT_FOUND)) : null;
+        Sport selectedSport = sportId != null ? sportService.getSportById(sportId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.SPORT_NOT_FOUND)) : null;
 
         switch (sportCategory) {
             case FOOTBALL -> {
                 List<FootballMatch> footballMatches = matchService.getScheduledFootballMatches();
+                if (selectedCity != null) {
+                    footballMatches = footballMatches.stream()
+                            .filter(m -> m.getMatch().getTournament().getField().getCity().getId()
+                                    .equals(selectedCity.getId()))
+                            .toList();
+                }
+                if (selectedSport != null) {
+                    footballMatches = footballMatches.stream()
+                            .filter(m -> m.getMatch().getTournament().getSport().getId().equals(selectedSport.getId()))
+                            .toList();
+                }
                 Map<Long, List<FootballMatch>> matchesPerSport = new HashMap<>();
                 for (Sport sport : sports) {
                     sportNames.put(sport.getId(), sport.getName());

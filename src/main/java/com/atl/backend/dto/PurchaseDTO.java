@@ -28,7 +28,7 @@ public class PurchaseDTO {
     private String type;
 
     @JsonProperty("detail")
-    private String detail;
+    private PurchaseDetail detail;
 
     @NotNull
     @JsonProperty("status")
@@ -52,7 +52,7 @@ public class PurchaseDTO {
         dto.setAccountId(purchase.getAccount().getId());
         dto.setObjectId(purchase.getObjectId());
         dto.setType(purchase.getType().toString());
-        dto.setDetail(purchase.getDetail().toString());
+        dto.setDetail(purchase.getDetail());
         dto.setStatus(purchase.getStatus().toString());
         dto.setAmount(purchase.getAmount());
         dto.setCreatedAt(purchase.getCreatedAt().toString());

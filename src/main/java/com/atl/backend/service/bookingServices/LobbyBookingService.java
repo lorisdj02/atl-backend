@@ -96,12 +96,12 @@ public class LobbyBookingService {
         }
 
         if (startTime != null) {
-            lobbyBookings = lobbyBookings.stream().filter(lb -> !lb.getBooking().getStartTime().isBefore(startTime))
+            lobbyBookings = lobbyBookings.stream().filter(lb ->lb.getBooking().getStartTime() != null && !startTime.isAfter(lb.getBooking().getStartTime()))
                     .toList();
         }
 
         if (finishTime != null) {
-            lobbyBookings = lobbyBookings.stream().filter(lb -> !lb.getBooking().getFinishTime().isAfter(finishTime))
+            lobbyBookings = lobbyBookings.stream().filter(lb ->lb.getBooking().getFinishTime() != null && !finishTime.isBefore(lb.getBooking().getFinishTime()))
                     .toList();
         }
 
@@ -167,7 +167,7 @@ public class LobbyBookingService {
         Player activePlayer = AccountContext.getActivePlayer();
         LobbyBooking lobbyBooking = lobbyBookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
-        if (!lobbyBooking.getOwnerPlayer().equals(activePlayer)) {
+        if (!activePlayer.equals(lobbyBooking.getOwnerPlayer())) {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
 
@@ -190,7 +190,7 @@ public class LobbyBookingService {
 
     @Transactional(rollbackFor = Exception.class)
     public LobbyBooking createLobbyBooking(LobbyBookingDTO lobbyBookingDTO) {
-        if (!AccountContext.getPlayerId().equals(lobbyBookingDTO.getOwnerPlayerId())) {
+        if (!lobbyBookingDTO.getOwnerPlayerId().equals(AccountContext.getPlayerId())) {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
 

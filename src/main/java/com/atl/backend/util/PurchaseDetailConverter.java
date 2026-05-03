@@ -1,7 +1,6 @@
 package com.atl.backend.util;
 
 import com.atl.backend.dto.PurchaseDetail;
-
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import tools.jackson.databind.ObjectMapper;

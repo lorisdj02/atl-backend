@@ -189,6 +189,7 @@ public class FootballMatchEventService {
     private record EventMinuteData(short minute, short additionalMinute) {
     }
 
+    @Transactional(rollbackFor = Exception.class)
     private FootballMatchEventModifiedValues handlePlayerEvent(FootballMatch footballMatch, FootballEventType eventType,
             Player player,
             Team playerTeam) {
@@ -197,10 +198,13 @@ public class FootballMatchEventService {
             throw new BadRequestException(ErrorsString.PLAYER_HAS_RED_CARD);
         }
 
-        Boolean isPlayerInHomeTeam = footballMatch.getHomeTeam().getId().equals(playerTeam.getId());
+        if (footballMatch.getHomeTeam() == null || footballMatch.getAwayTeam() == null) {
+            throw new BadRequestException(ErrorsString.CANNOT_ADD_EVENT_TO_MATCH);
+        }
 
-        if (!isPlayerInHomeTeam &&
-                !footballMatch.getAwayTeam().getId().equals(playerTeam.getId())) {
+        Boolean isPlayerInHomeTeam = playerTeam.getId().equals(footballMatch.getHomeTeam().getId());
+
+        if (!isPlayerInHomeTeam && !playerTeam.getId().equals(footballMatch.getAwayTeam().getId())) {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
         }
 

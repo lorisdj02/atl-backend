@@ -135,11 +135,11 @@ public class TeamService {
 
         team.setNumPlayers((short) (team.getNumPlayers() - 1));
 
-        if (team.getVice1Player() != null && team.getCaptainPlayer().equals(player)) {
+        if (team.getVice1Player() != null && player.equals(team.getCaptainPlayer())) {
             team.setCaptainPlayer(player);
             team.setVice1Player(team.getVice2Player());
             team.setVice2Player(null);
-        } else if (team.getVice2Player() != null && team.getCaptainPlayer().equals(player)) {
+        } else if (team.getVice2Player() != null && player.equals(team.getCaptainPlayer())) {
             team.setCaptainPlayer(team.getVice2Player());
             team.setVice2Player(null);
         }
@@ -244,7 +244,7 @@ public class TeamService {
                 .println("[DEBUG] - Checking if player " + playerId + " is captain or vice-captain of team " + teamId);
         System.out.println("[DEBUG] - Team captain: " + team.getCaptainPlayer().getPlayerId());
 
-        return (team.getCaptainPlayer().getPlayerId().equals(playerId))
+        return (playerId.equals(team.getCaptainPlayer().getPlayerId()))
                 || (team.getViceCaptainPlayers().contains(player));
     }
 
@@ -371,13 +371,13 @@ public class TeamService {
 
         needToBeInTeam(teamId, playerId);
 
-        if (team.getCaptainPlayer().equals(player)) {
+        if (team.getCaptainPlayer() != null && team.getCaptainPlayer().equals(player)) {
             throw new ConflictException(ErrorsString.PLAYER_IS_CAPTAIN);
-        } else if (team.getVice1Player().equals(player)) {
+        } else if (team.getVice1Player() != null && team.getVice1Player().equals(player)) {
             teamAuthService.checkManageTeamCaptain(teamId);
             team.setVice1Player(team.getVice2Player());
             team.setVice2Player(null);
-        } else if (team.getVice2Player().equals(player)) {
+        } else if (team.getVice2Player() != null && team.getVice2Player().equals(player)) {
             teamAuthService.checkManageTeamCaptain(teamId);
             team.setVice2Player(null);
         } else {

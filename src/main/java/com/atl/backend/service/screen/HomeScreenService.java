@@ -293,7 +293,6 @@ public class HomeScreenService {
         @Transactional(readOnly = true)
         public OrganizationHomeResponse getOrganizationHomeScreen(SportCategory sportCategory) {
                 Long organizationId = AccountContext.getOrganizationId();
-
                 List<Field> fields = new ArrayList<>();
                 List<Booking> generalBookings = new ArrayList<>();
                 Map<Long, String> cityNamePerField = new HashMap<>();
@@ -305,7 +304,6 @@ public class HomeScreenService {
                 Map<Long, String> usernamePerBooking = new HashMap<>();
 
                 fields = fieldService.getFieldsByOrganizationId(organizationId);
-
                 for (Field field : fields) {
                         if (cityNamePerField.get(field.getId()) == null) {
                                 cityNamePerField.put(field.getId(), field.getCity().getName());
@@ -371,6 +369,22 @@ public class HomeScreenService {
 
                                                                 FootballMatch footballMatch = optionalFootballMatch
                                                                                 .get();
+                                                                if (footballMatch.getHomeTeam() != null && teamsCache
+                                                                                .get(footballMatch.getHomeTeam()
+                                                                                                .getId()) == null) {
+                                                                        teamsCache.put(footballMatch.getHomeTeam()
+                                                                                        .getId(),
+                                                                                        footballMatch.getHomeTeam());
+                                                                }
+
+                                                                if (footballMatch.getAwayTeam() != null && teamsCache
+                                                                                .get(footballMatch.getAwayTeam()
+                                                                                                .getId()) == null) {
+                                                                        teamsCache.put(footballMatch.getAwayTeam()
+                                                                                        .getId(),
+                                                                                        footballMatch.getAwayTeam());
+                                                                }
+
                                                                 usernameAccount = footballMatch.getMatch()
                                                                                 .getTournament().getCoordinator()
                                                                                 .getAccount();
@@ -384,27 +398,35 @@ public class HomeScreenService {
                                                                 throw new BadRequestException(
                                                                                 ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
                                                 }
+                                                break;
                                         default:
                                                 throw new BadRequestException(
                                                                 ErrorsString.UNSUPPORTED_BOOKING_TYPE);
                                 }
+                                usernamePerBooking.put(booking.getId(), username);
                         }
                 }
                 List<FieldDTO> fieldsDTO = fields.stream().map(FieldDTO::fromField).toList();
+
                 List<BookingDTO> generalBookingsDTO = generalBookings.stream().map(BookingDTO::fromBooking)
                                 .toList();
+
                 Map<Long, LobbyBookingDTO> lobbyBookingsCacheDTO = lobbyBookingsCache.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> LobbyBookingDTO.fromLobbyBooking(entry.getValue())));
+
                 Map<Long, PrivateBookingDTO> privateBookingsCacheDTO = privateBookingsCache.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> PrivateBookingDTO.fromPrivateBooking(entry.getValue())));
+
                 Map<Long, MatchBookingDTO> matchBookingsCacheDTO = matchBookingsCache.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> MatchBookingDTO.fromMatchBooking(entry.getValue())));
+
                 Map<Long, FootballMatchDTO> footballMatchPerBookingDTO = footballMatchPerBooking.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> FootballMatchDTO.fromFootballMatch(entry.getValue())));
+
                 Map<Long, TeamDTO> teamsCacheDTO = teamsCache.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey,
                                                 entry -> TeamDTO.fromTeam(entry.getValue())));

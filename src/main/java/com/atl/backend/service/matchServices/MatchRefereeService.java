@@ -102,6 +102,7 @@ public class MatchRefereeService {
         refereeAssignment.setReferee(referee);
         refereeAssignment.setRole(refereeRoleName);
         refereeAssignment.setPay(payPerMatch);
+        refereeAssignmentRepository.save(refereeAssignment);
         return match.getId();
     }
 

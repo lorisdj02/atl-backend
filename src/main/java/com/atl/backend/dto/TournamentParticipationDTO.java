@@ -28,6 +28,9 @@ public class TournamentParticipationDTO {
 
     public static TournamentParticipationDTO fromTournamentParticipation(TournamentParticipation tournamentParticipation) {
         TournamentParticipationDTO dto = new TournamentParticipationDTO();
+        if (tournamentParticipation == null) {
+            return null;
+        }
         dto.setTournamentId(tournamentParticipation.getTournament().getId());
         dto.setTeamId(tournamentParticipation.getTeam().getId());
         dto.setToPay(tournamentParticipation.getToPay());

@@ -75,7 +75,6 @@ public class HomeController {
 
         OrganizationHomeResponse response = homeService
                 .getOrganizationHomeScreen(SportCategory.valueOf(sportCategory.toUpperCase()));
-
         return ResponseEntity.ok(response);
 
     }

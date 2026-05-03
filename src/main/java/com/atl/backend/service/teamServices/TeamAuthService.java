@@ -33,7 +33,7 @@ public class TeamAuthService {
         if (AccountContext.isPlayer()) {
             Player player = AccountContext.getActivePlayer();
 
-            if (team.getCaptainPlayer().getPlayerId().equals(player.getPlayerId())) {
+            if (player.getPlayerId().equals(team.getCaptainPlayer().getPlayerId())) {
                 return true;
             }
         }
@@ -57,10 +57,10 @@ public class TeamAuthService {
         if (AccountContext.isPlayer()) {
             Player player = AccountContext.getActivePlayer();
 
-            if (team.getCaptainPlayer().getPlayerId().equals(player.getPlayerId())) {
+            if (player.getPlayerId().equals(team.getCaptainPlayer().getPlayerId())) {
                 return true;
             }
-            if (team.getViceCaptainPlayers().contains(player)) {
+            if (team.getViceCaptainPlayers() != null && team.getViceCaptainPlayers().contains(player)) {
                 return true;
             }
         }

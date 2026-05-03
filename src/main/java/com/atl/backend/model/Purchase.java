@@ -10,6 +10,9 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Data
 @Entity
 @Table(name = "purchase")
@@ -34,6 +37,7 @@ public class Purchase {
     @Column(nullable = false, length = 31)
     private CheckoutType type;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     @Convert(converter = PurchaseDetailConverter.class)
     private PurchaseDetail detail;

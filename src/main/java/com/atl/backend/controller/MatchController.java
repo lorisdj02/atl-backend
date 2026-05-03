@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atl.backend.config.ErrorsString;
@@ -50,14 +51,16 @@ public class MatchController {
     @Autowired
     private TournamentTeamMatchOrchestrator tournamentTeamMatchOrchestrator;
 
+    // Utilizzo
+    // /api/v1/matches/{sportCategory}/referee/available-matches?cityId={cityId}&sportId={sportId}
     @GetMapping("/{sportCategory}/referee/available-matches")
-    // Aggiungere cityId e sportId
-    public ResponseEntity<AvailableMatchesResponse> getAvailableMatchesScreen(@PathVariable String sportCategory) {
+    public ResponseEntity<AvailableMatchesResponse> getAvailableMatchesScreen(@PathVariable String sportCategory,
+            @RequestParam(required = false) Long cityId, @RequestParam(required = false) Long sportId) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
         AvailableMatchesResponse response = matchScreenService
-                .getAvailableMatchesScreen(SportCategory.valueOf(sportCategory.toUpperCase()));
+                .getAvailableMatchesScreen(SportCategory.valueOf(sportCategory.toUpperCase()), cityId, sportId);
         return ResponseEntity.ok(response);
     }
 

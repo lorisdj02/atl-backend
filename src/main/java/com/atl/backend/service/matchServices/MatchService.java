@@ -286,26 +286,28 @@ public class MatchService {
                 switch (tournamentPhase) {
                     case FINAL -> {
                         FootballMatch finalMatch = footballMatches.stream()
-                                .filter(match -> match.getMatch().getGroupName().equals("FI"))
+                                .filter(match -> ("FI").equals(match.getMatch().getGroupName()))
                                 .findFirst()
                                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
                         return finalMatch.getHomeTeam().equals(team) || finalMatch.getAwayTeam().equals(team);
                     }
                     case SEMI -> {
                         List<FootballMatch> semiFinalMatches = footballMatches.stream()
-                                .filter(match -> match.getMatch().getGroupName().equals("SF1")
-                                        || match.getMatch().getGroupName().equals("SF2"))
+                                .filter(match -> ("SF1").equals(match.getMatch().getGroupName())
+                                        || ("SF2").equals(match.getMatch().getGroupName())
+
+                                )
                                 .toList();
                         return semiFinalMatches.stream()
                                 .anyMatch(
-                                        match -> match.getHomeTeam().equals(team) || match.getAwayTeam().equals(team));
+                                        match -> team.equals(match.getHomeTeam()) || team.equals(match.getAwayTeam()));
                     }
                     case QUARTER -> {
                         List<FootballMatch> quarterFinalMatches = footballMatches.stream()
-                                .filter(match -> match.getMatch().getGroupName().equals("QF1")
-                                        || match.getMatch().getGroupName().equals("QF2")
-                                        || match.getMatch().getGroupName().equals("QF3")
-                                        || match.getMatch().getGroupName().equals("QF4"))
+                                .filter(match -> ("QF1").equals(match.getMatch().getGroupName())
+                                        || ("QF2").equals(match.getMatch().getGroupName())
+                                        || ("QF3").equals(match.getMatch().getGroupName())
+                                        || ("QF4").equals(match.getMatch().getGroupName()))
                                 .toList();
                         return quarterFinalMatches.stream()
                                 .anyMatch(
@@ -313,7 +315,8 @@ public class MatchService {
                     }
                     case RO16 -> {
                         List<FootballMatch> roundOf16Matches = footballMatches.stream()
-                                .filter(match -> match.getMatch().getGroupName().startsWith("OF"))
+                                .filter(match -> match.getMatch().getGroupName() != null
+                                        && match.getMatch().getGroupName().startsWith("OF"))
                                 .toList();
                         return roundOf16Matches.stream()
                                 .anyMatch(
@@ -322,11 +325,12 @@ public class MatchService {
                     case RO32 -> {
                         // Non è ancora possibile crearlo, ma vabbè
                         List<FootballMatch> roundOf32Matches = footballMatches.stream()
-                                .filter(match -> match.getMatch().getGroupName().startsWith("32"))
+                                .filter(match -> match.getMatch().getGroupName() != null
+                                        && match.getMatch().getGroupName().startsWith("32"))
                                 .toList();
                         return roundOf32Matches.stream()
                                 .anyMatch(
-                                        match -> match.getHomeTeam().equals(team) || match.getAwayTeam().equals(team));
+                                        match -> team.equals(match.getHomeTeam()) || team.equals(match.getAwayTeam()));
                     }
 
                     default -> {
@@ -343,8 +347,8 @@ public class MatchService {
     public Boolean hasTeamPrizesByTeamIdAndTournamentId(Long teamId, Long tournamentId) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
-        Boolean prize1 = !tournament.getPrize1().equals(BigDecimal.ZERO);
-        Boolean prize2 = !tournament.getPrize2().equals(BigDecimal.ZERO);
+        Boolean prize1 = (BigDecimal.ZERO).compareTo(tournament.getPrize1()) != 0;
+        Boolean prize2 = (BigDecimal.ZERO).compareTo(tournament.getPrize2()) != 0;
 
         if (!prize1 && !prize2) {
             return false;

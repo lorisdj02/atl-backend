@@ -54,7 +54,7 @@ public class PrivateBookingService {
 
     @Transactional(rollbackFor = Exception.class)
     public PrivateBooking createPrivateBooking(PrivateBookingDTO privateBookingDTO) {
-        if (!AccountContext.getPlayerId().equals(privateBookingDTO.getPlayerId())) {
+        if (!privateBookingDTO.getPlayerId().equals(AccountContext.getPlayerId())) {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
 
@@ -90,7 +90,7 @@ public class PrivateBookingService {
         Player activePlayer = AccountContext.getActivePlayer();
         PrivateBooking privateBooking = privateBookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
-        if (!privateBooking.getPlayer().equals(activePlayer)) {
+        if (!activePlayer.equals(privateBooking.getPlayer())) {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
 

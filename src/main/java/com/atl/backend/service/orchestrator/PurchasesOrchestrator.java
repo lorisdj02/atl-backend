@@ -133,7 +133,7 @@ public class PurchasesOrchestrator {
         LobbyBooking lobbyBooking = lobbyBookingService.getLobbyBookingByBookingId(bookingId)
                 .orElseThrow(() -> new BadRequestException(ErrorsString.BOOKING_NOT_FOUND));
 
-        if (lobbyBooking.getOwnerPlayer().getPlayerId().equals(activePlayer.getPlayerId())) {
+        if (activePlayer.getPlayerId().equals(lobbyBooking.getOwnerPlayer().getPlayerId())) {
             refundLobbyBooking(bookingId);
             return;
         }
@@ -173,10 +173,9 @@ public class PurchasesOrchestrator {
                         payload.getTournamentId(),
                         AccountContext.getPlayerId());
 
-                if (payload.getAmount().compareTo(remainingAmount) != 0) {
+                if (payload.getAmount().compareTo(remainingAmount) > 0) {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_AMOUNT);
                 }
-
                 break;
             case PRIVATE_BOOKING:
                 if (payload.getFieldId() == null || payload.getStartTime() == null || payload.getFinishTime() == null
@@ -184,7 +183,7 @@ public class PurchasesOrchestrator {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
                 }
 
-                if (!payload.getOwnerPlayerId().equals(AccountContext.getPlayerId())) {
+                if (!AccountContext.getPlayerId().equals(payload.getOwnerPlayerId())) {
                     throw new BadRequestException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
                 }
 
@@ -216,7 +215,7 @@ public class PurchasesOrchestrator {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
                 }
 
-                if (!payload.getOwnerPlayerId().equals(AccountContext.getPlayerId())) {
+                if (!AccountContext.getPlayerId().equals(payload.getOwnerPlayerId())) {
                     throw new BadRequestException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
                 }
 

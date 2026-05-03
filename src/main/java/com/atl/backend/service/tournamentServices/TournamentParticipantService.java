@@ -383,9 +383,9 @@ public class TournamentParticipantService {
         saveTournamentParticipation(tournamentParticipation);
     }
 
-    public BigDecimal getToPayByTournamentIdAndPlayerId(Long tournamentId, Long accountId) {
+    public BigDecimal getToPayByTournamentIdAndPlayerId(Long tournamentId, Long playerId) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
-        Player player = getExistingPlayerByAccountId(accountId);
+        Player player = getExistingPlayerByPlayerId(playerId);
 
         Team team = teamService.getTeamByPlayerIdAndSportCategory(player.getPlayerId(),
                 tournament.getSport().getSportCategory())
@@ -394,6 +394,7 @@ public class TournamentParticipantService {
         TournamentParticipation tournamentParticipation = tournamentParticipationRepository
                 .findByTeam_IdAndTournament_Id(team.getId(), tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_PARTICIPATION_NOT_FOUND));
+
         return tournamentParticipation.getToPay();
     }
 

@@ -91,7 +91,7 @@ public class BookingUtilitiesService {
     public Boolean isBookingRefundable(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
-        if (!booking.getStatus().equals(BookingStatus.BOOKED)) {
+        if (!(BookingStatus.BOOKED).equals(booking.getStatus())) {
             throw new ConflictException(ErrorsString.BOOKING_NOT_REFUNDABLE);
         }
 
@@ -114,6 +114,5 @@ public class BookingUtilitiesService {
 
         return true;
     }
-
 
 }

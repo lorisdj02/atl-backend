@@ -3,6 +3,8 @@ package com.atl.backend.model;
 import com.atl.backend.dto.CheckoutPayload;
 import com.atl.backend.model.enums.*;
 import com.atl.backend.util.CheckoutPayloadConverter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -34,6 +36,7 @@ public class CheckoutSession {
     @Column(nullable = false, length = 15)
     private CheckoutStatus status = CheckoutStatus.PENDING;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
     @Convert(converter = CheckoutPayloadConverter.class)
     private CheckoutPayload payload;

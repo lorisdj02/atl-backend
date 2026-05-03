@@ -238,7 +238,7 @@ public class PaymentService {
                 throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
         }
 
-        WalletBalance walletBalance = getWalletBalanceByAccountId(sessionId);
+        WalletBalance walletBalance = getWalletBalanceByAccountId(account.getId());
 
         return CheckoutResponse.builder()
                 .checkoutSession(CheckoutSessionDTO.fromCheckoutSession(session))
@@ -439,6 +439,8 @@ public class PaymentService {
         session.setType(checkoutType);
         session.setPayload(payload);
         session.setAmount(payload.getAmount());
+        session.setStatus(CheckoutStatus.PENDING);
+        session.setExpiresAt(LocalDateTime.now().plusMinutes(15));
         return checkoutSessionRepository.save(session);
 
     }

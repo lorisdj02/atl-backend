@@ -47,19 +47,4 @@ public class CheckoutPayload {
     @JsonProperty("checkoutType")
     private String checkoutType;
 
-
-
-    /*
-     * final int? tournamentId;
-     * final int? lobbyId;
-     * final int? playersPaid;
-     * 
-     * final int? ownerPlayerId;
-     * final DateTime? startDateTime;
-     * final DateTime? endDateTime;
-     * final int? maxPlayers;
-     * final int? playersToFind;
-     * 
-     * final int? fieldId;
-     */
 }

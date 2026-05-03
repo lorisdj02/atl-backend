@@ -7,6 +7,7 @@ import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Account;
+import com.atl.backend.model.City;
 import com.atl.backend.model.FriendInvite;
 import com.atl.backend.model.GrowthStep;
 import com.atl.backend.model.Review;
@@ -17,6 +18,7 @@ import com.atl.backend.model.enums.AccountStatus;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.ReviewStatus;
 import com.atl.backend.repository.AccountRepository;
+import com.atl.backend.repository.CityRepository;
 import com.atl.backend.repository.FriendInviteRepository;
 import com.atl.backend.repository.GrowthStepRepository;
 import com.atl.backend.repository.ReviewRepository;
@@ -50,6 +52,8 @@ public class AccountService {
     private ReviewRepository reviewRepository;
     @Autowired
     private FriendInviteRepository friendInviteRepository;
+    @Autowired
+    private CityRepository cityRepository;
 
     @Autowired
     private PlayerService playerService;
@@ -341,6 +345,12 @@ public class AccountService {
         if (updateAccountInfosRequest.getImageUrl() != null) {
             account.setImageUrl(updateAccountInfosRequest.getImageUrl());
         }
+        if(updateAccountInfosRequest.getPreferredCityId() != null){
+            City preferredCity = cityRepository.findById(updateAccountInfosRequest.getPreferredCityId())
+                    .orElseThrow(() -> new NotFoundException(ErrorsString.CITY_NOT_FOUND));
+            account.setPreferredCity(preferredCity);
+        }
+
         accountRepository.save(account);
 
         return account;

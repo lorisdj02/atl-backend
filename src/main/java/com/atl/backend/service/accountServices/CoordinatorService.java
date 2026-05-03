@@ -30,7 +30,6 @@ public class CoordinatorService {
     public Coordinator registerCoordinator(Account account) {
         Coordinator coordinator = new Coordinator();
         coordinator.setAccount(account);
-        coordinator.setLevel((short) 0);
         return coordinatorRepository.save(coordinator);
     }
 

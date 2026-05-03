@@ -32,11 +32,9 @@ public class RefereeService {
     @Autowired
     private RefereeLicenseRepository refereeLicenseRepository;
 
-
     public Referee registerReferee(Account account) {
         Referee referee = new Referee();
         referee.setAccount(account);
-        referee.setLevel((short) 0);
         return refereeRepository.save(referee);
     }
 
@@ -81,12 +79,13 @@ public class RefereeService {
     @Transactional(rollbackFor = Exception.class)
     public RefereeLicense insertRefereeLicense(RefereeLicenseDTO refereeLicenseDTO) {
         Referee referee = AccountContext.getActiveReferee();
-        if (!referee.getRefereeId().equals(refereeLicenseDTO.getRefereeId())) {
+        if (!refereeLicenseDTO.getRefereeId().equals(referee.getRefereeId())) {
             throw new NotFoundException(ErrorsString.REFEREE_LICENSE_MISMATCH);
         }
 
         RefereeLicense refereeLicense = new RefereeLicense();
         refereeLicense.setReferee(referee);
+        refereeLicense.setLicenseId(refereeLicenseDTO.getLicenseId());
         refereeLicense.setSport(
                 sportService.getSportById(refereeLicenseDTO.getSportId())
                         .orElseThrow(() -> new NotFoundException(ErrorsString.SPORT_NOT_FOUND)));
@@ -94,13 +93,13 @@ public class RefereeService {
         // TODO: Imposta a ACTIVE solo dopo la verifica da parte di collaboratore,
         // adesso per debug
         refereeLicense.setStatus(LicenseStatus.ACTIVE);
-        refereeLicense.setCreatedAt(LocalDateTime.now());
-        try{
-            LocalDate issuedAt = LocalDate.parse(refereeLicenseDTO.getIssuedAt());
+        try {
+            LocalDate issuedAt = (LocalDateTime.parse(refereeLicenseDTO.getIssuedAt())).toLocalDate();
             refereeLicense.setIssuedAt(issuedAt);
         } catch (Exception e) {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }
+        System.out.println("RefereeLicense to be saved: " + refereeLicense);
         return refereeLicenseRepository.save(refereeLicense);
     }
 

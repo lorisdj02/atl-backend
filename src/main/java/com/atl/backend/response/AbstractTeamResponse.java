@@ -45,17 +45,17 @@ public class AbstractTeamResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.coordinatorsCache)
-    private List<CoordinatorDTO> coordinatorsCache = new ArrayList<>();
+    private Map<Long, CoordinatorDTO> coordinatorsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.fieldsCache)
-    private List<FieldDTO> fieldsCache = new ArrayList<>();
+    private Map<Long, FieldDTO> fieldsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.footballPlayerStatsCache)
-    private List<FootballTeamStatDTO> footballPlayerStatsCache = new ArrayList<>();
+    private Map<Long, FootballTeamStatDTO> footballPlayerStatsCache = new HashMap<>();
 
     @NotNull
     @Builder.Default

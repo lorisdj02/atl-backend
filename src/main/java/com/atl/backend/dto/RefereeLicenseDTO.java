@@ -40,7 +40,7 @@ public class RefereeLicenseDTO {
     private String verifiedAt;
 
     @NotNull
-    @JsonProperty("id")
+    @JsonProperty("licenseId")
     private String licenseId;
 
     public static RefereeLicenseDTO fromRefereeLicense(RefereeLicense refereeLicense) {

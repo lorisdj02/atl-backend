@@ -21,7 +21,7 @@ public class CheckoutSessionDTO {
 
     @NotNull
     @JsonProperty("type")
-    private String type;
+    private String checkoutType;
 
     @NotNull
     @JsonProperty("amount")
@@ -29,18 +29,19 @@ public class CheckoutSessionDTO {
 
     @NotNull
     @JsonProperty("payload")
-    private String payload;
+    private CheckoutPayload payload;
 
     public static CheckoutSessionDTO fromCheckoutSession(CheckoutSession session) {
         if (session == null) {
             return null;
         }
+
         CheckoutSessionDTO dto = new CheckoutSessionDTO();
         dto.setId(session.getId());
         dto.setAccountId(session.getAccount().getId());
-        dto.setType(session.getType().toString());
+        dto.setCheckoutType(session.getType().toString());
         dto.setAmount(session.getAmount());
-        dto.setPayload(session.getPayload() != null ? session.getPayload().toString() : "");
+        dto.setPayload(session.getPayload());
         return dto;
     }
 }

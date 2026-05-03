@@ -106,10 +106,10 @@ public class MatchBookingService {
             throw new ConflictException(ErrorsString.FIELD_NOT_AVAILABLE);
         }
 
-        if (match.getScheduledStart().equals(scheduledStart)) {
+        if (scheduledStart.equals(match.getScheduledStart())) {
             throw new ConflictException(ErrorsString.MATCH_ALREADY_SCHEDULED_FOR_THIS_TIME);
         } else if (match.getScheduledStart() != null
-                && match.getScheduledStart().isBefore(LocalDateTime.now().plusHours(24))) {
+                && LocalDateTime.now().plusHours(24).isAfter(match.getScheduledStart())) {
             throw new ConflictException(ErrorsString.YOU_CANNOT_RESCHEDULE_MATCH_LESS_THAN_24_HOURS_BEFORE);
         }
 
@@ -134,10 +134,15 @@ public class MatchBookingService {
                 FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
                         .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
                 footballMatch.setStatus(FootballMatchStatus.SCHEDULED);
+                footballMatch.setUpdatedAt(LocalDateTime.now());
                 footballMatchRepository.save(footballMatch);
             }
             default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
+
+        match.setScheduledStart(scheduledStart);
+        match.setUpdatedAt(LocalDateTime.now());
+        matchRepository.save(match);
 
         return MatchBookingDTO.fromMatchBooking(matchBooking);
     }
