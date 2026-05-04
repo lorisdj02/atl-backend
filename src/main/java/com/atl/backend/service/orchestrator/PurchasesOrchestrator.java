@@ -2,7 +2,7 @@ package com.atl.backend.service.orchestrator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 
@@ -156,8 +156,8 @@ public class PurchasesOrchestrator {
             throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
         }
 
-        LocalDateTime startTime;
-        LocalDateTime finishTime;
+        Instant startTime;
+        Instant finishTime;
         Field field;
         BigDecimal totalLobbyCost;
         BigDecimal playerCost;
@@ -188,8 +188,8 @@ public class PurchasesOrchestrator {
                 }
 
                 try {
-                    startTime = LocalDateTime.parse(payload.getStartTime());
-                    finishTime = LocalDateTime.parse(payload.getFinishTime());
+                    startTime = Instant.parse(payload.getStartTime());
+                    finishTime = Instant.parse(payload.getFinishTime());
                 } catch (Exception e) {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
                 }
@@ -220,8 +220,8 @@ public class PurchasesOrchestrator {
                 }
 
                 try {
-                    startTime = LocalDateTime.parse(payload.getStartTime());
-                    finishTime = LocalDateTime.parse(payload.getFinishTime());
+                    startTime = Instant.parse(payload.getStartTime());
+                    finishTime = Instant.parse(payload.getFinishTime());
                 } catch (Exception e) {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
                 }

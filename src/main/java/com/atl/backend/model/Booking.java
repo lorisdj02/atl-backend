@@ -7,7 +7,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Entity
@@ -38,20 +38,20 @@ public class Booking {
     private SportCategory sportCategory;
 
     @Column(name = "start_time", nullable = false)
-    private LocalDateTime startTime;
+    private Instant startTime;
 
     @Column(name = "finish_time", nullable = false)
-    private LocalDateTime finishTime;
+    private Instant finishTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "booking_type", nullable = false, length = 15)
     private BookingType bookingType;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     public BigDecimal calculatePrice() {
 

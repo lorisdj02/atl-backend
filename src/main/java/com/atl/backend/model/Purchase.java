@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -56,17 +56,17 @@ public class Purchase {
     private TransactionGroup transactionGroup;
 
     @Column(name = "refunded_at")
-    private LocalDateTime refundedAt;
+    private Instant refundedAt;
 
     @Column(name = "redeemed_at")
-    private LocalDateTime redeemedAt;
+    private Instant redeemedAt;
 
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

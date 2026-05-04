@@ -24,7 +24,7 @@ import com.atl.backend.model.LobbyBooking;
 import com.atl.backend.model.LobbyBookingParticipate;
 import com.atl.backend.model.Field;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +59,7 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public FieldsAndMaxPlayersPerFieldResponse getFreeFieldsByMaxPlayersAndCityAndDateAndSportCategory(
-            Short maxPlayers, Long cityId, LocalDateTime startTime, LocalDateTime finishTime,
+            Short maxPlayers, Long cityId, Instant startTime, Instant finishTime,
             SportCategory sportCategory) {
         List<Booking> bookings = bookingRepository
                 .findByField_City_IdAndStartTimeGreaterThanEqualAndFinishTimeLessThanEqual(cityId, startTime,
@@ -81,7 +81,7 @@ public class BookingService {
     }
 
     public List<Booking> getBookingsByFieldIdFromNow(Long fieldId) {
-        return bookingRepository.findByField_IdAndStartTimeGreaterThanEqual(fieldId, LocalDateTime.now());
+        return bookingRepository.findByField_IdAndStartTimeGreaterThanEqual(fieldId, Instant.now());
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -107,7 +107,7 @@ public class BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
         booking.setStatus(BookingStatus.REFUND);
-        booking.setUpdatedAt(LocalDateTime.now());
+        booking.setUpdatedAt(Instant.now());
         bookingRepository.save(booking);
     }
 

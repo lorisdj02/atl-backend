@@ -1,7 +1,7 @@
 package com.atl.backend.service.paymentServices;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -151,7 +151,7 @@ public class PaymentService {
             throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
         }
 
-        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (session.getExpiresAt().isBefore(Instant.now())) {
             session.setStatus(CheckoutStatus.EXPIRED);
             saveCheckoutSession(session);
             throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
@@ -309,7 +309,7 @@ public class PaymentService {
             throw new ConflictException(ErrorsString.TRANSACTION_FAILED);
         }
         transactionGroup.setStatus(status);
-        transactionGroup.setUpdatedAt(LocalDateTime.now());
+        transactionGroup.setUpdatedAt(Instant.now());
         List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroupId);
         for (Transaction transaction : transactions) {
             transaction.setStatus(status);
@@ -325,7 +325,7 @@ public class PaymentService {
             throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
         }
 
-        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (session.getExpiresAt().isBefore(Instant.now())) {
             session.setStatus(CheckoutStatus.EXPIRED);
             saveCheckoutSession(session);
             throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
@@ -440,7 +440,6 @@ public class PaymentService {
         session.setPayload(payload);
         session.setAmount(payload.getAmount());
         session.setStatus(CheckoutStatus.PENDING);
-        session.setExpiresAt(LocalDateTime.now().plusMinutes(15));
         return checkoutSessionRepository.save(session);
 
     }

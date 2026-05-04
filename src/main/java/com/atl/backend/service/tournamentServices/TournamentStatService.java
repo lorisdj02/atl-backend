@@ -1,6 +1,6 @@
 package com.atl.backend.service.tournamentServices;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -86,7 +86,7 @@ public class TournamentStatService {
         footballTournamentStats.setMotm((short) (footballTournamentStats.getMotm() + motmDelta));
         footballTournamentStats.setRedCards((short) (footballTournamentStats.getRedCards() + redCardsDelta));
         footballTournamentStats.setYellowCards((short) (footballTournamentStats.getYellowCards() + yellowCardsDelta));
-        footballTournamentStats.setUpdatedAt(LocalDateTime.now());
+        footballTournamentStats.setUpdatedAt(Instant.now());
         footballTournamentStatRepository.save(footballTournamentStats);
     }
 }

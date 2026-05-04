@@ -60,6 +60,10 @@ public class FieldDTO {
     @JsonProperty("closingTime")
     private String closingTime;
 
+    @NotNull
+    @JsonProperty("timeZone")
+    private String timeZone;
+
 
     public static FieldDTO fromField(Field field) {
         if (field == null) {
@@ -79,6 +83,7 @@ public class FieldDTO {
         dto.setClosedDays(field.getClosedDays());
         dto.setOpeningTime(field.getOpeningTime().toString());
         dto.setClosingTime(field.getClosingTime().toString());
+        dto.setTimeZone(field.getTimeZone());
         return dto;
     }
 }

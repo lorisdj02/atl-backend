@@ -1,7 +1,7 @@
 package com.atl.backend.service.tournamentServices;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -316,7 +316,7 @@ public class TournamentParticipantService {
             throw new BadRequestException(ErrorsString.PAYMENT_AMOUNT_EXCEEDS_TO_PAY);
         }
         tournamentParticipation.setToPay(tournamentParticipation.getToPay().subtract(amount));
-        tournamentParticipation.setUpdatedAt(LocalDateTime.now());
+        tournamentParticipation.setUpdatedAt(Instant.now());
         saveTournamentParticipation(tournamentParticipation);
     }
 

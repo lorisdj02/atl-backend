@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -587,7 +587,7 @@ public class TournamentService {
             default:
                 throw new IllegalArgumentException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
-        match.setFinishMatch(LocalDateTime.now());
+        match.setFinishMatch(Instant.now());
         matchService.saveMatch(match);
         return match.getId();
     }

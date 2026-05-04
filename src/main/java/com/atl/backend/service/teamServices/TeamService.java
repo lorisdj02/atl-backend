@@ -30,7 +30,7 @@ import com.atl.backend.repository.PlayerRepository;
 import com.atl.backend.exception.*;
 
 import java.util.Optional;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -144,7 +144,7 @@ public class TeamService {
             team.setVice2Player(null);
         }
 
-        team.setUpdatedAt(LocalDateTime.now());
+        team.setUpdatedAt(Instant.now());
 
         teamRepository.save(team);
         if (team.getNumPlayers() == 0) {
@@ -207,7 +207,7 @@ public class TeamService {
         if (!team.getCaptainPlayer().equals(player)) {
             team.setNumPlayers((short) (team.getNumPlayers() + 1));
         }
-        team.setUpdatedAt(LocalDateTime.now());
+        team.setUpdatedAt(Instant.now());
         teamRepository.save(team);
         return Optional.of(playsAtRepository.save(playsAt));
     }
@@ -537,7 +537,7 @@ public class TeamService {
         footballTeamStat.setMotm((short) (footballTeamStat.getMotm() + motmDelta));
         footballTeamStat.setRedCards((short) (footballTeamStat.getRedCards() + redCardsDelta));
         footballTeamStat.setYellowCards((short) (footballTeamStat.getYellowCards() + yellowCardsDelta));
-        footballTeamStat.setUpdatedAt(LocalDateTime.now());
+        footballTeamStat.setUpdatedAt(Instant.now());
         return footballTeamStatRepository.save(footballTeamStat);
 
     }
@@ -554,7 +554,7 @@ public class TeamService {
         team.setNumPlayers((short) 0);
         team.setCaptainPlayer(null);
         team.setVisible(false);
-        team.setUpdatedAt(LocalDateTime.now());
+        team.setUpdatedAt(Instant.now());
         teamRepository.save(team);
     }
 }

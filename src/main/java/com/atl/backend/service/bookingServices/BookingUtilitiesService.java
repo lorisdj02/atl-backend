@@ -1,6 +1,7 @@
 package com.atl.backend.service.bookingServices;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +38,12 @@ public class BookingUtilitiesService {
         }
         SportCategory sportCategoryEnum = SportCategory.valueOf(sportCategory.toUpperCase());
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime start = null;
-        LocalDateTime end = null;
+        Instant now = Instant.now();
+        Instant start = null;
+        Instant end = null;
         try {
-            start = LocalDateTime.parse(startTime);
-            end = LocalDateTime.parse(finishTime);
+            start = Instant.parse(startTime);
+            end = Instant.parse(finishTime);
         } catch (Exception e) {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }
@@ -58,6 +59,14 @@ public class BookingUtilitiesService {
             throw new ConflictException(ErrorsString.FIELD_NOT_AVAILABLE);
         }
 
+        Instant openingTime = field.getOpeningTime().atDate(start.atZone(field.getZoneId()).toLocalDate())
+                .atZone(field.getZoneId()).toInstant();
+        Instant closingTime = field.getClosingTime().atDate(start.atZone(field.getZoneId()).toLocalDate())
+                .atZone(field.getZoneId()).toInstant();
+        if (start.isBefore(openingTime) || end.isAfter(closingTime)) {
+            throw new BadRequestException(ErrorsString.BOOKING_OUTSIDE_OPENING_HOURS);
+        }
+
         Booking booking = new Booking();
         booking.setField(field);
         booking.setStartTime(start);
@@ -67,9 +76,9 @@ public class BookingUtilitiesService {
         return bookingRepository.save(booking);
     }
 
-    public Boolean isFieldFree(Long fieldId, LocalDateTime startTime, LocalDateTime finishTime) {
+    public Boolean isFieldFree(Long fieldId, Instant startTime, Instant finishTime) {
 
-        if (startTime.isBefore(LocalDateTime.now()) || finishTime.isBefore(LocalDateTime.now())
+        if (startTime.isBefore(Instant.now()) || finishTime.isBefore(Instant.now())
                 || startTime.isAfter(finishTime)) {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }
@@ -79,7 +88,8 @@ public class BookingUtilitiesService {
         return freeFields.contains(field);
     }
 
-    public List<Field> getFreeFieldInCityByDate(Long cityId, LocalDateTime startTime, LocalDateTime finishTime) {
+    public List<Field> getFreeFieldInCityByDate(Long cityId, Instant startTime, Instant finishTime) {
+
         List<Booking> bookings = bookingRepository
                 .findByField_City_IdAndStartTimeGreaterThanEqualAndFinishTimeLessThanEqual(cityId, startTime,
                         finishTime);
@@ -95,8 +105,8 @@ public class BookingUtilitiesService {
             throw new ConflictException(ErrorsString.BOOKING_NOT_REFUNDABLE);
         }
 
-        if (!booking.getStartTime().isAfter(LocalDateTime.now())) {
-            if (booking.getFinishTime().isAfter(LocalDateTime.now())) {
+        if (!booking.getStartTime().isAfter(Instant.now())) {
+            if (booking.getFinishTime().isAfter(Instant.now())) {
                 // finishBooking(bookingId);
                 throw new ConflictException(ErrorsString.BOOKING_ALREADY_FINISHED);
             } else {
@@ -108,7 +118,7 @@ public class BookingUtilitiesService {
 
         // Il booking è rimborsabile solo se manca più di un'ora all'inizio, per evitare
         // abusi (es. prenotazione last minute e richiesta di rimborso subito dopo)
-        if (booking.getStartTime().isBefore(LocalDateTime.now().plusHours(1))) {
+        if (booking.getStartTime().isBefore(Instant.now().plusSeconds(3600))) {
             throw new ConflictException(ErrorsString.BOOKING_NOT_REFUNDABLE);
         }
 

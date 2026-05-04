@@ -1,6 +1,6 @@
 package com.atl.backend.service.bookingServices;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,8 +41,8 @@ public class MatchBookingService {
     private FootballMatchRepository footballMatchRepository;
 
     @Transactional(rollbackFor = Exception.class)
-    public MatchBooking createMatchBooking(Long matchId, LocalDateTime startTime,
-            LocalDateTime finishTime) {
+    public MatchBooking createMatchBooking(Long matchId, Instant startTime,
+            Instant finishTime) {
 
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
@@ -60,9 +60,9 @@ public class MatchBookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public MatchBookingDTO scheduleMatch(Long matchId, LocalDateTime scheduledStart) {
+    public MatchBookingDTO scheduleMatch(Long matchId, Instant scheduledStart) {
         // Il match deve essere schedulato almeno 2 ore prima dell'orario attuale
-        if (scheduledStart.isBefore(LocalDateTime.now().plusHours(2))) {
+        if (scheduledStart.isBefore(Instant.now().plusSeconds(2 * 3600))) {
             throw new BadRequestException(ErrorsString.MATCH_SCHEDULE_TOO_LATE);
         }
 
@@ -96,23 +96,21 @@ public class MatchBookingService {
         Short minutesPerPause = tournament.getSport().getMinutesPerPause();
 
         // Considero 15 minuti di preparazione
-        LocalDateTime startTime = scheduledStart.minusMinutes(15);
+        Instant startTime = scheduledStart.minusSeconds(15 * 60);
 
         // Considero la durata massima della partita, che è 2 round più una pausa, più
         // 15 minuti di buffer finale
-        LocalDateTime finishTime = scheduledStart.plusMinutes(minutesPerRound * 2 + minutesPerPause + 15);
+        Instant finishTime = scheduledStart.plusSeconds((minutesPerRound * 2 + minutesPerPause + 15) * 60);
 
         if (!bookingUtilitiesService.isFieldFree(tournament.getField().getId(), startTime, finishTime)) {
             throw new ConflictException(ErrorsString.FIELD_NOT_AVAILABLE);
         }
-
         if (scheduledStart.equals(match.getScheduledStart())) {
             throw new ConflictException(ErrorsString.MATCH_ALREADY_SCHEDULED_FOR_THIS_TIME);
         } else if (match.getScheduledStart() != null
-                && LocalDateTime.now().plusHours(24).isAfter(match.getScheduledStart())) {
+                && Instant.now().plusSeconds(24 * 3600).isAfter(match.getScheduledStart())) {
             throw new ConflictException(ErrorsString.YOU_CANNOT_RESCHEDULE_MATCH_LESS_THAN_24_HOURS_BEFORE);
         }
-
         MatchBooking matchBooking;
         if (match.getScheduledStart() == null) {
             matchBooking = createMatchBooking(matchId, startTime, finishTime);
@@ -122,7 +120,7 @@ public class MatchBookingService {
                 matchBooking = existingMatchBooking.get();
                 matchBooking.getBooking().setStartTime(startTime);
                 matchBooking.getBooking().setFinishTime(finishTime);
-                matchBooking.getBooking().setUpdatedAt(LocalDateTime.now());
+                matchBooking.getBooking().setUpdatedAt(Instant.now());
                 matchBookingRepository.save(matchBooking);
             } else {
                 matchBooking = createMatchBooking(matchId, startTime, finishTime);
@@ -134,14 +132,14 @@ public class MatchBookingService {
                 FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
                         .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
                 footballMatch.setStatus(FootballMatchStatus.SCHEDULED);
-                footballMatch.setUpdatedAt(LocalDateTime.now());
+                footballMatch.setUpdatedAt(Instant.now());
                 footballMatchRepository.save(footballMatch);
             }
             default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
         match.setScheduledStart(scheduledStart);
-        match.setUpdatedAt(LocalDateTime.now());
+        match.setUpdatedAt(Instant.now());
         matchRepository.save(match);
 
         return MatchBookingDTO.fromMatchBooking(matchBooking);

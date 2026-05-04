@@ -2,6 +2,7 @@ package com.atl.backend.service.accountServices;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,7 +83,6 @@ public class RefereeService {
         if (!refereeLicenseDTO.getRefereeId().equals(referee.getRefereeId())) {
             throw new NotFoundException(ErrorsString.REFEREE_LICENSE_MISMATCH);
         }
-
         RefereeLicense refereeLicense = new RefereeLicense();
         refereeLicense.setReferee(referee);
         refereeLicense.setLicenseId(refereeLicenseDTO.getLicenseId());
@@ -94,12 +94,13 @@ public class RefereeService {
         // adesso per debug
         refereeLicense.setStatus(LicenseStatus.ACTIVE);
         try {
-            LocalDate issuedAt = (LocalDateTime.parse(refereeLicenseDTO.getIssuedAt())).toLocalDate();
+            LocalDate issuedAt = Instant.parse(refereeLicenseDTO.getIssuedAt())
+                    .atZone(java.time.ZoneOffset.UTC)
+                    .toLocalDate();
             refereeLicense.setIssuedAt(issuedAt);
         } catch (Exception e) {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }
-        System.out.println("RefereeLicense to be saved: " + refereeLicense);
         return refereeLicenseRepository.save(refereeLicense);
     }
 

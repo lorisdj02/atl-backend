@@ -245,6 +245,10 @@ public class ErrorsString {
 
     static final public String CATEGORY_NOT_COMATIBLE_WITH_FIELD = "CATEGORY_NOT_COMATIBLE_WITH_FIELD";
 
+    static final public String CANNOT_START_MATCH_WITH_UNASSIGNED_TEAMS = "CANNOT_START_MATCH_WITH_UNASSIGNED_TEAMS";
+
+    static final public String BOOKING_OUTSIDE_OPENING_HOURS = "BOOKING_OUTSIDE_OPENING_HOURS";
+
     // Authentication errors
 
     static final public String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";

@@ -1,6 +1,6 @@
 package com.atl.backend.service.paymentServices;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,8 +42,8 @@ public class PaymentRedeemService {
             throw new ConflictException(ErrorsString.PURCHASE_NOT_REDEEMABLE);
         }
         purchase.setStatus(PurchaseStatus.REDEEMED);
-        purchase.setRedeemedAt(LocalDateTime.now());
-        purchase.setUpdatedAt(LocalDateTime.now());
+        purchase.setRedeemedAt(Instant.now());
+        purchase.setUpdatedAt(Instant.now());
         paymentRefundService.setTransactionsNotRefundableByTransactionGroupId(purchase.getTransactionGroup().getId());
         purchaseRepository.save(purchase);
     }

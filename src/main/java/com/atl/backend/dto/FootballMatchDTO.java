@@ -2,7 +2,7 @@ package com.atl.backend.dto;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.Match;
@@ -43,10 +43,10 @@ public class FootballMatchDTO extends MatchDTO {
     private String status;
 
     @JsonProperty("halftime")
-    private LocalDateTime halftime;
+    private Instant halftime;
 
     @JsonProperty("startHalf")
-    private LocalDateTime startHalf;
+    private Instant startHalf;
 
     public static FootballMatchDTO fromFootballMatch(FootballMatch footballMatch) {
         if (footballMatch == null) {
@@ -67,6 +67,9 @@ public class FootballMatchDTO extends MatchDTO {
         dto.setLegOrder(baseDto.getLegOrder());
         dto.setCoordinatorStatus(baseDto.getCoordinatorStatus());
         dto.setFinalStageBracketId(baseDto.getFinalStageBracketId());
+        dto.setStartMatch(baseDto.getStartMatch());
+        dto.setFinishMatch(baseDto.getFinishMatch());
+        dto.setDay(baseDto.getDay());
 
         dto.setHomeTeamId(footballMatch.getHomeTeam() != null ? footballMatch.getHomeTeam().getId() : null);
         dto.setScoreHome(footballMatch.getScoreHome());
@@ -81,7 +84,6 @@ public class FootballMatchDTO extends MatchDTO {
         dto.setHalftime(footballMatch.getHalftime());
         dto.setStartHalf(footballMatch.getStartHalf());
         dto.setStatus(footballMatch.getStatus().toString());
-        dto.setDay(footballMatch.getMatch().getDay());
         return dto;
     }
 }

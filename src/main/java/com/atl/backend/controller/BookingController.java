@@ -16,7 +16,7 @@ import com.atl.backend.service.bookingServices.MatchBookingService;
 import com.atl.backend.service.orchestrator.PurchasesOrchestrator;
 import com.atl.backend.service.screen.BookingScreenService;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -59,15 +59,15 @@ public class BookingController {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        LocalDateTime start = null;
-        LocalDateTime end = null;
+        Instant start = null;
+        Instant end = null;
 
         try {
             if (startTime != null) {
-                start = LocalDateTime.parse(startTime);
+                start = Instant.parse(startTime);
             }
             if (finishTime != null) {
-                end = LocalDateTime.parse(finishTime);
+                end = Instant.parse(finishTime);
             }
         } catch (Exception e) {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
@@ -91,12 +91,12 @@ public class BookingController {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
 
-        LocalDateTime start = null;
-        LocalDateTime end = null;
+        Instant start = null;
+        Instant end = null;
 
         try {
-            start = LocalDateTime.parse(startTime);
-            end = LocalDateTime.parse(finishTime);
+            start = Instant.parse(startTime);
+            end = Instant.parse(finishTime);
         } catch (Exception e) {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }
@@ -166,9 +166,9 @@ public class BookingController {
     @PostMapping("/match-booking/{matchId}/schedule/{scheduledStart}")
     public ResponseEntity<MatchBookingDTO> scheduleMatch(@PathVariable Long matchId,
             @PathVariable String scheduledStart) {
-        LocalDateTime scheduledStartTime;
+        Instant scheduledStartTime;
         try {
-            scheduledStartTime = LocalDateTime.parse(scheduledStart);
+            scheduledStartTime = Instant.parse(scheduledStart);
         } catch (Exception e) {
             throw new BadRequestException(ErrorsString.INVALID_TIME_RANGE);
         }

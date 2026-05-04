@@ -1,6 +1,6 @@
 package com.atl.backend.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,10 +88,10 @@ public class Team {
     private Boolean visible = true;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     public List<Player> getViceCaptainPlayers() {
         List<Player> viceCaptains = new ArrayList<>();

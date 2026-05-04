@@ -1,6 +1,6 @@
 package com.atl.backend.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -30,12 +30,12 @@ public class FriendInvite {
     private Boolean redeemed = false;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inviter_transaction_id", nullable = false)
     private Transaction inviterTransaction;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

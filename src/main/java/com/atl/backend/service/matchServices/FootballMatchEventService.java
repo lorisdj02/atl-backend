@@ -1,6 +1,6 @@
 package com.atl.backend.service.matchServices;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +51,11 @@ public class FootballMatchEventService {
     private PlayerService playerService;
     @Autowired
     private TournamentStandingService tournamentStandingService;
+
+
+    public void deleteAllFootballMatchEvents() {
+        footballMatchEventRepository.deleteAll();
+    }
 
     private Team getPlayerTeam(Long playerId, Long tournamentId) {
         Team team = teamService.getTeamByPlayerIdAndSportCategory(playerId, SportCategory.FOOTBALL)
@@ -165,8 +170,8 @@ public class FootballMatchEventService {
             return new EventMinuteData((short) minutesPerRound, (short) 0);
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime currentHalfStart;
+        Instant now = Instant.now();
+        Instant currentHalfStart;
         int minuteOffset;
 
         if (footballMatch.getStartHalf() != null) {

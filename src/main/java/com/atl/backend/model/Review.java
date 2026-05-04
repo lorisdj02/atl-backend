@@ -4,7 +4,7 @@ import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.math.BigDecimal;
 
 @Data
@@ -77,11 +77,11 @@ public class Review {
     private Transaction linkedTransaction;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @Column(name = "committed_at")
-    private LocalDateTime committedAt;
+    private Instant committedAt;
 }

@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -241,7 +241,7 @@ public class AccountService {
             account.setVipType(null);
             account.setVipStart(null);
             account.setVipEnd(null);
-            account.setUpdatedAt(LocalDateTime.now());
+            account.setUpdatedAt(Instant.now());
             accountRepository.save(account);
         }
     }

@@ -2,7 +2,7 @@ package com.atl.backend.service.bookingServices;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,7 +82,7 @@ public class LobbyBookingService {
     }
 
     public List<LobbyBooking> getBookedLobbyBookings(SportCategory sportCategory, Short totalPlayers,
-            Long selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
+            Long selectedCityId, Instant startTime, Instant finishTime) {
         List<LobbyBooking> lobbyBookings = lobbyBookingRepository
                 .findBookedByBooking_SportCategory(
                         sportCategory);
@@ -127,7 +127,7 @@ public class LobbyBookingService {
         }
 
         lobbyBooking.setPlayersToFind((short) (lobbyBooking.getPlayersToFind() - playersPaid));
-        lobbyBooking.setUpdatedAt(LocalDateTime.now());
+        lobbyBooking.setUpdatedAt(Instant.now());
         lobbyBookingRepository.save(lobbyBooking);
 
         Optional<LobbyBookingParticipate> existingParticipation = lobbyBookingParticipateRepository
@@ -139,7 +139,7 @@ public class LobbyBookingService {
             LobbyBookingParticipate participation = existingParticipation.get();
             // Verificare se aggiunge un player in più
             participation.setPlayersPaid((short) (participation.getPlayersPaid() + playersPaid));
-            participation.setUpdatedAt(LocalDateTime.now());
+            participation.setUpdatedAt(Instant.now());
 
             return lobbyBookingParticipateRepository.save(participation);
         }
@@ -172,7 +172,7 @@ public class LobbyBookingService {
         }
 
         bookingUtilitiesService.isBookingRefundable(bookingId);
-        lobbyBooking.setUpdatedAt(LocalDateTime.now());
+        lobbyBooking.setUpdatedAt(Instant.now());
         lobbyBookingRepository.save(lobbyBooking);
     }
 
@@ -184,7 +184,7 @@ public class LobbyBookingService {
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
 
         bookingUtilitiesService.isBookingRefundable(bookingId);
-        lobbyBookingParticipate.setUpdatedAt(LocalDateTime.now());
+        lobbyBookingParticipate.setUpdatedAt(Instant.now());
         lobbyBookingParticipateRepository.save(lobbyBookingParticipate);
     }
 

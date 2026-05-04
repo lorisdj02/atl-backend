@@ -5,7 +5,7 @@ import com.atl.backend.model.enums.*;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Entity
@@ -84,11 +84,11 @@ public class Transaction {
     private Boolean visible = true;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @Column(name = "processed_at")
-    private LocalDateTime processedAt;
+    private Instant processedAt;
 }

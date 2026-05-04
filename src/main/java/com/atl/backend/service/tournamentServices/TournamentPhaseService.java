@@ -1,6 +1,6 @@
 package com.atl.backend.service.tournamentServices;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -109,7 +109,7 @@ public class TournamentPhaseService {
             case FINAL:
                 throw new ConflictException(ErrorsString.WRONG_TOURNAMENT_PHASE);
         }
-        tournament.setUpdatedAt(LocalDateTime.now());
+        tournament.setUpdatedAt(Instant.now());
         tournamentRepository.save(tournament);
     }
 

@@ -1,6 +1,6 @@
 package com.atl.backend.service.screen;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +57,7 @@ public class BookingScreenService {
 
         @Transactional(readOnly = true)
         public JoinLobbyResponse getJoinLobbyScreen(SportCategory sportCategory, Short totalPlayers,
-                        Long selectedCityId, LocalDateTime startTime, LocalDateTime finishTime) {
+                        Long selectedCityId, Instant startTime, Instant finishTime) {
 
                 Long playerId = AccountContext.getPlayerId();
                 Optional<Player> optionalPlayer = playerService.getPlayerByPlayerId(playerId);

@@ -13,7 +13,7 @@ import com.atl.backend.service.tournamentServices.TournamentAuthService;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -626,7 +626,7 @@ public class MatchService {
                     bracketScoreAwayDelta);
         }
 
-        footballMatch.setUpdatedAt(LocalDateTime.now());
+        footballMatch.setUpdatedAt(Instant.now());
         return saveFootballMatch(footballMatch);
     }
 
@@ -731,8 +731,7 @@ public class MatchService {
             throw new ConflictException(ErrorsString.CANNOT_START_PENALTY_SHOOTOUT);
         }
 
-        footballMatch.setStatus(FootballMatchStatus.PENALTY_SHOOT_OUT);
-        footballMatch.setUpdatedAt(LocalDateTime.now());
+        updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.PENALTY_SHOOT_OUT);
         footballMatchRepository.save(footballMatch);
     }
 
@@ -748,7 +747,7 @@ public class MatchService {
             throw new ConflictException(ErrorsString.MATCH_ALREADY_STARTED);
         }
 
-        if (LocalDateTime.now().isBefore(match.getScheduledStart())) {
+        if (Instant.now().isBefore(match.getScheduledStart())) {
             throw new ConflictException(ErrorsString.CANNOT_START_MATCH_BEFORE_SCHEDULED_TIME);
         }
 
@@ -769,7 +768,19 @@ public class MatchService {
             }
         }
 
-        match.setStartMatch(LocalDateTime.now());
+        switch (match.getSportCategory()) {
+            case FOOTBALL -> {
+                FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
+                        .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
+                if (footballMatch.getHomeTeam() == null || footballMatch.getAwayTeam() == null) {
+                    throw new ConflictException(ErrorsString.CANNOT_START_MATCH_WITH_UNASSIGNED_TEAMS);
+                }
+                updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.STARTED);
+            }
+            default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
+        }
+
+        match.setStartMatch(Instant.now());
         return matchRepository.save(match);
     }
 
@@ -781,9 +792,7 @@ public class MatchService {
         }
 
         tournamentAuthService.canManageTournament(footballMatch.getMatch().getTournament().getId());
-        footballMatch.setStatus(FootballMatchStatus.HALFTIME);
-        footballMatch.setHalftime(LocalDateTime.now());
-        footballMatch.setUpdatedAt(LocalDateTime.now());
+        updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.HALFTIME);
         return footballMatchRepository.save(footballMatch);
     }
 
@@ -794,9 +803,7 @@ public class MatchService {
             throw new ConflictException(ErrorsString.CANNOT_START_HALF);
         }
         tournamentAuthService.canManageTournament(footballMatch.getMatch().getTournament().getId());
-        footballMatch.setStatus(FootballMatchStatus.START_HALF);
-        footballMatch.setStartHalf(LocalDateTime.now());
-        footballMatch.setUpdatedAt(LocalDateTime.now());
+        updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.START_HALF);
         return footballMatchRepository.save(footballMatch);
     }
 
@@ -810,7 +817,7 @@ public class MatchService {
         if (match.getFinishMatch() != null) {
             throw new ConflictException(ErrorsString.MATCH_ALREADY_FINISHED);
         }
-        match.setFinishMatch(LocalDateTime.now());
+        updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.FINISHED);
         return matchRepository.save(match);
     }
 

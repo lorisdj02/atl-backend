@@ -1,7 +1,7 @@
 package com.atl.backend.service.paymentServices;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -92,12 +92,12 @@ public class PaymentRefundService {
                 totalRefundedAmount = totalRefundedAmount.add(transaction.getNetAmount());
                 transaction.setStatus(TransactionStatus.REFUNDED);
                 transaction.setRefundable(false);
-                transaction.setUpdatedAt(LocalDateTime.now());
+                transaction.setUpdatedAt(Instant.now());
                 transactionRepository.save(transaction);
                 numberOfRefundedTransactions++;
             }
         }
-        wallet.setUpdatedAt(LocalDateTime.now());
+        wallet.setUpdatedAt(Instant.now());
         walletRepository.save(wallet);
         if (numberOfRefundedTransactions == 0) {
             throw new PaymentRequiredException(ErrorsString.PURCHASE_NOT_REFUNDABLE);
@@ -108,8 +108,8 @@ public class PaymentRefundService {
             transactionGroup.setStatus(TransactionStatus.REFUNDED);
             purchase.setStatus(PurchaseStatus.REFUNDED);
         }
-        purchase.setUpdatedAt(LocalDateTime.now());
-        transactionGroup.setUpdatedAt(LocalDateTime.now());
+        purchase.setUpdatedAt(Instant.now());
+        transactionGroup.setUpdatedAt(Instant.now());
         transactionGroupRepository.save(transactionGroup);
         purchaseRepository.save(purchase);
         return totalRefundedAmount;
@@ -193,7 +193,7 @@ public class PaymentRefundService {
         List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroupId);
         for (Transaction transaction : transactions) {
             transaction.setRefundable(false);
-            transaction.setUpdatedAt(LocalDateTime.now());
+            transaction.setUpdatedAt(Instant.now());
             transactionRepository.save(transaction);
         }
     }

@@ -4,7 +4,7 @@ import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -56,20 +56,20 @@ public class FootballMatch {
     private Short missedPenaltyAway;
 
     @Column(name = "halftime")
-    private LocalDateTime halftime;
+    private Instant halftime;
 
     @Column(name = "start_half")
-    private LocalDateTime startHalf;
+    private Instant startHalf;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 31)
     private FootballMatchStatus status = FootballMatchStatus.NOT_SCHEDULED;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     public List<Team> getTeams() {
         return List.of(homeTeam, awayTeam);

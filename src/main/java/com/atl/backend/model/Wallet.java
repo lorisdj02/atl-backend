@@ -2,7 +2,7 @@ package com.atl.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Entity
@@ -22,14 +22,14 @@ public class Wallet {
     private Account account;
 
     @Column(name = "prize_last_withdraw")
-    private LocalDateTime prizeLastWithdraw;
+    private Instant prizeLastWithdraw;
 
     @Column(name = "personal_last_withdraw")
-    private LocalDateTime personalLastWithdraw;
+    private Instant personalLastWithdraw;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

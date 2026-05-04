@@ -4,7 +4,7 @@ import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Entity
@@ -36,13 +36,13 @@ public class Match {
     private String groupName;
 
     @Column(name = "scheduled_start")
-    private LocalDateTime scheduledStart;
+    private Instant scheduledStart;
 
     @Column(name = "start_match")
-    private LocalDateTime startMatch;
+    private Instant startMatch;
 
     @Column(name = "finish_match")
-    private LocalDateTime finishMatch;
+    private Instant finishMatch;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "coordinator_status", nullable = false)
@@ -69,8 +69,8 @@ public class Match {
     private LegOrderType legOrder;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

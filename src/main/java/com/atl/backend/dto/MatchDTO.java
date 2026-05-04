@@ -2,7 +2,7 @@ package com.atl.backend.dto;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.atl.backend.model.Match;
 import com.fasterxml.jackson.annotation.*;
@@ -18,13 +18,13 @@ public class MatchDTO {
     private Long id;
 
     @JsonProperty("scheduledStart")
-    private LocalDateTime scheduledStart;
+    private Instant scheduledStart;
 
     @JsonProperty("startMatch")
-    private LocalDateTime startMatch;
+    private Instant startMatch;
 
     @JsonProperty("finishMatch")
-    private LocalDateTime finishMatch;
+    private Instant finishMatch;
 
     @NotNull
     @JsonProperty("tournamentId")

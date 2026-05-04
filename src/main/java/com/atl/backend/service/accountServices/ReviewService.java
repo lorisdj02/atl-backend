@@ -1,7 +1,7 @@
 package com.atl.backend.service.accountServices;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,7 +83,7 @@ public class ReviewService {
 
         review.setComment(reviewDTO.getComment());
         review.setRating(reviewDTO.getRating());
-        review.setUpdatedAt(LocalDateTime.now());
+        review.setUpdatedAt(Instant.now());
         return reviewRepository.save(review);
     }
 

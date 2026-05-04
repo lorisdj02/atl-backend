@@ -4,7 +4,7 @@ import com.atl.backend.model.enums.*;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Data
@@ -67,7 +67,7 @@ public class Account {
     private City preferredCity;
 
     @Column(name = "last_login")
-    private LocalDateTime lastLogin;
+    private Instant lastLogin;
 
     @Column(name = "image_url", length = 511)
     private String imageUrl;
@@ -76,10 +76,10 @@ public class Account {
     private LocalDate birthdate;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @Column(name = "favorite_sport_category", length = 15)
     @Enumerated(EnumType.STRING)

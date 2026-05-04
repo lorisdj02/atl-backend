@@ -1,7 +1,7 @@
 package com.atl.backend.service.bookingServices;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -95,7 +95,7 @@ public class PrivateBookingService {
         }
 
         bookingUtilitiesService.isBookingRefundable(bookingId);
-        privateBooking.setUpdatedAt(LocalDateTime.now());
+        privateBooking.setUpdatedAt(Instant.now());
         privateBookingRepository.save(privateBooking);
     }
 

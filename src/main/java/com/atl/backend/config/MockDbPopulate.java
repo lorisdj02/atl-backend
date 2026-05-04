@@ -6,6 +6,7 @@ import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.CoordinatorService;
 import com.atl.backend.service.accountServices.OrganizationService;
 import com.atl.backend.service.accountServices.PlayerService;
+import com.atl.backend.service.matchServices.FootballMatchEventService;
 import com.atl.backend.service.orchestrator.ReviewsOrchestrator;
 import com.atl.backend.service.teamServices.TeamService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
@@ -55,6 +56,8 @@ import javax.sql.DataSource;
 @Component
 public class MockDbPopulate {
     @Autowired
+    private FootballMatchEventService footballMatchEventService;
+    @Autowired
     private TournamentParticipantService tournamentParticipantService;
     @Autowired
     private FieldService fieldService;
@@ -79,6 +82,8 @@ public class MockDbPopulate {
 
     @Autowired
     private TournamentParticipationRepository tournamentParticipationRepository;
+
+
 
     @Transactional(rollbackOn = Exception.class)
     public void createAccounts() {
@@ -220,6 +225,7 @@ public class MockDbPopulate {
         field1.setOrganization(organizations.get(0));
         field1.setOpeningTime(LocalTime.of(8, 0));
         field1.setClosingTime(LocalTime.of(23, 0));
+        field1.setTimeZone("Europe/Rome");
         field1.setHourCostPrivate(new BigDecimal("75"));
         field1.setHourCostTournament(new BigDecimal("50"));
         fieldService.saveField(field1, maxPlayersPerSportCategoryField1);
@@ -236,6 +242,7 @@ public class MockDbPopulate {
         field2.setOrganization(organizations.get(0));
         field2.setOpeningTime(LocalTime.of(8, 0));
         field2.setClosingTime(LocalTime.of(23, 0));
+        field2.setTimeZone("Europe/Rome");
         field2.setHourCostPrivate(new BigDecimal("75"));
         field2.setHourCostTournament(new BigDecimal("50"));
         fieldService.saveField(field2, maxPlayersPerSportCategoryField2);
@@ -252,6 +259,7 @@ public class MockDbPopulate {
         field3.setOrganization(organizations.get(0));
         field3.setOpeningTime(LocalTime.of(8, 0));
         field3.setClosingTime(LocalTime.of(23, 0));
+        field3.setTimeZone("Europe/Rome");
         field3.setHourCostPrivate(new BigDecimal("100"));
         field3.setHourCostTournament(new BigDecimal("75"));
         fieldService.saveField(field3, maxPlayersPerSportCategoryField3);
@@ -626,6 +634,8 @@ public class MockDbPopulate {
         sportService.deleteAllSports();
         sportService.deleteAllRefereeRoles();
         accountService.deleteAllGrowthSteps();
+        footballMatchEventService.deleteAllFootballMatchEvents();
+
 
         // restore FK checks
         try (Connection c = dataSource.getConnection(); Statement s = c.createStatement()) {
