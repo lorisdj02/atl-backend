@@ -89,7 +89,7 @@ public class TournamentPhaseService {
         }
         switch (tournament.getPhase()) {
             case GROUP:
-                tournamentStandingService.updateTeamsQualifiedInTournament(tournament, true);
+                tournamentStandingService.updateTeamsQualifiedInTournament(tournament);
                 tournament.setPhase(handlePostGroupStage(tournamentId));
                 break;
             case RO32:

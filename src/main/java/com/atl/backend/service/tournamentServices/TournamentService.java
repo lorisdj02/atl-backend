@@ -239,7 +239,7 @@ public class TournamentService {
 
         System.out.println("[DEBUG - TournamentService] - Standings generated for tournament " + tournamentId);
 
-        tournamentStandingService.updateTeamsQualifiedInTournament(tournament, true);
+        tournamentStandingService.updateTeamsQualifiedInTournament(tournament);
 
         System.out.println("[DEBUG - TournamentService] - Teams qualified for tournament " + tournamentId);
 

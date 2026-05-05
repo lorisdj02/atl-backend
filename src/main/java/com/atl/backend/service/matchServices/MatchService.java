@@ -711,7 +711,7 @@ public class MatchService {
         }
 
         tournamentAuthService.canManageTournament(match.getTournament().getId());
-        match.setMotmPlayer(playerRepository.findById(playerId)
+        match.setMotmPlayer(playerRepository.findByPlayerId(playerId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.PLAYER_NOT_FOUND)));
 
         matchRepository.save(match);
@@ -775,7 +775,7 @@ public class MatchService {
                 if (footballMatch.getHomeTeam() == null || footballMatch.getAwayTeam() == null) {
                     throw new ConflictException(ErrorsString.CANNOT_START_MATCH_WITH_UNASSIGNED_TEAMS);
                 }
-                updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.STARTED);
+                updateFootballMatch(matchId, (short) 0, (short) 0, null, null, null, null, FootballMatchStatus.STARTED);
             }
             default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
@@ -787,11 +787,12 @@ public class MatchService {
     public FootballMatch startFootballHalftime(Long matchId) {
         FootballMatch footballMatch = footballMatchRepository.findByMatch_Id(matchId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
-        if (footballMatch.getStatus() != FootballMatchStatus.START_HALF) {
+        if (footballMatch.getStatus() != FootballMatchStatus.STARTED) {
             throw new ConflictException(ErrorsString.CANNOT_GO_HALFTIME);
         }
 
         tournamentAuthService.canManageTournament(footballMatch.getMatch().getTournament().getId());
+        footballMatch.setHalftime(Instant.now());
         updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.HALFTIME);
         return footballMatchRepository.save(footballMatch);
     }
@@ -802,6 +803,7 @@ public class MatchService {
         if (footballMatch.getStatus() != FootballMatchStatus.HALFTIME) {
             throw new ConflictException(ErrorsString.CANNOT_START_HALF);
         }
+        footballMatch.setStartHalf(Instant.now());
         tournamentAuthService.canManageTournament(footballMatch.getMatch().getTournament().getId());
         updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.START_HALF);
         return footballMatchRepository.save(footballMatch);
@@ -817,6 +819,8 @@ public class MatchService {
         if (match.getFinishMatch() != null) {
             throw new ConflictException(ErrorsString.MATCH_ALREADY_FINISHED);
         }
+        match.setFinishMatch(Instant.now());
+        match.setUpdatedAt(Instant.now());
         updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.FINISHED);
         return matchRepository.save(match);
     }

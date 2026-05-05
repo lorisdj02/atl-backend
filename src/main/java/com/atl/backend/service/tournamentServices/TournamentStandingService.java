@@ -1,5 +1,6 @@
 package com.atl.backend.service.tournamentServices;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -108,7 +109,7 @@ public class TournamentStandingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void updateTeamsQualifiedInTournament(Tournament tournament, Boolean needToOrder) {
+    public void updateTeamsQualifiedInTournament(Tournament tournament) {
 
         final short qualifiedPerGroup = (short) (tournament.getNumTeamsQualified() / tournament.getNumGroups());
         final short numTeamsPerGroup = (short) (tournament.getNumTeams() / tournament.getNumGroups());
@@ -118,12 +119,7 @@ public class TournamentStandingService {
             extraQualified = tournament.getNumTeamsQualified() % tournament.getNumGroups();
         }
 
-        if (needToOrder) {
-            orderStandingsForTournament(tournament.getId());
-        }
-
-        System.out.println("[DEBUG - TournamentService] - Updating qualified teams for tournament " + tournament.getId()
-                + " with " + qualifiedPerGroup + " qualified per group and " + extraQualified + " extra qualified");
+        orderStandingsForTournament(tournament.getId());
 
         List<FootballStanding> notQualifiedFootballStandings = new ArrayList<>();
 
@@ -131,28 +127,20 @@ public class TournamentStandingService {
             case FOOTBALL:
                 for (int groupIndex = 1; groupIndex <= tournament.getNumGroups(); groupIndex++) {
                     String groupName = "" + (char) ('A' + groupIndex - 1);
-                    System.out.println(
-                            "[DEBUG - TournamentService] - Evaluating qualification for tournament "
-                                    + tournament.getId()
-                                    + " and group " + groupName);
 
                     List<FootballStanding> footballStandings = footballStandingRepository
                             .findByTournament_IdAndGroupName(tournament.getId(), groupName);
-
-                    System.out.println(
-                            "[DEBUG - TournamentService] - Football standings for tournament " + tournament.getId()
-                                    + " and group " + groupName + ". " + footballStandings.size() + " teams");
+                    footballStandings.sort((a, b) -> a.getRankPos().equals(b.getRankPos()) ? 0
+                            : a.getRankPos() > b.getRankPos() ? 1 : -1); // ordino in base alla posizione in classifica
                     for (int i = 0; i < footballStandings.size(); i++) {
+                        FootballStanding footballStanding = footballStandings.get(i);
+                        footballStanding.setQualified(false);
                         if (i < qualifiedPerGroup) {
-                            FootballStanding footballStanding = footballStandings.get(i);
                             footballStanding.setQualified(true);
-                            footballStandingRepository.save(footballStanding);
                         } else {
-                            FootballStanding footballStanding = footballStandings.get(i);
-                            footballStanding.setQualified(false);
-                            footballStandingRepository.save(footballStanding);
                             notQualifiedFootballStandings.add(footballStanding);
                         }
+                        footballStandingRepository.save(footballStanding);
                     }
                 }
 
@@ -190,8 +178,6 @@ public class TournamentStandingService {
             case FOOTBALL:
                 List<FootballStanding> footballStandings = new ArrayList<>(
                         footballStandingRepository.findByTournament_Id(tournamentId));
-                System.out.println("[DEBUG - TournamentService] - Ordering standings for tournament " + tournamentId
-                        + ". " + footballStandings.size() + " teams");
                 List<FootballStanding> groupFootballStandings = new ArrayList<>();
                 for (int j = 0; j < tournament.getNumGroups(); j++) {
                     groupFootballStandings = new ArrayList<>();
@@ -202,16 +188,11 @@ public class TournamentStandingService {
                         }
                     }
                     groupFootballStandings.sort(StandingsComparators.FOOTBALL_STANDING);
-                    System.out.println("[DEBUG - TournamentService] - Ordering standings for group " + groupName + ". "
-                            + groupFootballStandings.size() + " teams");
+
                     for (int i = 0; i < groupFootballStandings.size(); i++) {
                         FootballStanding footballStanding = groupFootballStandings.get(i);
                         footballStanding.setRankPos((short) (i + 1));
-                        System.out.println(
-                                "[DEBUG - TournamentService] - Setting rank position " + footballStanding.getRankPos()
-                                        + " for team " + footballStanding.getTeam().getName() + " "
-                                        + footballStanding.getTeam().getId() + " in tournament "
-                                        + tournamentId + " and group " + groupName);
+                        footballStanding.setUpdatedAt(Instant.now());
                         footballStandingRepository.save(footballStanding);
                     }
                 }

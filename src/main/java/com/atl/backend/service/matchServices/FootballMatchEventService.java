@@ -52,7 +52,6 @@ public class FootballMatchEventService {
     @Autowired
     private TournamentStandingService tournamentStandingService;
 
-
     public void deleteAllFootballMatchEvents() {
         footballMatchEventRepository.deleteAll();
     }
@@ -412,6 +411,8 @@ public class FootballMatchEventService {
         tournamentStandingService.updateFootballStanding(footballMatch.getMatch().getTournament().getId(),
                 awayTeam.getId(), awayPtsDelta, awayScoreDelta, homeScoreDelta, awayWonDelta,
                 awayDrawnDelta, awayLostDelta);
+
+        tournamentStandingService.updateTeamsQualifiedInTournament(footballMatch.getMatch().getTournament());
     }
 
     private void updateResultAndBracketInFinalStage(FootballMatch footballMatch, Short homeScoreDelta,
