@@ -319,9 +319,10 @@ public class AccountService {
     @Transactional(readOnly = true)
     public boolean hasNotifications() {
         Long accountId = AccountContext.getAccountId();
-        List<Review> reviews = getReviewsByReviewerAccountId(accountId);
+        // List<Review> reviews = getReviewsByReviewerAccountId(accountId);
         List<Review> pendingReviews = getPendingReviewsByReviewerAccountId(accountId);
-        return !reviews.isEmpty() || !pendingReviews.isEmpty();
+        // return !reviews.isEmpty() || !pendingReviews.isEmpty();
+        return !pendingReviews.isEmpty();
     }
 
     @Transactional(rollbackFor = Exception.class)

@@ -1,6 +1,7 @@
 package com.atl.backend.service.accountServices;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -44,46 +45,19 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewDTO.getId())
                 .orElseThrow(() -> new NotFoundException(ErrorsString.REVIEW_NOT_FOUND));
 
-        if (review.getReviewerAccount().getId() != AccountContext.getAccountId()) {
+        if (!review.getReviewerAccount().getId().equals(AccountContext.getAccountId())) {
             throw new UnauthorizedException(ErrorsString.UNAUTHORIZED);
         }
 
-        if (review.getReviewedAccount().getId() != reviewDTO.getReviewedAccountId()) {
+        if (!review.getReviewedAccount().getId().equals(reviewDTO.getReviewedAccountId())) {
             throw new NotFoundException(ErrorsString.REVIEW_NOT_FOUND);
         }
 
-        /*
-         * TODO: Manca:
-         *
-         * A) Creazione di una review in stato WAITING e della corrispettiva transazione
-         * di pagamento.
-         * Questa può essere fatta:
-         *
-         * 1) Inizia un torneo -> ogni convocato ha una sua review in stato WAITING. NON
-         * collegata ad una transazione, tranne per il vincitore.
-         *
-         * 2) Inizio di un match -> Si creano le recensioni e rispettive transazioni per
-         * i referee.
-         *
-         * 3) Fine di un match -> Si creano le recensioni e rispettive transazioni per i
-         * coordinatori.
-         * Le transazioni sono BLOCCANTI.
-         *
-         *
-         * B) Passaggio in stato PENDING. Può esser fatto:
-         *
-         * 1) Alla fine di un percorso di una squadra per un torneo, quando si è sicuri
-         * che non ci saranno più partite per quella squadra per i player.
-         * 2) Alla fine di un match per i referee e coordinatori.
-         *
-         * C) Passaggio in stato COMMITTED. Questo DEVE sbloccare la/le transazione/i di
-         * pagamento.
-         *
-         */
-
         review.setComment(reviewDTO.getComment());
-        review.setRating(reviewDTO.getRating());
+        review.setRating(reviewDTO.getRating().round(new MathContext(2)));
+        review.setStatus(ReviewStatus.COMMITTED);
         review.setUpdatedAt(Instant.now());
+        review.setCommittedAt(Instant.now());
         return reviewRepository.save(review);
     }
 

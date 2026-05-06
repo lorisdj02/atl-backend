@@ -5,6 +5,7 @@ import com.atl.backend.dto.RefereeLicenseDTO;
 import com.atl.backend.dto.ReviewDTO;
 import com.atl.backend.model.Account;
 import com.atl.backend.model.RefereeLicense;
+import com.atl.backend.model.Review;
 import com.atl.backend.request.RegisterAccountRequest;
 import com.atl.backend.request.UpdateAccountInfosRequest;
 import com.atl.backend.response.LoginResponse;
@@ -12,6 +13,7 @@ import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.RefereeService;
 import com.atl.backend.service.accountServices.ReviewService;
 
+import com.atl.backend.service.orchestrator.ReviewsOrchestrator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,12 +30,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountController {
 
     @Autowired
+    private ReviewsOrchestrator reviewsOrchestrator;
+    @Autowired
     private AccountService accountService;
     @Autowired
     private RefereeService refereeService;
-    @Autowired
-    private ReviewService reviewService;
-
 
     @GetMapping("/account/level")
     public ResponseEntity<Short> getAccountLevel() {
@@ -76,9 +77,9 @@ public class AccountController {
     }
 
     @PatchMapping("/review/commit")
-    public ResponseEntity<Void> commitReview(@RequestBody ReviewDTO reviewDTO) {
-        reviewService.commitReview(reviewDTO);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<ReviewDTO> commitReview(@RequestBody ReviewDTO reviewDTO) {
+        Review review = reviewsOrchestrator.commitReview(reviewDTO);
+        return ResponseEntity.ok(ReviewDTO.fromReview(review));
     }
 
     @PostMapping("/account/register")

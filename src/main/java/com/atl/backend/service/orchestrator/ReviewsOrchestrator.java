@@ -79,13 +79,14 @@ public class ReviewsOrchestrator {
         private AccountService accountService;
 
         @Transactional(rollbackFor = Exception.class)
-        public void commitReview(ReviewDTO reviewDTO) {
+        public Review commitReview(ReviewDTO reviewDTO) {
                 Review review = reviewService.commitReview(reviewDTO);
                 if (review.getLinkedTransaction() != null) {
                         paymentService.updateTransactionGroupStatus(
                                         review.getLinkedTransaction().getTransactionGroup().getId(),
                                         TransactionStatus.CONFIRMED);
                 }
+                return review;
         }
 
         @Transactional(rollbackFor = Exception.class)

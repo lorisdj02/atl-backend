@@ -150,7 +150,8 @@ public class ProfileScreenService {
     public WalletResponse getWalletScreen() {
         Long accountId = AccountContext.getAccountId();
 
-        List<Transaction> transactions = paymentService.getTransactionsByAccountId(accountId);
+        List<Transaction> transactions = paymentService.getTransactionsToShowByAccountId(accountId);
+
         Optional<Wallet> wallet = paymentService.getWalletByAccountId(accountId);
         if (wallet.isEmpty()) {
             throw new NotFoundException(ErrorsString.WALLET_NOT_FOUND);
@@ -203,7 +204,7 @@ public class ProfileScreenService {
     @Transactional(readOnly = true)
     public ReviewsResponse getReviewsScreen() {
         Account account = AccountContext.getActiveAccount();
-        List<Review> reviews = accountService.getReviewsByReviewerAccountId(account.getId());
+        List<Review> reviews = accountService.getPendingReviewsByReviewerAccountId(account.getId());
         Map<Long, Account> accountPerReview = new HashMap<>();
         Map<Long, String> matchTeamsStringPerReview = new HashMap<>();
         for (Review review : reviews) {
@@ -238,12 +239,12 @@ public class ProfileScreenService {
     public InviteFriendsResponse getInviteFriendsScreen() {
         Account account = AccountContext.getActiveAccount();
         BigDecimal inviteBalance = paymentService.getInviteBalanceByAccountId(account.getId());
-        String referrealCode = accountService.getReferralCodeByAccountId(account.getId());
+        String referralCode = accountService.getReferralCodeByAccountId(account.getId());
         Integer numRedeemed = accountService.getRedeemedInvitesByAccountId(account.getId());
         Integer numInvites = accountService.getTotalInvitesByAccountId(account.getId());
         return InviteFriendsResponse.builder()
                 .inviteBalance(inviteBalance)
-                .referralCode(referrealCode)
+                .referralCode(referralCode)
                 .numRedeemed(numRedeemed)
                 .numInvites(numInvites)
                 .build();

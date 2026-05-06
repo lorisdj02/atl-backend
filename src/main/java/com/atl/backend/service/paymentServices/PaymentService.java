@@ -105,6 +105,20 @@ public class PaymentService {
         return transactionRepository.findByAccount_Id(accountId);
     }
 
+    public List<Transaction> getTransactionsToShowByAccountId(Long accountId) {
+        List<Transaction> transactions = transactionRepository.findByAccount_Id(accountId);
+        List<Transaction> transactionsToShow = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            if ((transaction.getSource() == TransactionSource.PRIZE_WALLET
+                    || transaction.getSource() == TransactionSource.PERSONAL_WALLET)
+                    && (transaction.getStatus() == TransactionStatus.CONFIRMED
+                            || transaction.getStatus() == TransactionStatus.REFUNDED)) {
+                transactionsToShow.add(transaction);
+            }
+        }
+        return transactionsToShow;
+    }
+
     public Optional<Wallet> getWalletByAccountId(Long accountId) {
         return walletRepository.findByAccount_Id(accountId);
     }
