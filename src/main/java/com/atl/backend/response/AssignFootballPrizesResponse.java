@@ -9,7 +9,6 @@ import lombok.Data;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 import com.atl.backend.config.ApiJsonKeys;
-import com.atl.backend.dto.FootballStandingDTO;
 import com.atl.backend.dto.FootballTeamStatDTO;
 import com.atl.backend.dto.PlayerDTO;
 import com.atl.backend.dto.TeamDTO;
@@ -26,7 +25,7 @@ public class AssignFootballPrizesResponse {
 
     @NotNull
     @JsonProperty(ApiJsonKeys.team)
-    private TeamDTO teamName;
+    private TeamDTO team;
 
     @NotNull
     @Builder.Default

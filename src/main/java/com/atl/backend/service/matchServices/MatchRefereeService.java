@@ -14,6 +14,7 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.FootballMatch;
+import com.atl.backend.model.FootballMatchEvent;
 import com.atl.backend.model.Match;
 import com.atl.backend.model.Referee;
 import com.atl.backend.model.RefereeAssignment;
@@ -117,5 +118,11 @@ public class MatchRefereeService {
             }
         }
         return assignedFootballMatches;
+    }
+
+    public Boolean hasMatchEnoughReferees(FootballMatch footballMatch) {
+        List<RefereeAssignment> refereeAssignments = refereeAssignmentRepository.findByMatch_Id(footballMatch.getMatch().getId());
+        long refereeCount = refereeAssignments.size();
+        return refereeCount >= footballMatch.getMatch().getTournament().getSport().getNumRefereesPerMatch();
     }
 }

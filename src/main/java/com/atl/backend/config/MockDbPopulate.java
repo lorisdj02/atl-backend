@@ -685,6 +685,10 @@ public class MockDbPopulate {
                     System.out.println("[DEBUG] - Populating database...");
                     populateDb();
                     return;
+                } else if (arg.equals("tournament1reviews")){
+                    System.out.println("[DEBUG] - Creating reviews for tournament 1...");
+                    reviewsOrchestrator.createReviewForTournament(1L);
+                    return;
                 }
             }
 

@@ -1,10 +1,8 @@
 package com.atl.backend.request;
 
-import java.util.HashMap;
 import java.math.BigDecimal;
 import java.util.Map;
 
-import lombok.Builder;
 import lombok.Data;
 
 import com.fasterxml.jackson.annotation.*;
@@ -12,7 +10,6 @@ import jakarta.validation.constraints.*;
 import com.atl.backend.config.ApiJsonKeys;
 
 @Data
-@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AssignTournamentPrizesRequest {
@@ -25,7 +22,6 @@ public class AssignTournamentPrizesRequest {
     private Long teamId;
 
     @NotNull
-    @Builder.Default
     @JsonProperty(ApiJsonKeys.prizePerPlayer)
-    private Map<Long, BigDecimal> prizePerPlayer = new HashMap<>(); // playerId -> prizeAmount
+    private Map<String, BigDecimal> prizePerPlayer; // playerId -> prizeAmount
 }

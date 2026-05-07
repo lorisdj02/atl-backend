@@ -82,6 +82,9 @@ public class MatchScreenService {
                                     .equals(selectedCity.getId()))
                             .toList();
                 }
+                footballMatches = footballMatches.stream()
+                        .filter(m -> !matchRefereeService.hasMatchEnoughReferees(m))
+                        .toList();
                 if (selectedSport != null) {
                     footballMatches = footballMatches.stream()
                             .filter(m -> m.getMatch().getTournament().getSport().getId().equals(selectedSport.getId()))

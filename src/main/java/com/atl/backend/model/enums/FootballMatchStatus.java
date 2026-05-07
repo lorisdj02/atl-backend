@@ -5,7 +5,7 @@ public enum FootballMatchStatus {
     STARTED,
     HALFTIME,
     START_HALF,
-    PENALTY_SHOOT_OUT,
+    PENALTY_SHOOTOUT,
     FINISHED,
     HOME_RETIRED,
     AWAY_RETIRED,

@@ -163,6 +163,18 @@ public class TournamentService {
                 sportCategory);
     }
 
+    public List<Tournament> getTournamentsByCoordinatorIdAndSportCategory(Long coordinatorId,
+            SportCategory sportCategory) {
+        return tournamentRepository.findTournamentsByCoordinator_CoordinatorIdAndSportCategory(coordinatorId,
+                sportCategory);
+    }
+
+    public List<Tournament> getRecentTournamentsByCoordinatorIdAndSportCategory(Long coordinatorId , SportCategory sportCategory, Instant minimumDate) {
+        List<Tournament> tournaments = tournamentRepository.findRecentTournamentsByCoordinator_CoordinatorIdAndSportCategory(coordinatorId,
+                sportCategory, minimumDate);
+        return tournaments;
+    }
+
     public String getTournamentName(Long tournamentId) {
         Optional<Tournament> tournamentOpt = tournamentRepository.findById(tournamentId);
         if (tournamentOpt.isEmpty()) {
@@ -687,6 +699,7 @@ public class TournamentService {
         }
 
         tournament.setStatus(TournamentStatus.FINISHED);
+        tournament.setUpdatedAt(Instant.now());
         return tournamentRepository.save(tournament);
     }
 

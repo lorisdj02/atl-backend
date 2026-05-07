@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 
 @Repository
@@ -23,6 +24,12 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
 
     @Query("SELECT t FROM Tournament t WHERE t.status <> 'CANCELED' AND t.status <> 'FINISHED' AND t.status <> 'PENDING_PAYMENTS' AND t.coordinator.id = :coordinatorId AND t.sport.sportCategory = :sportCategory")
     List<Tournament> findActiveTournamentsByCoordinator_CoordinatorIdAndSportCategory(@Param("coordinatorId") Long coordinatorId, @Param("sportCategory") SportCategory sportCategory);
+
+    @Query("SELECT t FROM Tournament t WHERE t.coordinator.id = :coordinatorId AND t.sport.sportCategory = :sportCategory")
+    List<Tournament> findTournamentsByCoordinator_CoordinatorIdAndSportCategory(@Param("coordinatorId") Long coordinatorId, @Param("sportCategory") SportCategory sportCategory);
+
+    @Query("SELECT t FROM Tournament t WHERE t.coordinator.id = :coordinatorId AND t.sport.sportCategory = :sportCategory AND t.updatedAt >= :minimumDate")
+    List<Tournament> findRecentTournamentsByCoordinator_CoordinatorIdAndSportCategory(@Param("coordinatorId") Long coordinatorId, @Param("sportCategory") SportCategory sportCategory, @Param("minimumDate") Instant minimumDate);
 
     List<Tournament> findByCoordinator_CoordinatorId(Long coordinatorId);
 }

@@ -122,4 +122,9 @@ public class Tournament {
                     this.getStatus() != TournamentStatus.FINISHED &&
                     this.getStatus() != TournamentStatus.PENDING_PAYMENTS);
     }
+
+    public Boolean arePrizesAssigned() {
+        return this.getPrize1().compareTo(BigDecimal.ZERO) <= 0
+                && (this.getPrize2() == null || this.getPrize2().compareTo(BigDecimal.ZERO) <= 0);
+    }
 }

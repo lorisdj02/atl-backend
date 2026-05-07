@@ -461,9 +461,11 @@ public class TournamentScreenService {
         }
 
         return AssignFootballPrizesResponse.builder()
+                .tournament(TournamentDTO.fromTournament(tournament))
                 .isWinner(isWinner)
                 .playersCache(playersCache)
                 .footballPlayerStatsCache(footballPlayerStatsCache)
+                .team(TeamDTO.fromTeam(accountTeam))
                 .build();
     }
 }

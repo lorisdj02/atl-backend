@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -198,8 +199,10 @@ public class HomeScreenService {
                 Map<Long, Short> minutesRoundPerTournament = new HashMap<>();
                 Map<Long, Short> minutesPausePerTournament = new HashMap<>();
 
-                activeTournaments = tournamentService.getActiveTournamentsByCoordinatorIdAndSportCategory(coordinatorId,
-                                sportCategory);
+                Long sixMonthsAgoEpoch = Instant.now().minusSeconds(6 * 30 * 24 * 3600).getEpochSecond();
+
+                activeTournaments = tournamentService.getRecentTournamentsByCoordinatorIdAndSportCategory(coordinatorId,
+                                sportCategory, Instant.now().minusSeconds(sixMonthsAgoEpoch)); // Last 6 months tournaments
 
                 for (Tournament tournament : activeTournaments) {
                         switch (sportCategory) {

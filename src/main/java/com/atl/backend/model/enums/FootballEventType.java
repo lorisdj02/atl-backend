@@ -3,7 +3,7 @@ public enum FootballEventType {
     START,
     HALFTIME,
     START_HALF,
-    PENALTY_SHOOT_OUT,
+    PENALTY_SHOOTOUT,
     FINISH,
     YELLOW_CARD,
     RED_CARD,

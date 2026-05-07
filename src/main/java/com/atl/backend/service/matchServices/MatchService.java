@@ -171,11 +171,11 @@ public class MatchService {
                         .orElseThrow(() -> new NotFoundException(ErrorsString.MATCH_NOT_FOUND));
                 if (footballMatch
                         .getStatus() != FootballMatchStatus.START_HALF
-                        && footballMatch.getStatus() != FootballMatchStatus.PENALTY_SHOOT_OUT) {
+                        && footballMatch.getStatus() != FootballMatchStatus.PENALTY_SHOOTOUT) {
                     return false;
                 }
 
-                if (footballMatch.getStatus() == FootballMatchStatus.PENALTY_SHOOT_OUT) {
+                if (footballMatch.getStatus() == FootballMatchStatus.PENALTY_SHOOTOUT) {
                     if (footballMatch.getPenaltyScoreHome() == null || footballMatch.getPenaltyScoreAway() == null
                             || footballMatch.getMissedPenaltyHome() == null
                             || footballMatch.getMissedPenaltyAway() == null) {
@@ -347,10 +347,13 @@ public class MatchService {
     public Boolean hasTeamPrizesByTeamIdAndTournamentId(Long teamId, Long tournamentId) {
         Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
 
-        Boolean prize1 = (BigDecimal.ZERO).compareTo(tournament.getPrize1()) != 0;
-        Boolean prize2 = (BigDecimal.ZERO).compareTo(tournament.getPrize2()) != 0;
-
-        if (!prize1 && !prize2) {
+        Boolean isTherePrize1 = (BigDecimal.ZERO).compareTo(tournament.getPrize1()) < 0;
+        Boolean isTherePrize2 = tournament.getPrize2() == null || (BigDecimal.ZERO).compareTo(tournament.getPrize2()) < 0;
+        System.out.println(
+                "[DEBUG - MatchService] - Checking prizes for team " + teamId + " in tournament " + tournamentId
+                        + ": prize1=" + tournament.getPrize1() + ", prize2=" + tournament.getPrize2());
+        System.out.println("[DEBUG - MatchService] - isTherePrize1=" + isTherePrize1 + ", isTherePrize2=" + isTherePrize2);
+        if (!isTherePrize1 && !isTherePrize2) {
             return false;
         }
 
@@ -386,11 +389,11 @@ public class MatchService {
                     return false;
                 }
                 if (teamIsHome && aggregateScoreHome > aggregateScoreAway) {
-                    return prize1;
+                    return isTherePrize1;
                 } else if (teamIsAway && aggregateScoreAway > aggregateScoreHome) {
-                    return prize1;
+                    return isTherePrize1;
                 } else {
-                    return prize2;
+                    return isTherePrize2;
                 }
             }
             default -> throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
@@ -731,7 +734,7 @@ public class MatchService {
             throw new ConflictException(ErrorsString.CANNOT_START_PENALTY_SHOOTOUT);
         }
 
-        updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.PENALTY_SHOOT_OUT);
+        updateFootballMatch(matchId, null, null, null, null, null, null, FootballMatchStatus.PENALTY_SHOOTOUT);
         footballMatchRepository.save(footballMatch);
     }
 

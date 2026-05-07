@@ -22,6 +22,7 @@ import com.atl.backend.model.Tournament;
 import com.atl.backend.model.enums.FootballEventType;
 import com.atl.backend.model.enums.FootballMatchStatus;
 import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.model.enums.TournamentPhase;
 import com.atl.backend.repository.FootballMatchEventRepository;
 import com.atl.backend.repository.FootballMatchRepository;
 import com.atl.backend.service.accountServices.PlayerService;
@@ -106,13 +107,15 @@ public class FootballMatchEventService {
 
                 // All'inizio della partita, assegno i punti per il pareggio, così da aggiornare
                 // subito live la classifica
-                tournamentStandingService.updateFootballStanding(footballMatch.getMatch().getTournament().getId(),
-                        homeTeam.getId(), (short) 1, (short) 0, (short) 0, (short) 0,
-                        (short) 1, (short) 0);
+                if (tournament.getPhase().equals(TournamentPhase.GROUP)) {
+                    tournamentStandingService.updateFootballStanding(footballMatch.getMatch().getTournament().getId(),
+                            homeTeam.getId(), (short) 1, (short) 0, (short) 0, (short) 0,
+                            (short) 1, (short) 0);
 
-                tournamentStandingService.updateFootballStanding(footballMatch.getMatch().getTournament().getId(),
-                        awayTeam.getId(), (short) 1, (short) 0, (short) 0, (short) 0,
-                        (short) 1, (short) 0);
+                    tournamentStandingService.updateFootballStanding(footballMatch.getMatch().getTournament().getId(),
+                            awayTeam.getId(), (short) 1, (short) 0, (short) 0, (short) 0,
+                            (short) 1, (short) 0);
+                }
                 break;
 
             case HALFTIME:
@@ -123,7 +126,7 @@ public class FootballMatchEventService {
                 matchService.startFootballSecondHalf(matchId);
                 break;
 
-            case PENALTY_SHOOT_OUT:
+            case PENALTY_SHOOTOUT:
                 matchService.startFootballPenaltyShootout(matchId);
                 break;
 
@@ -212,7 +215,7 @@ public class FootballMatchEventService {
             throw new NotFoundException(ErrorsString.TEAM_NOT_FOUND);
         }
 
-        Boolean isPenaltyShootOut = footballMatch.getStatus() == FootballMatchStatus.PENALTY_SHOOT_OUT;
+        Boolean isPenaltyShootOut = footballMatch.getStatus() == FootballMatchStatus.PENALTY_SHOOTOUT;
 
         // Se è halftime, non è ancora iniziata la seconda metà, quindi non si possono
         // aggiungere eventi

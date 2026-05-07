@@ -104,6 +104,6 @@ public class FootballMatch {
     }
 
     public Boolean isPenaltyShootOut(){
-        return status == FootballMatchStatus.PENALTY_SHOOT_OUT;
+        return status == FootballMatchStatus.PENALTY_SHOOTOUT;
     }
 }

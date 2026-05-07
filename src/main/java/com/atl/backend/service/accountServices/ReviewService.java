@@ -31,6 +31,15 @@ public class ReviewService {
     @Autowired
     private ReviewRepository reviewRepository;
 
+    public Review updateReview(Long id, Transaction linkedTransaction ,ReviewStatus status) {
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.REVIEW_NOT_FOUND));
+        review.setStatus(status);
+        review.setLinkedTransaction(linkedTransaction);
+        review.setUpdatedAt(Instant.now());
+        return reviewRepository.save(review);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public Review commitReview(ReviewDTO reviewDTO) {
         if (reviewDTO == null || reviewDTO.getId() == null) {
