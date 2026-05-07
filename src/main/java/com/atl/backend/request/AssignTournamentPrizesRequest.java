@@ -15,7 +15,7 @@ import com.atl.backend.config.ApiJsonKeys;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AssignPrizesTournamentRequest {
+public class AssignTournamentPrizesRequest {
     @NotNull
     @JsonProperty(ApiJsonKeys.tournamentId)
     private Long tournamentId;

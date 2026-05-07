@@ -172,6 +172,7 @@ public class TournamentStandingService {
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void orderStandingsForTournament(Long tournamentId) {
         Tournament tournament = getExistingTournament(tournamentId);
         switch (tournament.getSport().getSportCategory()) {
@@ -203,4 +204,5 @@ public class TournamentStandingService {
         }
     }
 
+    
 }

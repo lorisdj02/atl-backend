@@ -37,7 +37,7 @@ import com.atl.backend.model.enums.TransactionPendingReason;
 import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.model.enums.TransactionType;
-import com.atl.backend.request.AssignPrizesTournamentRequest;
+import com.atl.backend.request.AssignTournamentPrizesRequest;
 import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.CoordinatorService;
 import com.atl.backend.service.accountServices.PlayerService;
@@ -169,12 +169,21 @@ public class ReviewsOrchestrator {
         }
 
         @Transactional(rollbackFor = Exception.class)
-        public void assignTournamentPrizes(AssignPrizesTournamentRequest request) {
+        public void assignTournamentPrizes(Long tournamentId, AssignTournamentPrizesRequest request) {
+
+                if (tournamentId != null && !tournamentId.equals(request.getTournamentId())) {
+                        throw new BadRequestException(ErrorsString.TOURNAMENT_ID_MISMATCH);
+                }
+
                 Tournament tournament = tournamentService.getTournamentById(request.getTournamentId())
                                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
                 Team winningTeam = tournamentParticipantService.getWinningTeamInTournament(request.getTournamentId())
                                 .orElseThrow(() -> new NotFoundException(ErrorsString.WINNING_TEAM_NOT_FOUND));
                 Team finalistTeam = null;
+
+                if (tournamentService.arePrizesAssignedInTournament(tournamentId)) {
+                        throw new ConflictException(ErrorsString.CANNOT_ASSIGN_PRIZES);
+                }
 
                 if (tournament.getPrize2() != null && tournament.getPrize2().compareTo(BigDecimal.ZERO) > 0) {
                         finalistTeam = tournamentParticipantService

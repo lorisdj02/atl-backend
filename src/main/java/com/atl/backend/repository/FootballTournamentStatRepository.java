@@ -15,4 +15,7 @@ public interface FootballTournamentStatRepository extends JpaRepository<Football
     List<FootballTournamentStat> findByTournament_Id(Long tournamentId);
 
     Optional<FootballTournamentStat> findByTournament_IdAndPlayer_PlayerIdAndTeam_Id(Long tournamentId, Long playerId, Long teamId);
+
+    Optional<FootballTournamentStat> findByTournament_IdAndTeam_IdAndPlayer_PlayerId(Long tournamentId, Long teamId, Long playerId);
+
 }

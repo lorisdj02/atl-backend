@@ -59,6 +59,8 @@ public class ErrorsString {
 
     static final public String MATCH_EVENT_NOT_FOUND = "MATCH_EVENT_NOT_FOUND";
 
+    static final public String STAT_NOT_FOUND = "STAT_NOT_FOUND";
+
     // Bad request errors
 
     static final public String UNSUPPORTED_SPORT_CATEGORY = "UNSUPPORTED_SPORT_CATEGORY";
@@ -248,6 +250,8 @@ public class ErrorsString {
     static final public String CANNOT_START_MATCH_WITH_UNASSIGNED_TEAMS = "CANNOT_START_MATCH_WITH_UNASSIGNED_TEAMS";
 
     static final public String BOOKING_OUTSIDE_OPENING_HOURS = "BOOKING_OUTSIDE_OPENING_HOURS";
+
+    static final public String CANNOT_ASSIGN_PRIZES = "CANNOT_ASSIGN_PRIZES";
 
     // Authentication errors
 

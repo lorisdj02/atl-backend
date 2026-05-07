@@ -5,6 +5,7 @@ import com.atl.backend.service.accountServices.PlayerService;
 import com.atl.backend.service.matchServices.MatchService;
 import com.atl.backend.service.teamServices.TeamAuthService;
 import com.atl.backend.service.teamServices.TeamService;
+import com.atl.backend.service.tournamentServices.TournamentAuthService;
 import com.atl.backend.service.tournamentServices.TournamentParticipantService;
 import com.atl.backend.service.tournamentServices.TournamentPhaseService;
 import com.atl.backend.service.tournamentServices.TournamentService;
@@ -43,7 +44,10 @@ import com.atl.backend.model.Coordinator;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.model.enums.TournamentPhase;
+import com.atl.backend.model.enums.TournamentStatus;
 import com.atl.backend.response.AllTournamentsResponse;
+import com.atl.backend.response.AssignFootballPrizesResponse;
 import com.atl.backend.response.CallupsResponse;
 import com.atl.backend.response.FootballTournamentResponse;
 import com.atl.backend.response.TournamentDetailsResponse;
@@ -72,6 +76,8 @@ public class TournamentScreenService {
     private TournamentStatService tournamentStatService;
     @Autowired
     private TournamentPhaseService tournamentPhaseService;
+    @Autowired
+    private TournamentAuthService tournamentAuthService;
 
     @Autowired
     private TeamService teamService;
@@ -370,8 +376,19 @@ public class TournamentScreenService {
             players.add(stat.getPlayer());
         }
 
-        //TODO: semplificato
-        Boolean canContinue = tournamentPhaseService.canGoToNextPhase(tournamentId);
+        Boolean canContinue = null;
+
+        if (AccountContext.isPlayer() && tournament.getStatus() == TournamentStatus.PENDING_PAYMENTS
+                && tournament.getPhase() == TournamentPhase.FINAL) {
+            Team accountTeam = teamService.getTeamByPlayerIdAndSportCategory(
+                    AccountContext.getPlayerId(), tournament.getSport().getSportCategory())
+                    .orElse(null);
+            if (accountTeam != null && teamAuthService.canManageTeamInTournament(accountTeam.getId(), tournamentId)) {
+                canContinue = matchService.hasTeamPrizesByTeamIdAndTournamentId(accountTeam.getId(), tournamentId);
+            }
+        } else if (tournamentAuthService.canManageTournament(tournamentId)) {
+            canContinue = tournamentPhaseService.canGoToNextPhase(tournamentId);
+        }
 
         return FootballTournamentResponse.builder()
                 .matches(matches.stream().map(FootballMatchDTO::fromFootballMatch).toList())
@@ -403,6 +420,50 @@ public class TournamentScreenService {
                 .field(FieldDTO.fromField(tournament.getField()))
                 .sport(SportDTO.fromSport(tournament.getSport()))
                 .cityName(tournament.getField().getCity().getName())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public AssignFootballPrizesResponse getAssignFootballPrizesScreen(Long tournamentId) {
+        Tournament tournament = tournamentService.getTournamentById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
+
+        Player currentPlayer = AccountContext.getActivePlayer();
+        Team accountTeam = teamService
+                .getTeamByPlayerIdAndSportCategory(currentPlayer.getPlayerId(), SportCategory.FOOTBALL)
+                .orElseThrow(() -> new ConflictException(ErrorsString.NEED_TO_BE_IN_TEAM));
+        teamAuthService.checkManageTeamInTournament(accountTeam.getId(), tournamentId);
+
+        if (!tournament.getPhase().equals(TournamentPhase.FINAL)
+                || !tournament.getStatus().equals(TournamentStatus.PENDING_PAYMENTS)) {
+            throw new ConflictException(ErrorsString.CANNOT_ASSIGN_PRIZES);
+        }
+
+        Optional<Team> winningTeam = tournamentParticipantService.getWinningTeamInTournament(tournamentId);
+        if (winningTeam.isEmpty()) {
+            throw new NotFoundException(ErrorsString.WINNING_TEAM_NOT_FOUND);
+        }
+        Boolean isWinner = winningTeam.get().getId().equals(accountTeam.getId());
+
+        List<Long> playerIds = tournamentParticipantService.getCalluppedPlayerIdsByTournamentIdAndTeamId(tournamentId,
+                accountTeam.getId());
+
+        Map<Long, PlayerDTO> playersCache = new HashMap<>();
+        Map<Long, FootballTeamStatDTO> footballPlayerStatsCache = new HashMap<>();
+        for (Long playerId : playerIds) {
+            Player player = playerService.getPlayerByPlayerId(playerId)
+                    .orElseThrow(() -> new NotFoundException(ErrorsString.PLAYER_NOT_FOUND));
+            playersCache.put(playerId, PlayerDTO.fromPlayer(player));
+            FootballTournamentStat tournamentStats = tournamentStatService
+                    .getFootballTournamentStatByTournamentIdAndTeamIdAndPlayerId(tournamentId, accountTeam.getId(), playerId)
+                    .orElseThrow(() -> new NotFoundException(ErrorsString.STAT_NOT_FOUND));
+            footballPlayerStatsCache.put(playerId, FootballTeamStatDTO.fromFootballTournamentStat(tournamentStats));
+        }
+
+        return AssignFootballPrizesResponse.builder()
+                .isWinner(isWinner)
+                .playersCache(playersCache)
+                .footballPlayerStatsCache(footballPlayerStatsCache)
                 .build();
     }
 }

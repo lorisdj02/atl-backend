@@ -656,11 +656,12 @@ public class TournamentService {
 
         // Imposta il premio a -1 per indicare che è stato assegnato e non è più
         // disponibile
+        // Non va bene, perchè perdo quanto valeva il premio -> lo rendo negativo
         if (assignFirstPrize != null && assignFirstPrize) {
-            tournament.setPrize1(BigDecimal.valueOf(-1));
+            tournament.setPrize1(tournament.getPrize1().negate());
         }
         if (assignSecondPrize != null && assignSecondPrize) {
-            tournament.setPrize2(BigDecimal.valueOf(-1));
+            tournament.setPrize2(tournament.getPrize2().negate());
         }
         return tournamentRepository.save(tournament);
     }

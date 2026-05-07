@@ -24,9 +24,11 @@ import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.TournamentParticipation;
 import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.request.AssignTournamentPrizesRequest;
 import com.atl.backend.request.ConfirmCallupsRequest;
 import com.atl.backend.response.AllTournamentsResponse;
 import com.atl.backend.response.ApplyTournamentFiltersResponse;
+import com.atl.backend.response.AssignFootballPrizesResponse;
 import com.atl.backend.response.CallupsResponse;
 import com.atl.backend.response.ScheduleMatchResponse;
 import com.atl.backend.response.TournamentDetailsResponse;
@@ -146,6 +148,12 @@ public class TournamentController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/tournament/{tournamentId}/assign-football-prizes-screen")
+    public ResponseEntity<AssignFootballPrizesResponse> getAssignFootballPrizesScreen(@PathVariable Long tournamentId) {
+        AssignFootballPrizesResponse response = tournamentScreenService.getAssignFootballPrizesScreen(tournamentId);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<TournamentDTO> createTournament(@RequestBody TournamentDTO tournamentDTO) {
         TournamentDTO tournament = tournamentService.createTournament(tournamentDTO);
@@ -184,6 +192,12 @@ public class TournamentController {
     @PatchMapping("/tournament/{tournamentId}/toggle-favorite-status")
     public ResponseEntity<Void> toggleFavoriteStatus(@PathVariable Long tournamentId) {
         tournamentService.toggleTournamentFavoriteStatus(tournamentId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/tournament/{tournamentId}/assign-prizes")
+    public ResponseEntity<Void> assignPrizes(@PathVariable Long tournamentId, @RequestBody AssignTournamentPrizesRequest request) {
+        reviewsOrchestrator.assignTournamentPrizes(tournamentId, request);
         return ResponseEntity.ok().build();
     }
 }

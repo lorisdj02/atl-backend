@@ -342,5 +342,8 @@ public class ApiJsonKeys {
 
     // AssignPrizesTournamentRequest
     public static final String prizePerPlayer = "prizePerPlayer"; // Map<Integer, BigDecimal>
-
+    // AssignFootballPrizesTournamentResponse
+    public static final String statPerPlayer = "statPerPlayer"; // int
+    // AssignFootballPrizesTournamentResponse
+    public static final String isWinner = "isWinner"; // boolean
 }

@@ -382,7 +382,7 @@ public class MatchService {
                 FootballMatch footballMatch = footballMatchOptional.get();
                 Boolean teamIsHome = footballMatch.getHomeTeam().equals(team);
                 Boolean teamIsAway = footballMatch.getAwayTeam().equals(team);
-                if (!teamIsHome && !teamIsAway) {
+                if (teamIsHome == teamIsAway) {
                     return false;
                 }
                 if (teamIsHome && aggregateScoreHome > aggregateScoreAway) {

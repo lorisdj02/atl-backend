@@ -18,4 +18,5 @@ public interface FootballStandingRepository extends JpaRepository<FootballStandi
     List<FootballStanding> findByTournament_IdAndGroupName(Long tournamentId, String groupName);
 
     Optional<FootballStanding> findByTournament_IdAndTeam_Id(Long tournamentId, Long teamId);
+
 }

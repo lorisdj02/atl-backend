@@ -1,6 +1,8 @@
 package com.atl.backend.dto;
 
 import com.atl.backend.model.FootballTeamStat;
+import com.atl.backend.model.FootballTournamentStat;
+
 import lombok.Data;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
@@ -31,6 +33,21 @@ public class FootballTeamStatDTO {
     @NotNull
     @JsonProperty("redCards")
     private Short redCards;
+
+    public static FootballTeamStatDTO fromFootballTournamentStat(FootballTournamentStat footballTournamentStat) {
+        if (footballTournamentStat == null) {
+            return null;
+        }
+
+        FootballTeamStatDTO dto = new FootballTeamStatDTO();
+        dto.setTeamId(footballTournamentStat.getTeam().getId());
+        dto.setPlayerId(footballTournamentStat.getPlayer().getPlayerId());
+        dto.setGoals(footballTournamentStat.getGoals());
+        dto.setMotm(footballTournamentStat.getMotm());
+        dto.setYellowCards(footballTournamentStat.getYellowCards());
+        dto.setRedCards(footballTournamentStat.getRedCards());
+        return dto;
+    }
 
     public static FootballTeamStatDTO fromFootballTeamStat(FootballTeamStat footballTeamStat) {
         if (footballTeamStat == null) {

@@ -89,4 +89,8 @@ public class TournamentStatService {
         footballTournamentStats.setUpdatedAt(Instant.now());
         footballTournamentStatRepository.save(footballTournamentStats);
     }
+
+    public Optional<FootballTournamentStat> getFootballTournamentStatByTournamentIdAndTeamIdAndPlayerId(Long tournamentId, Long teamId, Long playerId) {
+        return footballTournamentStatRepository.findByTournament_IdAndTeam_IdAndPlayer_PlayerId(tournamentId, teamId, playerId);
+    }
 }
