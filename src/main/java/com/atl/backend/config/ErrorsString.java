@@ -253,6 +253,8 @@ public class ErrorsString {
 
     static final public String CANNOT_ASSIGN_PRIZES = "CANNOT_ASSIGN_PRIZES";
 
+    static final public String TOURNAMENT_ALREADY_IN_FINAL_PHASE = "TOURNAMENT_ALREADY_IN_FINAL_PHASE";
+
     // Authentication errors
 
     static final public String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";

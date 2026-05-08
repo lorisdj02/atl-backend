@@ -44,8 +44,8 @@ public class AccountDTO {
     @JsonProperty("birthdate")
     private String birthdate;
 
-    @JsonProperty("vip")
-    private boolean vip;
+    @JsonProperty("isVip")
+    private Boolean isVip;
 
     @JsonProperty("vipType")
     private String vipType;
@@ -76,8 +76,8 @@ public class AccountDTO {
         dto.setImageUrl(account.getImageUrl());
         dto.setRole(account.getRole().toString());
         dto.setBirthdate(account.getBirthdate() != null ? account.getBirthdate().toString() : null);
-        dto.setVip(account.getVip());
-        dto.setVipType(account.getVipType().toString());
+        dto.setIsVip(account.getIsVip());
+        dto.setVipType(account.getVipType() != null ? account.getVipType().toString() : null);
         dto.setVipStart(account.getVipStart() != null ? account.getVipStart().toString() : null);
         dto.setVipEnd(account.getVipEnd() != null ? account.getVipEnd().toString() : null);
         dto.setPreferredCityId(account.getPreferredCity() != null ? account.getPreferredCity().getId() : null);

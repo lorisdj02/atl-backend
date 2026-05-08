@@ -107,8 +107,7 @@ public class TournamentPhaseService {
                 tournament.setPhase(TournamentPhase.FINAL);
                 break;
             case FINAL:
-                tournament.setStatus(TournamentStatus.PENDING_PAYMENTS);
-                break;
+                throw new ConflictException(ErrorsString.TOURNAMENT_ALREADY_IN_FINAL_PHASE);
         }
         tournament.setUpdatedAt(Instant.now());
         tournamentRepository.save(tournament);

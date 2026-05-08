@@ -703,8 +703,8 @@ public class TournamentService {
         return tournamentRepository.save(tournament);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public Tournament finishTournament(Long tournamentId) {
-        // TODO: controllare secondo
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
 
@@ -726,7 +726,6 @@ public class TournamentService {
 
         Map<TournamentPhase, Set<Team>> teamPerPhase = tournamentParticipantService
                 .getTeamsInEachPhaseOfTournament(tournamentId);
-
         Map<TournamentPhase, Set<Team>> sortedByPhaseDesc = teamPerPhase.entrySet().stream()
                 .sorted(Map.Entry.<TournamentPhase, Set<Team>>comparingByKey(Comparator.reverseOrder()))
                 .collect(Collectors.toMap(
@@ -772,7 +771,6 @@ public class TournamentService {
             }
         }
         return tournamentRepository.save(tournament);
-
     }
 
 }

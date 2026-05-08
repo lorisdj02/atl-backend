@@ -467,7 +467,7 @@ public class PaymentService {
             Account organizationAccount = field.getOrganization().getAccount();
             BigDecimal amount = booking.calculatePrice();
             BigDecimal atlFee = ATLCostants.ORGANIZATION_FEE_ATL;
-            if (organizationAccount.getVip() != null && organizationAccount.getVip()) {
+            if (organizationAccount.getIsVip() != null && organizationAccount.getIsVip()) {
                 amount = amount.multiply(BigDecimal.valueOf(1).subtract(atlFee));
             }
             TransactionGroup transactionGroup = new TransactionGroup();

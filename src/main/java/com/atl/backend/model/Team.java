@@ -81,8 +81,8 @@ public class Team {
     @Column(name = "sport_category", nullable = false, length = 15)
     private SportCategory sportCategory;
 
-    @Column(name = "vip", nullable = false)
-    private Boolean vip = false;
+    @Column(name = "is_vip", nullable = false)
+    private Boolean isVip = false;
 
     @Column(name = "visible")
     private Boolean visible = true;

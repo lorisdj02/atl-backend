@@ -25,6 +25,7 @@ import com.atl.backend.repository.ReviewRepository;
 import com.atl.backend.repository.WalletRepository;
 import com.atl.backend.request.RegisterAccountRequest;
 import com.atl.backend.request.UpdateAccountInfosRequest;
+import com.atl.backend.response.HasNotificationsResponse;
 import com.atl.backend.response.LoginResponse;
 import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.paymentServices.PaymentService;
@@ -237,7 +238,7 @@ public class AccountService {
             account.setPhone("deleted_phone_" + account.getId());
             account.setName("deleted_name_" + account.getId());
             account.setSurname("deleted_surname_" + account.getId());
-            account.setVip(false);
+            account.setIsVip(false);
             account.setVipType(null);
             account.setVipStart(null);
             account.setVipEnd(null);
@@ -317,12 +318,16 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    public boolean hasNotifications() {
-        Long accountId = AccountContext.getAccountId();
+    public HasNotificationsResponse hasNotifications() {
+        Account account = AccountContext.getActiveAccount();
         // List<Review> reviews = getReviewsByReviewerAccountId(accountId);
-        List<Review> pendingReviews = getPendingReviewsByReviewerAccountId(accountId);
+        List<Review> pendingReviews = getPendingReviewsByReviewerAccountId(account.getId());
         // return !reviews.isEmpty() || !pendingReviews.isEmpty();
-        return !pendingReviews.isEmpty();
+
+        return HasNotificationsResponse.builder()
+                .hasUnreadNotifications(!pendingReviews.isEmpty())
+                .isVip(account.getIsVip())
+                .build();
     }
 
     @Transactional(rollbackFor = Exception.class)

@@ -8,10 +8,10 @@ import com.atl.backend.model.RefereeLicense;
 import com.atl.backend.model.Review;
 import com.atl.backend.request.RegisterAccountRequest;
 import com.atl.backend.request.UpdateAccountInfosRequest;
+import com.atl.backend.response.HasNotificationsResponse;
 import com.atl.backend.response.LoginResponse;
 import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.RefereeService;
-import com.atl.backend.service.accountServices.ReviewService;
 
 import com.atl.backend.service.orchestrator.ReviewsOrchestrator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +48,7 @@ public class AccountController {
     }
 
     @GetMapping("/account/has-notifications")
-    public ResponseEntity<Boolean> hasNotifications() {
+    public ResponseEntity<HasNotificationsResponse> hasNotifications() {
         return ResponseEntity.ok(accountService.hasNotifications());
     }
 

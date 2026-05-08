@@ -99,7 +99,7 @@ public class TeamScreenService {
                                 List<FootballTeamStat> footballTeamStats = teamService
                                                 .getFootballTeamStatsByTeamId(teamId);
                                 for (FootballTeamStat stat : footballTeamStats) {
-                                        if (team.getVip() == false
+                                        if (team.getIsVip() == false
                                                         && playersInTeamResponse.getPlayers().stream()
                                                                         .noneMatch(player -> player.getPlayerId()
                                                                                         .equals(stat.getPlayer()

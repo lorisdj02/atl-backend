@@ -240,10 +240,6 @@ public class TeamService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.PLAYER_NOT_FOUND));
 
-        System.out
-                .println("[DEBUG] - Checking if player " + playerId + " is captain or vice-captain of team " + teamId);
-        System.out.println("[DEBUG] - Team captain: " + team.getCaptainPlayer().getPlayerId());
-
         return (playerId.equals(team.getCaptainPlayer().getPlayerId()))
                 || (team.getViceCaptainPlayers().contains(player));
     }
@@ -268,7 +264,7 @@ public class TeamService {
         List<Player> players = playsAts.stream().map(PlaysAt::getPlayer).toList();
         List<Player> historicalPlayers = new ArrayList<>();
 
-        if (team.getVip()) {
+        if (team.getIsVip()) {
             switch (team.getSportCategory()) {
                 case FOOTBALL:
                     List<FootballTeamStat> footballTeamStats = footballTeamStatRepository.findByTeam_Id(teamId);

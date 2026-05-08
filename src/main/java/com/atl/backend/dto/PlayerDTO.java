@@ -33,8 +33,8 @@ public class PlayerDTO {
     private String imageUrl;
 
     @NotNull
-    @JsonProperty("vip")
-    private boolean vip;
+    @JsonProperty("isVip")
+    private Boolean isVip;
 
     @NotNull
     @JsonProperty("vipType")
@@ -65,7 +65,7 @@ public class PlayerDTO {
         dto.setName(player.getAccount().getName());
         dto.setSurname(player.getAccount().getSurname());
         dto.setImageUrl(player.getAccount().getImageUrl());
-        dto.setVip(player.getAccount().getVip());
+        dto.setIsVip(player.getAccount().getIsVip());
         dto.setVipType(player.getAccount().getVipType() != null ? player.getAccount().getVipType().toString() : null);
         dto.setVipStart(
                 player.getAccount().getVipStart() != null ? player.getAccount().getVipStart().toString() : null);

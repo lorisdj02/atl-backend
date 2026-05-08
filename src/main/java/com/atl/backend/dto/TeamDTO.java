@@ -45,8 +45,8 @@ public class TeamDTO {
     private String description;
 
     @NotNull
-    @JsonProperty("vip")
-    private Boolean vip = false;
+    @JsonProperty("isVip")
+    private Boolean isVip = false;
 
     @NotNull
     @JsonProperty("maxPlayers")
@@ -82,7 +82,7 @@ public class TeamDTO {
         dto.setName(team.getName());
         dto.setAlias(team.getAlias());
         dto.setDescription(team.getDescription());
-        dto.setVip(team.getVip());
+        dto.setIsVip(team.getIsVip());
         dto.setMaxPlayers(team.getMaxPlayers());
         dto.setNumPlayers(team.getNumPlayers());
         dto.setSportCategory(team.getSportCategory() != null ? team.getSportCategory().toString() : null);

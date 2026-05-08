@@ -189,6 +189,12 @@ public class TournamentController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/tournament/{tournamentId}/finish")
+    public ResponseEntity<Void> finishTournament(@PathVariable Long tournamentId) {
+        reviewsOrchestrator.finishTournament(tournamentId);
+        return ResponseEntity.ok().build();
+    }
+
     @PatchMapping("/tournament/{tournamentId}/toggle-favorite-status")
     public ResponseEntity<Void> toggleFavoriteStatus(@PathVariable Long tournamentId) {
         tournamentService.toggleTournamentFavoriteStatus(tournamentId);
@@ -196,7 +202,8 @@ public class TournamentController {
     }
 
     @PatchMapping("/tournament/{tournamentId}/assign-prizes")
-    public ResponseEntity<Void> assignPrizes(@PathVariable Long tournamentId, @RequestBody AssignTournamentPrizesRequest request) {
+    public ResponseEntity<Void> assignPrizes(@PathVariable Long tournamentId,
+            @RequestBody AssignTournamentPrizesRequest request) {
         reviewsOrchestrator.assignTournamentPrizes(tournamentId, request);
         return ResponseEntity.ok().build();
     }

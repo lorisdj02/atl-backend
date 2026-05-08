@@ -36,8 +36,8 @@ public class Account {
     @Column(name = "surname", nullable = false, length = 31)
     private String surname;
 
-    @Column(name = "vip", nullable = false)
-    private Boolean vip = false;
+    @Column(name = "is_vip", nullable = false)
+    private Boolean isVip = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "vip_type", length = 15, nullable = false)

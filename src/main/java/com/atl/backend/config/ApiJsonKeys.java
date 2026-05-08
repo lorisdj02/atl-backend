@@ -346,4 +346,7 @@ public class ApiJsonKeys {
     public static final String statPerPlayer = "statPerPlayer"; // int
     // AssignFootballPrizesTournamentResponse
     public static final String isWinner = "isWinner"; // boolean
+
+    //HasUnreadNotificationsResponse
+    public static final String isVip = "isVip"; // boolean
 }

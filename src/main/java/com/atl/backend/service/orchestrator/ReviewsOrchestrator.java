@@ -147,7 +147,7 @@ public class ReviewsOrchestrator {
                                 .getCalluppedPlayerIdsByTournamentIdAndTeamId(tournamentId, winningTeam.getId());
 
                 List<Long> finalistPlayerIds = new ArrayList<>();
-                if (tournament.getPrize2() != null && tournament.getPrize2().compareTo(BigDecimal.ZERO) > 0) {
+                if (tournament.getPrize2() != null && BigDecimal.ZERO.compareTo(tournament.getPrize2()) < 0) {
                         finalistTeam = tournamentParticipantService.getFinalistTeamInTournament(tournamentId)
                                         .orElseThrow(() -> new NotFoundException(ErrorsString.FINALIST_TEAM_NOT_FOUND));
                         finalistPlayerIds = tournamentParticipantService
@@ -170,8 +170,7 @@ public class ReviewsOrchestrator {
                                                                 tournamentId)
                                                 .orElseThrow(() -> new NotFoundException(
                                                                 ErrorsString.REVIEW_NOT_FOUND));
-                                review.setStatus(ReviewStatus.PENDING);
-                                reviewService.saveReview(review);
+                                reviewService.updateReview(review.getId(), null, ReviewStatus.PENDING);
                         }
                 }
         }
@@ -257,30 +256,33 @@ public class ReviewsOrchestrator {
                                 isWinningTeam, !isWinningTeam);
                 if (savedTournament.arePrizesAssigned()) {
                         tournamentService.closeTournament(request.getTournamentId());
-                        List<Long> participantIds = tournamentParticipantService
-                                        .getCalluppedPlayerIdsByTournamentId(request.getTournamentId());
-
-                        Coordinator reviewedCoordinator = tournament.getCoordinator();
-                        for (Long participantId : participantIds) {
-                                Callup callup = tournamentParticipantService
-                                                .getCallupByPlayerIdAndTournamentId(participantId,
-                                                                tournament.getId())
-                                                .orElseThrow(() -> new NotFoundException(
-                                                                ErrorsString.PLAYER_NOT_CALLED_UP_IN_TOURNAMENT));
-                                Player reviewerPlayer = callup.getPlayer();
-                                Optional<Review> review = reviewService
-                                                .getReviewByReviewerAccount_IdAndReviewedAccount_IdAndTournament_Id(
-                                                                reviewerPlayer.getAccount().getId(),
-                                                                reviewedCoordinator.getAccount().getId(),
-                                                                tournament.getId());
-                                if (review.isPresent()) {
-                                        Review existingReview = review.get();
-                                        if (existingReview.getLinkedTransaction() == null) {
-                                                reviewService.updateReview(existingReview.getId(), null,
-                                                                ReviewStatus.PENDING);
-                                        }
-                                }
-                        }
+                        /*
+                         * List<Long> participantIds = tournamentParticipantService
+                         * .getCalluppedPlayerIdsByTournamentId(request.getTournamentId());
+                         * 
+                         * Coordinator reviewedCoordinator = tournament.getCoordinator();
+                         * for (Long participantId : participantIds) {
+                         * Callup callup = tournamentParticipantService
+                         * .getCallupByPlayerIdAndTournamentId(participantId,
+                         * tournament.getId())
+                         * .orElseThrow(() -> new NotFoundException(
+                         * ErrorsString.PLAYER_NOT_CALLED_UP_IN_TOURNAMENT));
+                         * Player reviewerPlayer = callup.getPlayer();
+                         * Optional<Review> review = reviewService
+                         * .getReviewByReviewerAccount_IdAndReviewedAccount_IdAndTournament_Id(
+                         * reviewerPlayer.getAccount().getId(),
+                         * reviewedCoordinator.getAccount().getId(),
+                         * tournament.getId());
+                         * if (review.isPresent()) {
+                         * Review existingReview = review.get();
+                         * if (existingReview.getLinkedTransaction() == null) {
+                         * reviewService.updateReview(existingReview.getId(), null,
+                         * ReviewStatus.PENDING);
+                         * }
+                         * }
+                         *
+                         * }
+                         */
                 }
         }
 
