@@ -18,6 +18,10 @@ public class CityDTO {
     @JsonProperty("name")
     private String name;
 
+    @NotNull
+    @JsonProperty("timeZone")
+    private String timeZone;
+
     public static CityDTO fromCity(City city) {
         if (city == null) {
             return null;
@@ -26,6 +30,7 @@ public class CityDTO {
         CityDTO dto = new CityDTO();
         dto.setId(city.getId());
         dto.setName(city.getName());
+        dto.setTimeZone(city.getTimeZone());
         return dto;
     }
 }

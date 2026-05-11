@@ -89,6 +89,11 @@
 			<groupId>org.eclipse</groupId>
 			<artifactId>yasson</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>26.6.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

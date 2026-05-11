@@ -1,6 +1,7 @@
 package com.atl.backend.service.paymentServices;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,9 +15,11 @@ import org.springframework.stereotype.Service;
 import com.atl.backend.auth.AccountContext;
 import com.atl.backend.config.ATLCostants;
 import com.atl.backend.config.ErrorsString;
+import com.atl.backend.config.StripeConfig;
 import com.atl.backend.dto.CheckoutPayload;
 import com.atl.backend.dto.CheckoutSessionDTO;
 import com.atl.backend.dto.PurchaseDetail;
+import com.atl.backend.dto.StripePaymentSheetData;
 import com.atl.backend.dto.WalletDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.exception.ConflictException;
@@ -41,6 +44,7 @@ import com.atl.backend.model.enums.TransactionPendingReason;
 import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.model.enums.TransactionType;
+import com.atl.backend.repository.AccountRepository;
 import com.atl.backend.repository.BookingRepository;
 import com.atl.backend.repository.CheckoutSessionRepository;
 import com.atl.backend.repository.FieldRepository;
@@ -53,6 +57,14 @@ import com.atl.backend.repository.TransactionRepository;
 import com.atl.backend.repository.WalletBalanceRepository;
 import com.atl.backend.repository.WalletRepository;
 import com.atl.backend.response.CheckoutResponse;
+import com.stripe.Stripe;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
+import com.stripe.model.EphemeralKey;
+import com.stripe.model.PaymentIntent;
+import com.stripe.param.CustomerCreateParams;
+import com.stripe.param.EphemeralKeyCreateParams;
+import com.stripe.param.PaymentIntentCreateParams;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +80,8 @@ public class PaymentService {
 
     @Autowired
     private WalletRepository walletRepository;
+    @Autowired
+    private AccountRepository accountRepository;
     @Autowired
     private TransactionRepository transactionRepository;
     @Autowired
@@ -86,6 +100,9 @@ public class PaymentService {
     private LobbyBookingRepository lobbyBookingRepository;
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Autowired
+    private StripeConfig stripeConfig;
 
     public Wallet createWalletForAccount(Account account) {
         Wallet wallet = new Wallet();
@@ -333,7 +350,8 @@ public class PaymentService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Purchase payCheckout(CheckoutSession session, Boolean useWallet, PurchaseDetail detail) {
+    public Purchase payCheckout(CheckoutSession session, Boolean useWallet, PurchaseDetail detail,
+            String paymentIntentId) {
         // TODO: verificare le fee e le tasse da applicare
         if (session.getStatus() != CheckoutStatus.PENDING) {
             throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
@@ -406,15 +424,7 @@ public class PaymentService {
             }
         }
 
-        if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
-            // TODO: integrare STRIPE, gestire qui l'errore senza lanciare un'eccezione, in
-            // modo da permettere comunque la creazione dell'acquisto e dei transaction
-            // group, che saranno poi confermati o rimborsati a seconda dell'esito del
-            // pagamento. Tutto all'interno di un try catch, in modo da poter gestire
-            // eventuali errori di comunicazione con Stripe o di pagamento fallito, e in
-            // modo da poter comunque creare l'acquisto e i transaction group, che saranno
-            // poi confermati o rimborsati a seconda dell'esito del pagamento.
-            amountToPay = BigDecimal.ZERO; // Rimuovere questa riga quando si integra Stripe
+        if (amountToPay.compareTo(BigDecimal.ZERO) > 0 && paymentIntentId != null) {
 
             if (false) { // TODO: Sostituire questa condizione con il controllo dell'esito del pagamento
                          // tramite Stripe
@@ -422,6 +432,12 @@ public class PaymentService {
                 saveTransactionGroup(transactionGroup);
                 return null;
             }
+        }
+
+        if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
+            transactionGroup.setStatus(TransactionStatus.FAILED);
+            saveTransactionGroup(transactionGroup);
+            return null;
         }
 
         transactionGroup.setStatus(TransactionStatus.CONFIRMED);
@@ -455,7 +471,24 @@ public class PaymentService {
         session.setAmount(payload.getAmount());
         session.setStatus(CheckoutStatus.PENDING);
         return checkoutSessionRepository.save(session);
+    }
 
+    private BigDecimal calculateRemainingAmount(BigDecimal totalAmount){
+        WalletBalance walletBalance = getWalletBalanceByAccountId(AccountContext.getActiveAccount().getId());
+        if (totalAmount == null) {
+            return null;
+        }
+        BigDecimal remainingAmount = totalAmount;
+        if (walletBalance.hasInviteBalance()) {
+            remainingAmount = remainingAmount.subtract(walletBalance.getInviteBalance());
+        }
+        if (remainingAmount.compareTo(BigDecimal.ZERO) > 0 && walletBalance.hasPrizeBalance()) {
+            remainingAmount = remainingAmount.subtract(walletBalance.getPrizeBalance());
+        }
+        if (remainingAmount.compareTo(BigDecimal.ZERO) > 0 && walletBalance.hasPersonalBalance()) {
+            remainingAmount = remainingAmount.subtract(walletBalance.getPersonalBalance());
+        }
+        return remainingAmount;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -488,5 +521,87 @@ public class PaymentService {
             accountIds.add(purchase.getAccount().getId());
         }
         return accountIds;
+    }
+
+    public StripePaymentSheetData createPaymentIntent(Long sessionId, Boolean useWallet) {
+        Account account = AccountContext.getActiveAccount();
+        CheckoutSession session = checkoutSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.CHECKOUT_SESSION_NOT_FOUND));
+        if (session.getStatus() != CheckoutStatus.PENDING) {
+            throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
+        }
+        if (session.getExpiresAt().isBefore(Instant.now())) {
+            session.setStatus(CheckoutStatus.EXPIRED);
+            saveCheckoutSession(session);
+            throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
+        }
+        if (!session.getAccount().equals(account)) {
+            throw new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND);
+        }
+
+        BigDecimal totalAmount = session.getAmount();
+        BigDecimal amount = totalAmount;
+        if (useWallet) {
+            amount = calculateRemainingAmount(totalAmount);
+        }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException(ErrorsString.PAYMENT_AMOUNT_MUST_BE_POSITIVE);
+        }
+
+
+        if (stripeConfig.getSecretKey() == null || stripeConfig.getSecretKey().isBlank()
+                || stripeConfig.getPublishableKey() == null || stripeConfig.getPublishableKey().isBlank()
+                || stripeConfig.getApiVersion() == null || stripeConfig.getApiVersion().isBlank()) {
+            throw new PaymentRequiredException(ErrorsString.PAYMENT_FAILED);
+        }
+
+        Stripe.apiKey = stripeConfig.getSecretKey();
+
+        try {
+            String customerId = account.getStripeId();
+            if (customerId == null || customerId.isBlank()) {
+                CustomerCreateParams customerParams = CustomerCreateParams.builder()
+                        .setEmail(account.getEmail())
+                        .setName(account.getName() + " " + account.getSurname())
+                        .setPhone(account.getPhone())
+                        .build();
+                Customer customer = Customer.create(customerParams);
+                customerId = customer.getId();
+                account.setStripeId(customerId);
+                accountRepository.save(account);
+            }
+
+                EphemeralKeyCreateParams ephemeralKeyParams = EphemeralKeyCreateParams.builder()
+                    .setCustomer(customerId)
+                    .setStripeVersion(stripeConfig.getApiVersion())
+                    .build();
+                EphemeralKey ephemeralKey = EphemeralKey.create(ephemeralKeyParams);
+
+            PaymentIntentCreateParams intentParams = PaymentIntentCreateParams.builder()
+                    .setAmount(toStripeAmount(amount))
+                    .setCurrency("eur")
+                    .setCustomer(customerId)
+                    .setAutomaticPaymentMethods(
+                            PaymentIntentCreateParams.AutomaticPaymentMethods.builder().setEnabled(true).build())
+                    .putMetadata("checkoutSessionId", String.valueOf(sessionId))
+                    .build();
+            PaymentIntent paymentIntent = PaymentIntent.create(intentParams);
+
+            StripePaymentSheetData data = new StripePaymentSheetData();
+            data.setPaymentIntentId(paymentIntent.getId());
+            data.setClientSecret(paymentIntent.getClientSecret());
+            data.setCustomerId(customerId);
+            data.setEphemeralKey(ephemeralKey.getSecret());
+            data.setPublishableKey(stripeConfig.getPublishableKey());
+            return data;
+        } catch (StripeException e) {
+            throw new PaymentRequiredException(ErrorsString.PAYMENT_FAILED);
+        }
+    }
+
+    private long toStripeAmount(BigDecimal amount) {
+        return amount.multiply(BigDecimal.valueOf(100))
+                .setScale(0, RoundingMode.HALF_UP)
+                .longValueExact();
     }
 }

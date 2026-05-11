@@ -82,7 +82,7 @@ public class BookingController {
                 selectedCityId, start, end));
     }
 
-    @GetMapping("/free-fields/{sportCategory}/max-players/{maxPlayers}/city/{cityId}/startDate/{startTime}/finishDate/{finishTime}")
+    @GetMapping("/free-fields/{sportCategory}/max-players/{maxPlayers}/city/{cityId}/start-time/{startTime}/finish-time/{finishTime}")
     public ResponseEntity<FieldsAndMaxPlayersPerFieldResponse> getFreeFieldsByPlayerAndCityAndDate(
             @PathVariable String sportCategory,
             @PathVariable Short maxPlayers, @PathVariable Long cityId, @PathVariable String startTime,

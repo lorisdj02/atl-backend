@@ -6,7 +6,6 @@ import lombok.Data;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -60,9 +59,6 @@ public class Field {
     @Column(name = "closing_time", nullable = false)
     private LocalTime closingTime;
 
-    @Column(name = "time_zone", nullable = false, length = 63)
-    private String timeZone = "Europe/Rome";
-
     @Column(name = "closed_days", nullable = false, length = 7)
     private String closedDays = "0000001";
 
@@ -84,9 +80,5 @@ public class Field {
         BigDecimal durationInHours = BigDecimal.valueOf(Duration.between(startTime, finishTime).toMinutes())
                 .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
         return hourCostPrivate.multiply(durationInHours);
-    }
-
-    public ZoneId getZoneId() {
-        return ZoneId.of(timeZone);
     }
 }

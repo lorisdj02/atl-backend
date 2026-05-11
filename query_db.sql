@@ -3,6 +3,7 @@ CREATE TABLE
     "id" BIGINT PRIMARY KEY,
     "name" text UNIQUE NOT NULL,
     "created_at" timestamptz NOT NULL DEFAULT NOW (),
+    "time_zone" varchar(63) NOT NULL DEFAULT 'Europe/Rome',
     "updated_at" timestamptz
   );
 
@@ -119,7 +120,6 @@ CREATE TABLE
     "hour_cost_private" numeric(10, 2) NOT NULL,
     "opening_time" time NOT NULL,
     "closing_time" time NOT NULL,
-    "time_zone" varchar(63) NOT NULL DEFAULT 'Europe/Rome',
     "closed_days" char(7) NOT NULL DEFAULT '0000001',
     "created_at" timestamptz NOT NULL DEFAULT NOW (),
     "updated_at" timestamptz

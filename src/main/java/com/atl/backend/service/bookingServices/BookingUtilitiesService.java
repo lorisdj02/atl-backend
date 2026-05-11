@@ -1,7 +1,6 @@
 package com.atl.backend.service.bookingServices;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,10 +58,10 @@ public class BookingUtilitiesService {
             throw new ConflictException(ErrorsString.FIELD_NOT_AVAILABLE);
         }
 
-        Instant openingTime = field.getOpeningTime().atDate(start.atZone(field.getZoneId()).toLocalDate())
-                .atZone(field.getZoneId()).toInstant();
-        Instant closingTime = field.getClosingTime().atDate(start.atZone(field.getZoneId()).toLocalDate())
-                .atZone(field.getZoneId()).toInstant();
+        Instant openingTime = field.getOpeningTime().atDate(start.atZone(field.getCity().getZoneId()).toLocalDate())
+                .atZone(field.getCity().getZoneId()).toInstant();
+        Instant closingTime = field.getClosingTime().atDate(start.atZone(field.getCity().getZoneId()).toLocalDate())
+                .atZone(field.getCity().getZoneId()).toInstant();
         if (start.isBefore(openingTime) || end.isAfter(closingTime)) {
             throw new BadRequestException(ErrorsString.BOOKING_OUTSIDE_OPENING_HOURS);
         }
