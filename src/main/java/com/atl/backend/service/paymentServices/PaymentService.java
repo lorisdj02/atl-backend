@@ -473,7 +473,7 @@ public class PaymentService {
         return checkoutSessionRepository.save(session);
     }
 
-    private BigDecimal calculateRemainingAmount(BigDecimal totalAmount){
+    private BigDecimal calculateRemainingAmount(BigDecimal totalAmount) {
         WalletBalance walletBalance = getWalletBalanceByAccountId(AccountContext.getActiveAccount().getId());
         if (totalAmount == null) {
             return null;
@@ -548,7 +548,6 @@ public class PaymentService {
             throw new BadRequestException(ErrorsString.PAYMENT_AMOUNT_MUST_BE_POSITIVE);
         }
 
-
         if (stripeConfig.getSecretKey() == null || stripeConfig.getSecretKey().isBlank()
                 || stripeConfig.getPublishableKey() == null || stripeConfig.getPublishableKey().isBlank()
                 || stripeConfig.getApiVersion() == null || stripeConfig.getApiVersion().isBlank()) {
@@ -556,7 +555,6 @@ public class PaymentService {
         }
 
         Stripe.apiKey = stripeConfig.getSecretKey();
-
         try {
             String customerId = account.getStripeId();
             if (customerId == null || customerId.isBlank()) {
@@ -571,11 +569,11 @@ public class PaymentService {
                 accountRepository.save(account);
             }
 
-                EphemeralKeyCreateParams ephemeralKeyParams = EphemeralKeyCreateParams.builder()
+            EphemeralKeyCreateParams ephemeralKeyParams = EphemeralKeyCreateParams.builder()
                     .setCustomer(customerId)
                     .setStripeVersion(stripeConfig.getApiVersion())
                     .build();
-                EphemeralKey ephemeralKey = EphemeralKey.create(ephemeralKeyParams);
+            EphemeralKey ephemeralKey = EphemeralKey.create(ephemeralKeyParams);
 
             PaymentIntentCreateParams intentParams = PaymentIntentCreateParams.builder()
                     .setAmount(toStripeAmount(amount))
@@ -592,8 +590,7 @@ public class PaymentService {
             data.setClientSecret(paymentIntent.getClientSecret());
             data.setCustomerId(customerId);
             data.setEphemeralKey(ephemeralKey.getSecret());
-            data.setPublishableKey(stripeConfig.getPublishableKey());
-            return data;
+            data.setPublishableKey(stripeConfig.getPublishableKey());            return data;
         } catch (StripeException e) {
             throw new PaymentRequiredException(ErrorsString.PAYMENT_FAILED);
         }
