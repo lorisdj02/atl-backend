@@ -1,6 +1,7 @@
 package com.atl.backend.model;
 
 import java.time.Instant;
+import java.time.ZoneId;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -20,4 +21,11 @@ public class City {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Column(name = "time_zone", nullable = false, length = 63)
+    private String timeZone = "Europe/Rome";
+
+    public ZoneId getZoneId() {
+        return ZoneId.of(timeZone);
+    }
 }

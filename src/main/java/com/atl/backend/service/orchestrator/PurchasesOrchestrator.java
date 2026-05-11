@@ -298,7 +298,7 @@ public class PurchasesOrchestrator {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Purchase payCheckoutSession(Long sessionId, Boolean useWallet) {
+    public Purchase payCheckoutSession(Long sessionId, Boolean useWallet, String paymentIntentId) {
         CheckoutSession session = paymentService.getCheckoutSessionById(sessionId)
                 .orElseThrow(() -> new BadRequestException(ErrorsString.CHECKOUT_SESSION_NOT_FOUND));
 
@@ -328,7 +328,7 @@ public class PurchasesOrchestrator {
                 throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_TYPE);
         }
 
-        Purchase purchase = paymentService.payCheckout(session, useWallet, detail);
+        Purchase purchase = paymentService.payCheckout(session, useWallet, detail, paymentIntentId);
         if (purchase == null) {
             return null;
         }
@@ -386,7 +386,7 @@ public class PurchasesOrchestrator {
         paymentService.saveTransactionGroup(inviterGroup);
         paymentService.saveTransactionGroup(invitedGroup);
 
-        BigDecimal reward = BigDecimal.valueOf(2.5); // TODO: configurare
+        BigDecimal reward = ATLCostants.INVITE_REWARD;
 
         Transaction inviterTransaction = paymentService.createTransaction(inviterAccount, reward, reward,
                 BigDecimal.ZERO,
@@ -395,7 +395,7 @@ public class PurchasesOrchestrator {
 
         paymentService.createTransaction(account, reward, reward, BigDecimal.ZERO, BigDecimal.ZERO, invitedGroup,
                 TransactionType.INVITE, TransactionSource.INVITE_WALLET, TransactionStatus.CONFIRMED,
-                TransactionPendingReason.INVITE_REWARD);
+                null);
 
         accountService.addInvite(request.getInviteCode(), account, inviterTransaction);
 

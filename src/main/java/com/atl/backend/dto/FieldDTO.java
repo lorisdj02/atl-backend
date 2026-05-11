@@ -83,7 +83,7 @@ public class FieldDTO {
         dto.setClosedDays(field.getClosedDays());
         dto.setOpeningTime(field.getOpeningTime().toString());
         dto.setClosingTime(field.getClosingTime().toString());
-        dto.setTimeZone(field.getTimeZone());
+        dto.setTimeZone(field.getCity().getTimeZone());
         return dto;
     }
 }

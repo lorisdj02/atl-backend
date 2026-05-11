@@ -25,6 +25,7 @@ import com.atl.backend.model.LobbyBookingParticipate;
 import com.atl.backend.model.Field;
 
 import java.time.Instant;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,15 @@ public class BookingService {
 
         Map<Long, Short> maxPlayersPerField = new HashMap<>();
         List<Field> freeFields = cityFields.stream().filter(f -> !bookedFieldIds.contains(f.getId())).toList();
+        for (Field field : freeFields) {
+            LocalTime startTimeLocal = startTime.atZone(field.getCity().getZoneId()).toLocalTime();
+            LocalTime finishTimeLocal = finishTime.atZone(field.getCity().getZoneId()).toLocalTime();
+            if (field.getClosingTime() != null
+                    && (field.getClosingTime().isBefore(startTimeLocal) || field.getClosingTime().isAfter(finishTimeLocal))) {
+                continue;
+            }
+        }
+
         for (Field field : freeFields) {
             maxPlayersPerField.put(field.getId(),
                     fieldService.getMaxPlayersByFieldIdAndSportCategory(field.getId(), sportCategory));

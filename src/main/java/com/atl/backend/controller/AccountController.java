@@ -12,7 +12,7 @@ import com.atl.backend.response.HasNotificationsResponse;
 import com.atl.backend.response.LoginResponse;
 import com.atl.backend.service.accountServices.AccountService;
 import com.atl.backend.service.accountServices.RefereeService;
-
+import com.atl.backend.service.orchestrator.PurchasesOrchestrator;
 import com.atl.backend.service.orchestrator.ReviewsOrchestrator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +35,9 @@ public class AccountController {
     private AccountService accountService;
     @Autowired
     private RefereeService refereeService;
+    @Autowired
+    private PurchasesOrchestrator purchasesOrchestrator;
+
 
     @GetMapping("/account/level")
     public ResponseEntity<Short> getAccountLevel() {
@@ -84,7 +87,7 @@ public class AccountController {
 
     @PostMapping("/account/register")
     public ResponseEntity<AccountDTO> registerAccount(@RequestBody RegisterAccountRequest accountDTO) {
-        Account createdAccount = accountService.registerAccount(accountDTO);
+        Account createdAccount = purchasesOrchestrator.registerAccount(accountDTO);
         return ResponseEntity.ok(AccountDTO.fromAccount(createdAccount));
     }
 
