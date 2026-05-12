@@ -30,6 +30,14 @@ public class TransactionDTO {
     @JsonProperty("currency")
     private String currency;
 
+    @NotNull
+    @JsonProperty("createdAt")
+    private String createdAt;
+
+    @NotNull
+    @JsonProperty("source")
+    private String source;
+
     public static TransactionDTO fromTransaction(Transaction transaction) {
         TransactionDTO dto = new TransactionDTO();
         dto.setAccountId(transaction.getAccount().getId());
@@ -37,6 +45,8 @@ public class TransactionDTO {
         dto.setType(transaction.getType().name());
         dto.setAmount(transaction.getAmount());
         dto.setCurrency(transaction.getCurrency());
+        dto.setCreatedAt(transaction.getCreatedAt().toString());
+        dto.setSource(transaction.getSource().name());
         return dto;
     }
 }

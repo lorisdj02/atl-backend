@@ -26,10 +26,12 @@ import com.atl.backend.model.Purchase;
 import com.atl.backend.model.Tournament;
 import com.atl.backend.model.Transaction;
 import com.atl.backend.model.TransactionGroup;
+import com.atl.backend.model.enums.CheckoutStatus;
 import com.atl.backend.model.enums.CheckoutType;
 import com.atl.backend.model.enums.TransactionPendingReason;
 import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionType;
+import com.atl.backend.request.PaymentIntentRequest;
 import com.atl.backend.request.RegisterAccountRequest;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.service.FieldService;
@@ -297,8 +299,9 @@ public class PurchasesOrchestrator {
         return paymentService.createCheckoutSession(payload, checkoutType);
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public Purchase payCheckoutSession(Long sessionId, Boolean useWallet, String paymentIntentId) {
+    @Transactional
+    public Purchase payCheckoutSession(Long sessionId, Boolean useWallet, PaymentIntentRequest paymentIntentRequest) {
+        System.out.println("Inizio pagamento per sessione: " + sessionId + ", useWallet: " + useWallet + ", paymentIntentId: " + paymentIntentRequest.getPaymentIntentId());
         CheckoutSession session = paymentService.getCheckoutSessionById(sessionId)
                 .orElseThrow(() -> new BadRequestException(ErrorsString.CHECKOUT_SESSION_NOT_FOUND));
 
@@ -323,45 +326,54 @@ public class PurchasesOrchestrator {
                         .orElseThrow(() -> new BadRequestException(ErrorsString.FIELD_NOT_FOUND));
                 detail.setTitle(field.getName());
                 detail.setDescription(payload.getStartTime() + " - " + payload.getFinishTime());
+                System.out.println("Dettaglio acquisto: " + detail.getTitle() + ", " + detail.getDescription());
                 break;
             default:
                 throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_TYPE);
         }
 
+        System.out.println("Dettaglio acquisto preparato: " + detail.getTitle() + ", " + detail.getDescription());
+        String paymentIntentId = paymentIntentRequest != null ? paymentIntentRequest.getPaymentIntentId() : null;
         Purchase purchase = paymentService.payCheckout(session, useWallet, detail, paymentIntentId);
+        System.out.println("Pagamento processato, purchase id: " + (purchase != null ? purchase.getId() : "null"));
         if (purchase == null) {
             return null;
         }
 
         BigDecimal amountToPay = payload.getAmount();
         Account account = session.getAccount();
-
-        switch (session.getType()) {
-            case TOURNAMENT_FEE:
-                tournamentParticipantService.decreseTournamentParticipation_ToPay(payload.getTournamentId(),
-                        account.getId(),
-                        amountToPay);
-                purchase.setObjectId(payload.getTournamentId());
-                break;
-            case LOBBY_BOOKING_PARTICIPATE:
-                lobbyBookingService.createLobbyBookingParticipate(payload.getLobbyId(), payload.getPlayersPaid());
-                purchase.setObjectId(payload.getLobbyId());
-                break;
-            case LOBBY_BOOKING_CREATE:
-                Long lobbyId = lobbyBookingService
-                        .createLobbyBookingFromCheckoutPayload(payload);
-                purchase.setObjectId(lobbyId);
-                break;
-            case PRIVATE_BOOKING:
-                Long privateBookingId = privateBookingService
-                        .createPrivateBookingFromCheckoutPayload(payload);
-                purchase.setObjectId(privateBookingId);
-                break;
-            default:
-                throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
+        try {
+            switch (session.getType()) {
+                case TOURNAMENT_FEE:
+                    tournamentParticipantService.decreseTournamentParticipation_ToPay(payload.getTournamentId(),
+                            account.getId(),
+                            amountToPay);
+                    purchase.setObjectId(payload.getTournamentId());
+                    break;
+                case LOBBY_BOOKING_PARTICIPATE:
+                    lobbyBookingService.createLobbyBookingParticipate(payload.getLobbyId(), payload.getPlayersPaid());
+                    purchase.setObjectId(payload.getLobbyId());
+                    break;
+                case LOBBY_BOOKING_CREATE:
+                    Long lobbyId = lobbyBookingService
+                            .createLobbyBookingFromCheckoutPayload(payload);
+                    purchase.setObjectId(lobbyId);
+                    break;
+                case PRIVATE_BOOKING:
+                    Long privateBookingId = privateBookingService
+                            .createPrivateBookingFromCheckoutPayload(payload);
+                    purchase.setObjectId(privateBookingId);
+                    break;
+                default:
+                    throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
+            }
+        } catch (Exception e) {
+            paymentRefundService.refundPurchase(purchase.getId());
+            System.out.println("Errore durante l'elaborazione dell'acquisto, rimborso effettuato: " + e.getMessage());
+            return null;
         }
-
-        return purchase;
+        paymentService.updateCheckoutSessionStatus(sessionId, CheckoutStatus.SUCCEDED);
+        return paymentService.savePurchase(purchase);
     }
 
     @Transactional(rollbackFor = Exception.class)

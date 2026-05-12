@@ -20,6 +20,7 @@ import com.atl.backend.model.TransactionGroup;
 import com.atl.backend.model.Wallet;
 import com.atl.backend.model.enums.CheckoutType;
 import com.atl.backend.model.enums.PurchaseStatus;
+import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.model.enums.TransactionType;
 import com.atl.backend.repository.PurchaseRepository;
@@ -40,6 +41,8 @@ public class PaymentRefundService {
     private TransactionGroupRepository transactionGroupRepository;
 
     private Transaction craftRefundTransaction(Transaction originalTransaction) {
+        TransactionSource source = originalTransaction.getSource();
+
         Transaction refundTransaction = new Transaction();
         refundTransaction.setAccount(originalTransaction.getAccount());
         refundTransaction.setAmount(originalTransaction.getNetAmount());
@@ -48,6 +51,13 @@ public class PaymentRefundService {
         refundTransaction.setFee(BigDecimal.ZERO);
         refundTransaction.setTransactionGroup(originalTransaction.getTransactionGroup());
         refundTransaction.setType(TransactionType.REFUND);
+        switch (source) {
+            case STRIPE:
+                refundTransaction.setSource(TransactionSource.PERSONAL_WALLET);
+                break;
+            default:
+                refundTransaction.setSource(source);
+        }
         refundTransaction.setSource(originalTransaction.getSource());
         refundTransaction.setStatus(TransactionStatus.CONFIRMED);
         refundTransaction.setRelatedTransaction(originalTransaction);

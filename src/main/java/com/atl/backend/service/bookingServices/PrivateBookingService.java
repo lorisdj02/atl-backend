@@ -2,6 +2,7 @@ package com.atl.backend.service.bookingServices;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,10 +39,11 @@ public class PrivateBookingService {
 
     public List<PrivateBooking> getActivePrivateBookingsByPlayerId(Long playerId) {
         List<PrivateBooking> privateBookings = privateBookingRepository.findByPlayer_PlayerId(playerId);
-        List<PrivateBooking> activePrivateBookings = List.of();
+        List<PrivateBooking> activePrivateBookings = new ArrayList<>();
         for (PrivateBooking booking : privateBookings) {
             if (booking.getBooking().getStatus() != BookingStatus.CANCELED
-                    && booking.getBooking().getStatus() != BookingStatus.FINISHED) {
+                    && booking.getBooking().getStatus() != BookingStatus.FINISHED
+                    && booking.getBooking().getStatus() != BookingStatus.REFUNDED) {
                 activePrivateBookings.add(booking);
             }
         }

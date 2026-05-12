@@ -66,7 +66,8 @@ public class LobbyBookingService {
         List<LobbyBooking> lobbyBookings = List.of();
         for (LobbyBookingParticipate participation : participations) {
             if (participation.getLobbyBooking().getBooking().getStatus() != BookingStatus.CANCELED
-                    && participation.getLobbyBooking().getBooking().getStatus() != BookingStatus.FINISHED) {
+                    && participation.getLobbyBooking().getBooking().getStatus() != BookingStatus.FINISHED
+                    && participation.getLobbyBooking().getBooking().getStatus() != BookingStatus.REFUNDED) {
                 lobbyBookings.add(participation.getLobbyBooking());
             }
         }
@@ -96,12 +97,15 @@ public class LobbyBookingService {
         }
 
         if (startTime != null) {
-            lobbyBookings = lobbyBookings.stream().filter(lb ->lb.getBooking().getStartTime() != null && !startTime.isAfter(lb.getBooking().getStartTime()))
+            lobbyBookings = lobbyBookings.stream().filter(
+                    lb -> lb.getBooking().getStartTime() != null && !startTime.isAfter(lb.getBooking().getStartTime()))
                     .toList();
         }
 
         if (finishTime != null) {
-            lobbyBookings = lobbyBookings.stream().filter(lb ->lb.getBooking().getFinishTime() != null && !finishTime.isBefore(lb.getBooking().getFinishTime()))
+            lobbyBookings = lobbyBookings.stream()
+                    .filter(lb -> lb.getBooking().getFinishTime() != null
+                            && !finishTime.isBefore(lb.getBooking().getFinishTime()))
                     .toList();
         }
 

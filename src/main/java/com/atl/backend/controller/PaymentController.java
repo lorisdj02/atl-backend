@@ -19,6 +19,7 @@ import com.atl.backend.dto.StripePaymentSheetData;
 import com.atl.backend.exception.PaymentRequiredException;
 import com.atl.backend.model.CheckoutSession;
 import com.atl.backend.model.Purchase;
+import com.atl.backend.request.PaymentIntentRequest;
 import com.atl.backend.response.CheckoutResponse;
 import com.atl.backend.service.orchestrator.PurchasesOrchestrator;
 import com.atl.backend.service.paymentServices.PaymentService;
@@ -37,7 +38,7 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/create-checkout-session")
+    @PostMapping("/checkout-session/create")
     public ResponseEntity<CheckoutSessionDTO> createCheckoutSession(@RequestBody CheckoutPayload payload) {
         CheckoutSession response = purchasesOrchestrator.createCheckoutSession(payload);
         return ResponseEntity.ok(CheckoutSessionDTO.fromCheckoutSession(response));
@@ -46,17 +47,21 @@ public class PaymentController {
     // Uso: /api/payments/checkout-session/{sessionId}/pay?useWallet=true
     @PatchMapping("/checkout-session/{sessionId}/pay")
     public ResponseEntity<PurchaseDTO> payCheckoutSession(@PathVariable Long sessionId,
-            @RequestParam(required = false) Boolean useWallet, @RequestBody(required = false) String paymentIntentId) {
-        Purchase response = purchasesOrchestrator.payCheckoutSession(sessionId, useWallet != null ? useWallet : false, paymentIntentId);
+            @RequestParam(required = false) Boolean useWallet,
+            @RequestBody(required = false) PaymentIntentRequest paymentIntentRequest) {
+        Purchase response = purchasesOrchestrator.payCheckoutSession(sessionId, useWallet != null ? useWallet : false,
+                paymentIntentRequest);
         if (response == null) {
             throw new PaymentRequiredException(ErrorsString.PAYMENT_FAILED);
         }
         return ResponseEntity.ok(PurchaseDTO.fromPurchase(response));
     }
 
-    @PostMapping("/create-payment-intent/{sessionId}")
-    public ResponseEntity<StripePaymentSheetData> createPaymentIntent(@PathVariable Long sessionId, @RequestParam(required = false) Boolean useWallet) {
-        StripePaymentSheetData response = paymentService.createPaymentIntent(sessionId, useWallet != null ? useWallet : false);
+    @PostMapping("/checkout-session/{sessionId}/create-payment-intent")
+    public ResponseEntity<StripePaymentSheetData> createPaymentIntent(@PathVariable Long sessionId,
+            @RequestParam(required = false) Boolean useWallet) {
+        StripePaymentSheetData response = paymentService.createPaymentIntent(sessionId,
+                useWallet != null ? useWallet : false);
         return ResponseEntity.ok(response);
     }
 }

@@ -349,4 +349,7 @@ public class ApiJsonKeys {
 
     //HasUnreadNotificationsResponse
     public static final String isVip = "isVip"; // boolean
+
+    // PaymentIntentRequest
+    public static final String paymentIntentId = "paymentIntentId"; // String
 }

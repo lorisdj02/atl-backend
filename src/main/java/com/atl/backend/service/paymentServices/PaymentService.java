@@ -62,6 +62,7 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.EphemeralKey;
 import com.stripe.model.PaymentIntent;
+import com.stripe.net.RequestOptions;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.EphemeralKeyCreateParams;
 import com.stripe.param.PaymentIntentCreateParams;
@@ -127,7 +128,7 @@ public class PaymentService {
         List<Transaction> transactionsToShow = new ArrayList<>();
         for (Transaction transaction : transactions) {
             if ((transaction.getSource() == TransactionSource.PRIZE_WALLET
-                    || transaction.getSource() == TransactionSource.PERSONAL_WALLET)
+                    || transaction.getSource() == TransactionSource.PERSONAL_WALLET || transaction.getSource() == TransactionSource.STRIPE)
                     && (transaction.getStatus() == TransactionStatus.CONFIRMED
                             || transaction.getStatus() == TransactionStatus.REFUNDED)) {
                 transactionsToShow.add(transaction);
@@ -344,6 +345,7 @@ public class PaymentService {
         List<Transaction> transactions = transactionRepository.findByTransactionGroup_Id(transactionGroupId);
         for (Transaction transaction : transactions) {
             transaction.setStatus(status);
+            transaction.setUpdatedAt(Instant.now());
             transactionRepository.save(transaction);
         }
         return transactionGroupRepository.save(transactionGroup);
@@ -360,7 +362,7 @@ public class PaymentService {
         if (session.getExpiresAt().isBefore(Instant.now())) {
             session.setStatus(CheckoutStatus.EXPIRED);
             saveCheckoutSession(session);
-            throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
+            return null;
         }
 
         Account account = session.getAccount();
@@ -370,7 +372,7 @@ public class PaymentService {
 
         BigDecimal amountToPay = session.getAmount();
         BigDecimal originalAmountToPay = amountToPay;
-
+        System.out.println("Importo totale da pagare: " + amountToPay);
         if (amountToPay.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException(ErrorsString.PAYMENT_AMOUNT_MUST_BE_POSITIVE);
         }
@@ -393,16 +395,6 @@ public class PaymentService {
             Transaction personalTransaction;
             List<Transaction> savedTransactions = new ArrayList<>();
 
-            if (walletBalance.hasInviteBalance()) {
-                transactionAmount = inviteBalance.compareTo(amountToPay) >= 0 ? amountToPay : inviteBalance;
-                inviteTransaction = createTransaction(account, transactionAmount,
-                        transactionAmount,
-                        BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
-                        TransactionSource.INVITE_WALLET,
-                        TransactionStatus.PENDING, null);
-                amountToPay = amountToPay.subtract(transactionAmount);
-            }
-
             if (walletBalance.hasPrizeBalance()) {
                 transactionAmount = prizeBalance.compareTo(amountToPay) >= 0 ? amountToPay : prizeBalance;
                 prizeTransaction = createTransaction(account, transactionAmount,
@@ -411,6 +403,20 @@ public class PaymentService {
                         TransactionSource.PRIZE_WALLET,
                         TransactionStatus.PENDING, null);
                 amountToPay = amountToPay.subtract(transactionAmount);
+                System.out.println("Utilizzo prize balance: " + transactionAmount + ", importo rimanente da pagare: "
+                        + amountToPay);
+            }
+
+            if (walletBalance.hasInviteBalance()) {
+                transactionAmount = inviteBalance.compareTo(amountToPay) >= 0 ? amountToPay : inviteBalance;
+                inviteTransaction = createTransaction(account, transactionAmount,
+                        transactionAmount,
+                        BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup, TransactionType.PAYMENT,
+                        TransactionSource.INVITE_WALLET,
+                        TransactionStatus.PENDING, null);
+                amountToPay = amountToPay.subtract(transactionAmount);
+                System.out.println("Utilizzo invite balance: " + transactionAmount + ", importo rimanente da pagare: "
+                        + amountToPay);
             }
 
             if (walletBalance.hasPersonalBalance()) {
@@ -421,26 +427,61 @@ public class PaymentService {
                         TransactionSource.PERSONAL_WALLET,
                         TransactionStatus.PENDING, null);
                 amountToPay = amountToPay.subtract(transactionAmount);
+                System.out.println("Utilizzo personal balance: " + transactionAmount + ", importo rimanente da pagare: "
+                        + amountToPay);
             }
         }
-
+        System.out.println("Importo da pagare dopo utilizzo wallet: " + amountToPay);
         if (amountToPay.compareTo(BigDecimal.ZERO) > 0 && paymentIntentId != null) {
-
-            if (false) { // TODO: Sostituire questa condizione con il controllo dell'esito del pagamento
-                         // tramite Stripe
-                transactionGroup.setStatus(TransactionStatus.FAILED);
-                saveTransactionGroup(transactionGroup);
+            Stripe.apiKey = stripeConfig.getSecretKey();
+            try {
+                if (paymentIntentId == null || paymentIntentId.isBlank()) {
+                    transactionGroup.setStatus(TransactionStatus.FAILED);
+                    saveTransactionGroup(transactionGroup);
+                    return null;
+                }
+                RequestOptions requestOptions = RequestOptions.builder()
+                        .setApiKey(stripeConfig.getSecretKey())
+                        .build();
+                System.out.println("Recupero PaymentIntent da Stripe con ID: " + paymentIntentId);
+                PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId, requestOptions);
+                if (paymentIntent == null || paymentIntent.getStatus() == null) {
+                    updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.FAILED);
+                    return null;
+                }
+                System.out.println("PaymentIntent status: " + paymentIntent.getStatus());
+                if (!"succeeded".equals(paymentIntent.getStatus())) {
+                    updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.FAILED);
+                    return null;
+                }
+                Long amountLong = paymentIntent.getAmountReceived() != null ? paymentIntent.getAmountReceived()
+                        : paymentIntent.getAmount();
+                BigDecimal paymentAmount = BigDecimal.valueOf(amountLong != null ? amountLong : 0L)
+                        .divide(BigDecimal.valueOf(100));
+                System.out.println("Importo pagato tramite Stripe: " + paymentAmount);
+                if (paymentAmount.compareTo(amountToPay) < 0) {
+                    updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.FAILED);
+                    return null;
+                }
+                createTransaction(account, paymentAmount, paymentAmount, BigDecimal.ZERO, BigDecimal.ZERO,
+                        transactionGroup, TransactionType.PAYMENT, TransactionSource.STRIPE,
+                        TransactionStatus.CONFIRMED, null);
+                System.out.println(
+                        "PaymentIntent " + paymentIntentId + " retrieved successfully. Amount: " + paymentAmount);
+                amountToPay = amountToPay.subtract(paymentAmount);
+            } catch (Exception e) {
+                System.out.println("Errore durante il recupero del PaymentIntent da Stripe: " + e.getMessage());
+                updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.FAILED);
                 return null;
             }
         }
 
         if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
-            transactionGroup.setStatus(TransactionStatus.FAILED);
-            saveTransactionGroup(transactionGroup);
+            updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.FAILED);
             return null;
         }
 
-        transactionGroup.setStatus(TransactionStatus.CONFIRMED);
+        updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.CONFIRMED);
 
         Purchase purchase = new Purchase();
         purchase.setAccount(account);
@@ -448,7 +489,20 @@ public class PaymentService {
         purchase.setDetail(detail);
         purchase.setTransactionGroup(transactionGroup);
         purchase.setType(session.getType());
+        purchase.setObjectId(-1L); // mocked, verrà aggiornato successivamente dagli orchestrator specifici in base
+                                   // al tipo di acquisto
+        return savePurchase(purchase);
+    }
+
+    public Purchase savePurchase(Purchase purchase) {
         return purchaseRepository.save(purchase);
+    }
+
+    public CheckoutSession updateCheckoutSessionStatus(Long sessionId, CheckoutStatus checkoutStatus) {
+        CheckoutSession session = checkoutSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.CHECKOUT_SESSION_NOT_FOUND));
+        session.setStatus(checkoutStatus);
+        return checkoutSessionRepository.save(session);
     }
 
     @Transactional(readOnly = true)
@@ -479,12 +533,15 @@ public class PaymentService {
             return null;
         }
         BigDecimal remainingAmount = totalAmount;
-        if (walletBalance.hasInviteBalance()) {
-            remainingAmount = remainingAmount.subtract(walletBalance.getInviteBalance());
-        }
+
         if (remainingAmount.compareTo(BigDecimal.ZERO) > 0 && walletBalance.hasPrizeBalance()) {
             remainingAmount = remainingAmount.subtract(walletBalance.getPrizeBalance());
         }
+
+        if (walletBalance.hasInviteBalance()) {
+            remainingAmount = remainingAmount.subtract(walletBalance.getInviteBalance());
+        }
+
         if (remainingAmount.compareTo(BigDecimal.ZERO) > 0 && walletBalance.hasPersonalBalance()) {
             remainingAmount = remainingAmount.subtract(walletBalance.getPersonalBalance());
         }
@@ -590,7 +647,8 @@ public class PaymentService {
             data.setClientSecret(paymentIntent.getClientSecret());
             data.setCustomerId(customerId);
             data.setEphemeralKey(ephemeralKey.getSecret());
-            data.setPublishableKey(stripeConfig.getPublishableKey());            return data;
+            data.setPublishableKey(stripeConfig.getPublishableKey());
+            return data;
         } catch (StripeException e) {
             throw new PaymentRequiredException(ErrorsString.PAYMENT_FAILED);
         }

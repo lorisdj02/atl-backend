@@ -116,7 +116,7 @@ public class BookingService {
     public void setBookingRefunded(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
-        booking.setStatus(BookingStatus.REFUND);
+        booking.setStatus(BookingStatus.REFUNDED);
         booking.setUpdatedAt(Instant.now());
         bookingRepository.save(booking);
     }
