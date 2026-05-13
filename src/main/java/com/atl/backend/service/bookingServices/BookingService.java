@@ -11,6 +11,7 @@ import com.atl.backend.service.FieldService;
 import com.atl.backend.repository.LobbyBookingParticipateRepository;
 
 import com.atl.backend.model.PrivateBooking;
+import com.atl.backend.model.Transaction;
 import com.atl.backend.model.enums.BookingStatus;
 import com.atl.backend.model.enums.SportCategory;
 import com.atl.backend.auth.AccountContext;
@@ -155,5 +156,13 @@ public class BookingService {
             default:
                 throw new BadRequestException(ErrorsString.UNSUPPORTED_BOOKING_TYPE);
         }
+    }
+
+    public Booking updateOrganizationTransactionIdForBooking(Long bookingId, Transaction organizationTransaction) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
+        booking.setOrganizationTransaction(organizationTransaction);
+        booking.setUpdatedAt(Instant.now());
+        return bookingRepository.save(booking);
     }
 }

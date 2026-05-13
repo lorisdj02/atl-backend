@@ -549,10 +549,10 @@ public class PaymentService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void payOrganizationByBookingId(Long bookingId) {
+    public Transaction createOrganizationTransactionForBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
-        if (booking.getStatus() == BookingStatus.IN_PROGRESS) {
+        if (booking.getStatus() == BookingStatus.BOOKED) {
             Field field = booking.getField();
             Account organizationAccount = field.getOrganization().getAccount();
             BigDecimal amount = booking.calculatePrice();
@@ -562,10 +562,11 @@ public class PaymentService {
             }
             TransactionGroup transactionGroup = new TransactionGroup();
             saveTransactionGroup(transactionGroup);
-            createTransaction(organizationAccount, amount, amount, BigDecimal.ZERO, BigDecimal.ZERO,
+            return createTransaction(organizationAccount, amount, amount, BigDecimal.ZERO, BigDecimal.ZERO,
                     transactionGroup, TransactionType.FEE, TransactionSource.PERSONAL_WALLET,
                     TransactionStatus.PENDING, TransactionPendingReason.BOOKING_NOT_STARTED);
-            updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.CONFIRMED);
+        }else{
+            throw new ConflictException(ErrorsString.BOOKING_NOT_IN_BOOKED_STATUS);
         }
     }
 

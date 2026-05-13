@@ -78,8 +78,8 @@ public class TournamentController {
     }
 
     @GetMapping("/tournament/{tournamentId}/view-callups")
-    public ResponseEntity<List<PlayerDTO>> getViewCallupsScreen(@PathVariable Long tournamentId) {
-        List<PlayerDTO> response = tournamentScreenService.getViewCallupsScreen(tournamentId);
+    public ResponseEntity<CallupsResponse> getViewCallupsScreen(@PathVariable Long tournamentId) {
+        CallupsResponse response = tournamentScreenService.getViewCallupsScreen(tournamentId);
         return ResponseEntity.ok(response);
     }
 

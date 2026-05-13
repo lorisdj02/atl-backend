@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.atl.backend.config.ATLCostants;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.MatchBookingDTO;
 import com.atl.backend.exception.BadRequestException;
@@ -108,7 +109,7 @@ public class MatchBookingService {
         if (scheduledStart.equals(match.getScheduledStart())) {
             throw new ConflictException(ErrorsString.MATCH_ALREADY_SCHEDULED_FOR_THIS_TIME);
         } else if (match.getScheduledStart() != null
-                && Instant.now().plusSeconds(24 * 3600).isAfter(match.getScheduledStart())) {
+                && ATLCostants.getRescheduleLimit().isAfter(match.getScheduledStart())) {
             throw new ConflictException(ErrorsString.YOU_CANNOT_RESCHEDULE_MATCH_LESS_THAN_24_HOURS_BEFORE);
         }
         MatchBooking matchBooking;

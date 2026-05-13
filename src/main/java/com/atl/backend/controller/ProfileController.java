@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.atl.backend.response.InviteFriendsResponse;
 import com.atl.backend.response.MyGrowthResponse;
 import com.atl.backend.response.PersonalPlayerStatsResponse;
+import com.atl.backend.response.PurchasesResponse;
 import com.atl.backend.response.RefereeLicensesResponse;
 import com.atl.backend.response.ReviewsResponse;
 import com.atl.backend.response.WalletResponse;
@@ -53,6 +54,12 @@ public class ProfileController {
     @GetMapping("/friend-invites")
     public ResponseEntity<InviteFriendsResponse> getInviteFriendsScreen() {
         InviteFriendsResponse response = profileScreenService.getInviteFriendsScreen();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/purchases")
+    public ResponseEntity<PurchasesResponse> getPurchasesScreen() {
+        PurchasesResponse response = profileScreenService.getPurchasesScreen();
         return ResponseEntity.ok(response);
     }
 }

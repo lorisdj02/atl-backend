@@ -13,10 +13,13 @@ import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
 import com.atl.backend.model.Booking;
 import com.atl.backend.model.Purchase;
+import com.atl.backend.model.Transaction;
 import com.atl.backend.model.enums.BookingStatus;
 import com.atl.backend.model.enums.CheckoutType;
 import com.atl.backend.model.enums.PurchaseStatus;
+import com.atl.backend.model.enums.TransactionStatus;
 import com.atl.backend.repository.PurchaseRepository;
+import com.atl.backend.repository.TransactionRepository;
 import com.atl.backend.service.bookingServices.BookingService;
 
 @Service
@@ -28,6 +31,8 @@ public class PaymentRedeemService {
     private PaymentRefundService paymentRefundService;
     @Autowired
     private BookingService bookingService;
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     private Purchase getExistingPurchase(Long purchaseId) {
         return purchaseRepository.findById(purchaseId)
@@ -85,6 +90,12 @@ public class PaymentRedeemService {
             redeemPurchase(purchase.getId());
         }
 
+        Transaction organizationTransaction = booking.getOrganizationTransaction();
+        if (organizationTransaction != null) {
+            organizationTransaction.setStatus(TransactionStatus.CONFIRMED);
+            organizationTransaction.setUpdatedAt(Instant.now());
+            transactionRepository.save(organizationTransaction);
+        }
     }
 
     public void redeemTournamentFeePurchasesByTournamentId(Long tournamentId) {

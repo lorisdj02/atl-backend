@@ -175,7 +175,7 @@ public class LobbyBookingService {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
 
-        bookingUtilitiesService.isBookingRefundable(bookingId);
+        bookingUtilitiesService.checkBookingRefundable(bookingId);
         lobbyBooking.setUpdatedAt(Instant.now());
         lobbyBookingRepository.save(lobbyBooking);
     }
@@ -187,7 +187,7 @@ public class LobbyBookingService {
                 .findByPlayer_PlayerIdAndLobbyBooking_Booking_Id(activePlayer.getPlayerId(), bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
 
-        bookingUtilitiesService.isBookingRefundable(bookingId);
+        bookingUtilitiesService.checkBookingRefundable(bookingId);
         lobbyBookingParticipate.setUpdatedAt(Instant.now());
         lobbyBookingParticipateRepository.save(lobbyBookingParticipate);
     }
@@ -241,7 +241,10 @@ public class LobbyBookingService {
         List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
                 .findByPlayer_PlayerId(playerId);
         List<LobbyBookingParticipate> filteredParticipations = participations.stream()
-                .filter(p -> p.getLobbyBooking().getBooking().getSportCategory() == sportCategory).toList();
+                .filter(p -> p.getLobbyBooking().getBooking().getSportCategory() == sportCategory
+                        && p.getLobbyBooking().getBooking().getStatus() != BookingStatus.CANCELED
+                        && p.getLobbyBooking().getBooking().getStatus() != BookingStatus.REFUNDED)
+                .toList();
         return filteredParticipations.size();
     }
 

@@ -7,6 +7,7 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.MatchBookingDTO;
 import com.atl.backend.exception.BadRequestException;
 import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.request.BookingRefundRequest;
 import com.atl.backend.response.BookFieldResponse;
 import com.atl.backend.response.FieldsAndMaxPlayersPerFieldResponse;
 import com.atl.backend.response.JoinLobbyResponse;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
@@ -152,14 +154,14 @@ public class BookingController {
      * }
      */
     @DeleteMapping("/lobby-booking/{bookingId}/leave")
-    public ResponseEntity<Void> leaveLobbyBooking(@PathVariable Long bookingId) {
-        purchasesOrchestrator.leaveLobbyBooking(bookingId);
+    public ResponseEntity<Void> leaveLobbyBooking(@PathVariable Long bookingId, @RequestBody(required = false) BookingRefundRequest bookingRefundRequest) {
+        purchasesOrchestrator.leaveLobbyBooking(bookingId, bookingRefundRequest);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/private-booking/{bookingId}/refund")
-    public ResponseEntity<Void> refundPrivateBooking(@PathVariable Long bookingId) {
-        purchasesOrchestrator.refundPrivateBooking(bookingId);
+    public ResponseEntity<Void> refundPrivateBooking(@PathVariable Long bookingId, @RequestBody(required = false) BookingRefundRequest bookingRefundRequest) {
+        purchasesOrchestrator.refundPrivateBooking(bookingId, bookingRefundRequest);
         return ResponseEntity.noContent().build();
     }
 

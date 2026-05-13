@@ -506,4 +506,11 @@ public class TournamentParticipantService {
         }
     }
 
+    public void changeNumberOfParticipantsForTournament(Long tournamentId) {
+        Tournament tournament = getExistingTournamentByTournamentId(tournamentId);
+        List<TournamentParticipation> participations = getPaidTournamentParticipationsByTeamId(tournamentId);
+        tournament.setPaidTeams((short) participations.size());
+        tournamentRepository.save(tournament);
+    }
+
 }

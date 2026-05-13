@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.atl.backend.config.ATLCostants;
 import com.atl.backend.config.ErrorsString;
 import com.atl.backend.exception.ConflictException;
 import com.atl.backend.exception.NotFoundException;
@@ -97,7 +98,7 @@ public class BookingUtilitiesService {
         return cityFields.stream().filter(f -> !bookedFieldIds.contains(f.getId())).toList();
     }
 
-    public Boolean isBookingRefundable(Long bookingId) {
+    public Boolean checkBookingRefundable(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
         if (!(BookingStatus.BOOKED).equals(booking.getStatus())) {
@@ -117,7 +118,7 @@ public class BookingUtilitiesService {
 
         // Il booking è rimborsabile solo se manca più di un'ora all'inizio, per evitare
         // abusi (es. prenotazione last minute e richiesta di rimborso subito dopo)
-        if (booking.getStartTime().isBefore(Instant.now().plusSeconds(3600))) {
+        if (booking.getStartTime().isBefore(ATLCostants.getBookingRefundLimit())) {
             throw new ConflictException(ErrorsString.BOOKING_NOT_REFUNDABLE);
         }
 

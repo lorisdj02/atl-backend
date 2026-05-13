@@ -96,7 +96,7 @@ public class PrivateBookingService {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
 
-        bookingUtilitiesService.isBookingRefundable(bookingId);
+        bookingUtilitiesService.checkBookingRefundable(bookingId);
         privateBooking.setUpdatedAt(Instant.now());
         privateBookingRepository.save(privateBooking);
     }
@@ -104,7 +104,8 @@ public class PrivateBookingService {
     public Integer countPrivateBookingsByPlayerIdAndSportCategory(Long playerId, SportCategory sportCategory) {
         List<PrivateBooking> privateBookings = privateBookingRepository.findByPlayer_PlayerId(playerId);
         List<PrivateBooking> filteredPrivateBookings = privateBookings.stream()
-                .filter(pb -> pb.getBooking().getSportCategory() == sportCategory).toList();
+                .filter(pb -> pb.getBooking().getSportCategory() == sportCategory && pb.getBooking().getStatus() != BookingStatus.CANCELED
+                        && pb.getBooking().getStatus() != BookingStatus.REFUNDED).toList();
         return filteredPrivateBookings.size();
     }
 

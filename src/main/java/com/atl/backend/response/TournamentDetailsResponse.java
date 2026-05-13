@@ -32,7 +32,7 @@ public class TournamentDetailsResponse {
     @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.teamsCache)
-    private Map<Integer, TeamDTO> teamsCache = new HashMap<>();
+    private Map<Long, TeamDTO> teamsCache = new HashMap<>();
 
     @JsonProperty(ApiJsonKeys.currentPlayer)
     private PlayerDTO currentPlayer;

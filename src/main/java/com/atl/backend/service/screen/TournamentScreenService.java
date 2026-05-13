@@ -235,6 +235,11 @@ public class TournamentScreenService {
             }
         }
 
+        Map<Long, TeamDTO> teamsDTOCache = teamsCache.entrySet().stream().collect(
+                HashMap::new,
+                (m, e) -> m.put(e.getKey(), TeamDTO.fromTeam(e.getValue())),
+                HashMap::putAll);
+
         return TournamentDetailsResponse.builder()
                 .field(FieldDTO.fromField(tournament.getField()))
                 .cityName(tournament.getField().getCity().getName())
@@ -242,15 +247,14 @@ public class TournamentScreenService {
                 .accountTeam(TeamDTO.fromTeam(accountTeam))
                 .currentPlayer(PlayerDTO.fromPlayer(currentPlayer))
                 .teamParticipation(TournamentParticipationDTO.fromTournamentParticipation(teamParticipation))
+                .teamsCache(teamsDTOCache)
                 .build();
     }
 
     @Transactional(readOnly = true)
-    public List<PlayerDTO> getViewCallupsScreen(Long tournamentId) {
-        Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
-        if (optionalTournament.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
-        }
+    public CallupsResponse getViewCallupsScreen(Long tournamentId) {
+        Tournament tournament = tournamentService.getTournamentById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
 
         List<PlayerDTO> players = new ArrayList<>();
         Player currentPlayer = AccountContext.getActivePlayer();
@@ -278,17 +282,13 @@ public class TournamentScreenService {
             }
             players.add(PlayerDTO.fromPlayer(optionalPlayer.get()));
         }
-        return players;
+        return CallupsResponse.builder().players(players).build();
     }
 
     @Transactional(readOnly = true)
     public CallupsResponse getCallupsScreen(Long tournamentId) {
-        Optional<Tournament> optionalTournament = tournamentService.getTournamentById(tournamentId);
-        if (optionalTournament.isEmpty()) {
-            throw new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND);
-        }
-
-        Tournament tournament = optionalTournament.get();
+        Tournament tournament = tournamentService.getTournamentById(tournamentId)
+                .orElseThrow(() -> new NotFoundException(ErrorsString.TOURNAMENT_NOT_FOUND));
 
         Optional<Team> accountTeam = teamService.getTeamByPlayerIdAndSportCategory(
                 AccountContext.getActivePlayer().getPlayerId(), tournament.getSport().getSportCategory());
@@ -455,7 +455,8 @@ public class TournamentScreenService {
                     .orElseThrow(() -> new NotFoundException(ErrorsString.PLAYER_NOT_FOUND));
             playersCache.put(playerId, PlayerDTO.fromPlayer(player));
             FootballTournamentStat tournamentStats = tournamentStatService
-                    .getFootballTournamentStatByTournamentIdAndTeamIdAndPlayerId(tournamentId, accountTeam.getId(), playerId)
+                    .getFootballTournamentStatByTournamentIdAndTeamIdAndPlayerId(tournamentId, accountTeam.getId(),
+                            playerId)
                     .orElseThrow(() -> new NotFoundException(ErrorsString.STAT_NOT_FOUND));
             footballPlayerStatsCache.put(playerId, FootballTeamStatDTO.fromFootballTournamentStat(tournamentStats));
         }

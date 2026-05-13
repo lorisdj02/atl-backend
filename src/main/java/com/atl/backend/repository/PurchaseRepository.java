@@ -16,4 +16,8 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
             PurchaseStatus status);
 
     List<Purchase> findByTypeAndObjectIdAndStatus(CheckoutType type, Long objectId, PurchaseStatus status);
+
+    List<Purchase> findByAccount_IdAndStatus(Long accountId, PurchaseStatus status);
+
+    List<Purchase> findByAccount_Id(Long accountId);
 }

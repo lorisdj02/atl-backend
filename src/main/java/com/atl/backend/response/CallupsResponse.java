@@ -24,16 +24,13 @@ public class CallupsResponse {
     @JsonProperty(ApiJsonKeys.players)
     private List<PlayerDTO> players = new ArrayList<>();
 
-    @NotNull
     @JsonProperty(ApiJsonKeys.sport)
     private SportDTO sport;
 
-    @NotNull
     @Builder.Default
     @JsonProperty(ApiJsonKeys.calledUpPlayerIds)
     private List<Long> calledUpPlayerIds = new ArrayList<>();
 
-    @NotNull
     @JsonProperty(ApiJsonKeys.tournament)
     private TournamentDTO tournament;
 

@@ -50,6 +50,10 @@ public class Booking {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_transaction_id")
+    private Transaction organizationTransaction;
+
     @Column(name = "updated_at")
     private Instant updatedAt;
 

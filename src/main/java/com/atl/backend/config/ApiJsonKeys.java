@@ -352,4 +352,10 @@ public class ApiJsonKeys {
 
     // PaymentIntentRequest
     public static final String paymentIntentId = "paymentIntentId"; // String
+
+    // BookingCancellationRequest
+    public static final String description = "description"; // String
+
+    // PurchasesResponse
+    public static final String purchases = "purchases"; // List<PurchaseDTO>
 }

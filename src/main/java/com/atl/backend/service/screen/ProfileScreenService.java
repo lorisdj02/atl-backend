@@ -13,6 +13,7 @@ import com.atl.backend.config.ErrorsString;
 import com.atl.backend.dto.AccountDTO;
 import com.atl.backend.dto.FootballTeamStatDTO;
 import com.atl.backend.dto.GrowthStepDTO;
+import com.atl.backend.dto.PurchaseDTO;
 import com.atl.backend.dto.RefereeLicenseDTO;
 import com.atl.backend.dto.ReviewDTO;
 import com.atl.backend.dto.SportDTO;
@@ -24,6 +25,7 @@ import com.atl.backend.model.FootballMatch;
 import com.atl.backend.model.FootballTeamStat;
 import com.atl.backend.model.GrowthStep;
 import com.atl.backend.model.Player;
+import com.atl.backend.model.Purchase;
 import com.atl.backend.model.Referee;
 import com.atl.backend.model.RefereeLicense;
 import com.atl.backend.model.RefereeRole;
@@ -34,9 +36,11 @@ import com.atl.backend.model.Wallet;
 import com.atl.backend.model.WalletBalance;
 import com.atl.backend.model.enums.GrowthStepType;
 import com.atl.backend.model.enums.SportCategory;
+import com.atl.backend.repository.PurchaseRepository;
 import com.atl.backend.response.InviteFriendsResponse;
 import com.atl.backend.response.MyGrowthResponse;
 import com.atl.backend.response.PersonalPlayerStatsResponse;
+import com.atl.backend.response.PurchasesResponse;
 import com.atl.backend.response.RefereeLicensesResponse;
 import com.atl.backend.response.ReviewsResponse;
 import com.atl.backend.response.WalletResponse;
@@ -81,6 +85,9 @@ public class ProfileScreenService {
     private PrivateBookingService privateBookingService;
     @Autowired
     private LobbyBookingService lobbyBookingService;
+
+    @Autowired
+    private PurchaseRepository purchaseRepository;
 
     @Transactional(readOnly = true)
     public MyGrowthResponse getMyGrowthScreen() {
@@ -250,4 +257,12 @@ public class ProfileScreenService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public PurchasesResponse getPurchasesScreen() {
+        Account account = AccountContext.getActiveAccount();
+        List<Purchase> purchases = purchaseRepository.findByAccount_Id(account.getId());
+        return PurchasesResponse.builder()
+                .purchases(purchases.stream().map(PurchaseDTO::fromPurchase).toList())
+                .build();
+    }
 }
