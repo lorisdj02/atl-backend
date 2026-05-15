@@ -58,7 +58,6 @@ public class PaymentRefundService {
             default:
                 refundTransaction.setSource(source);
         }
-        refundTransaction.setSource(originalTransaction.getSource());
         refundTransaction.setStatus(TransactionStatus.CONFIRMED);
         refundTransaction.setRelatedTransaction(originalTransaction);
         return refundTransaction;
@@ -149,11 +148,11 @@ public class PaymentRefundService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundLobbyCreationByBookingId(Long bookingId) {
+    public void refundLobbyCreationByBookingId(Long bookingId, Long accountId) {
         List<Purchase> purchases = new ArrayList<>();
 
         List<Purchase> lobbyBookingCreate = purchaseRepository.findByTypeAndObjectIdAndAccount_IdAndStatus(
-                CheckoutType.LOBBY_BOOKING_CREATE, bookingId, null, PurchaseStatus.CONFIRMED);
+                CheckoutType.LOBBY_BOOKING_CREATE, bookingId, accountId, PurchaseStatus.CONFIRMED);
 
         if (lobbyBookingCreate.isEmpty() || lobbyBookingCreate.size() > 1) {
             throw new NotFoundException(ErrorsString.PURCHASE_NOT_FOUND);

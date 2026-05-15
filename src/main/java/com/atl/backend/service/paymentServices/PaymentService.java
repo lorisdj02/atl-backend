@@ -491,6 +491,7 @@ public class PaymentService {
         purchase.setType(session.getType());
         purchase.setObjectId(-1L); // mocked, verrà aggiornato successivamente dagli orchestrator specifici in base
                                    // al tipo di acquisto
+                                   System.out.println("Creazione acquisto con importo: " + originalAmountToPay + ", tipo: " + session.getType());
         return savePurchase(purchase);
     }
 
@@ -552,16 +553,20 @@ public class PaymentService {
     public Transaction createOrganizationTransactionForBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
+                System.out.println("Creating organization transaction for booking ID: " + bookingId + ", booking status: " + booking.getStatus());
         if (booking.getStatus() == BookingStatus.BOOKED) {
             Field field = booking.getField();
             Account organizationAccount = field.getOrganization().getAccount();
             BigDecimal amount = booking.calculatePrice();
             BigDecimal atlFee = ATLCostants.ORGANIZATION_FEE_ATL;
+            System.out.println("Calculated booking price: " + amount);
             if (organizationAccount.getIsVip() != null && organizationAccount.getIsVip()) {
                 amount = amount.multiply(BigDecimal.valueOf(1).subtract(atlFee));
             }
+            System.out.println("Final amount after applying VIP discount if applicable: " + amount);
             TransactionGroup transactionGroup = new TransactionGroup();
             saveTransactionGroup(transactionGroup);
+            System.out.println("Created transaction group with ID: " + transactionGroup.getId());
             return createTransaction(organizationAccount, amount, amount, BigDecimal.ZERO, BigDecimal.ZERO,
                     transactionGroup, TransactionType.FEE, TransactionSource.PERSONAL_WALLET,
                     TransactionStatus.PENDING, TransactionPendingReason.BOOKING_NOT_STARTED);

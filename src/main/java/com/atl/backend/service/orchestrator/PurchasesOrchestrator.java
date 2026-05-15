@@ -116,9 +116,9 @@ public class PurchasesOrchestrator {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void refundLobbyBooking(Long bookingId) {
+    public void refundLobbyBooking(Long bookingId, Long accountId) {
         lobbyBookingService.refundLobbyBooking(bookingId);
-        paymentRefundService.refundLobbyCreationByBookingId(bookingId);
+        paymentRefundService.refundLobbyCreationByBookingId(bookingId, accountId);
         bookingService.setBookingRefunded(bookingId);
     }
 
@@ -136,7 +136,7 @@ public class PurchasesOrchestrator {
                 .orElseThrow(() -> new BadRequestException(ErrorsString.BOOKING_NOT_FOUND));
 
         if (activePlayer.getPlayerId().equals(lobbyBooking.getOwnerPlayer().getPlayerId())) {
-            refundLobbyBooking(bookingId);
+            refundLobbyBooking(bookingId, activePlayer.getAccount().getId());
             return;
         }
         lobbyBookingService.leaveLobbyBooking(bookingId);
@@ -220,7 +220,6 @@ public class PurchasesOrchestrator {
                 if (!AccountContext.getPlayerId().equals(payload.getOwnerPlayerId())) {
                     throw new BadRequestException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
                 }
-
                 try {
                     startTime = Instant.parse(payload.getStartTime());
                     finishTime = Instant.parse(payload.getFinishTime());
@@ -332,13 +331,15 @@ public class PurchasesOrchestrator {
 
         String paymentIntentId = paymentIntentRequest != null ? paymentIntentRequest.getPaymentIntentId() : null;
         Purchase purchase = paymentService.payCheckout(session, useWallet, detail, paymentIntentId);
+        System.out.println("Payment processed for checkout session ID: " + sessionId + ", purchase ID: " + (purchase != null ? purchase.getId() : "null"));
         if (purchase == null) {
             return null;
         }
-        BigDecimal amountToPay = payload.getAmount();
+        BigDecimal amountToPay = payload.getAmount().divide(BigDecimal.ONE, 2, RoundingMode.HALF_UP);
         Account account = session.getAccount();
         Transaction organizationTransaction;
         try {
+            System.out.println("Processing purchase for checkout session ID: " + sessionId + ", amount: " + amountToPay + ", account ID: " + account.getId() + ", checkout type: " + session.getType());
             switch (session.getType()) {
                 case TOURNAMENT_FEE:
                     tournamentParticipantService.decreseTournamentParticipation_ToPay(payload.getTournamentId(),
@@ -348,15 +349,21 @@ public class PurchasesOrchestrator {
                     purchase.setObjectId(payload.getTournamentId());
                     break;
                 case LOBBY_BOOKING_PARTICIPATE:
-                    lobbyBookingService.createLobbyBookingParticipate(payload.getLobbyId(), payload.getPlayersPaid());
+                    lobbyBookingService.createLobbyBookingParticipate(payload.getLobbyId(), payload.getPlayersPaid(),
+                            payload.getAmount());
                     purchase.setObjectId(payload.getLobbyId());
                     break;
                 case LOBBY_BOOKING_CREATE:
+                    System.out.println("Creating lobby booking from checkout payload for session ID: " + sessionId);
                     Long lobbyId = lobbyBookingService
                             .createLobbyBookingFromCheckoutPayload(payload);
+                            System.out.println("Created lobby booking with ID: " + lobbyId);
                     purchase.setObjectId(lobbyId);
+                    System.out.println("Created lobby booking with ID: " + lobbyId);
                     organizationTransaction = paymentService.createOrganizationTransactionForBooking(lobbyId);
+                    System.out.println("Created organization transaction with ID: " + organizationTransaction.getId());
                     bookingService.updateOrganizationTransactionIdForBooking(lobbyId, organizationTransaction);
+                    System.out.println("Updated booking with organization transaction ID: " + organizationTransaction.getId());
                     break;
                 case PRIVATE_BOOKING:
                     Long privateBookingId = privateBookingService

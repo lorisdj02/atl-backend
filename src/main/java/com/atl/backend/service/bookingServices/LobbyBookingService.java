@@ -3,6 +3,7 @@ package com.atl.backend.service.bookingServices;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +54,7 @@ public class LobbyBookingService {
     public List<LobbyBooking> getLobbyBookingsByPlayerId(Long playerId) {
         List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
                 .findByPlayer_PlayerId(playerId);
-        List<LobbyBooking> lobbyBookings = List.of();
+        List<LobbyBooking> lobbyBookings = new ArrayList<>();
         for (LobbyBookingParticipate participation : participations) {
             lobbyBookings.add(participation.getLobbyBooking());
         }
@@ -63,7 +64,7 @@ public class LobbyBookingService {
     public List<LobbyBooking> getActiveLobbyBookingsByPlayerId(Long playerId) {
         List<LobbyBookingParticipate> participations = lobbyBookingParticipateRepository
                 .findByPlayer_PlayerId(playerId);
-        List<LobbyBooking> lobbyBookings = List.of();
+        List<LobbyBooking> lobbyBookings = new ArrayList<>();
         for (LobbyBookingParticipate participation : participations) {
             if (participation.getLobbyBooking().getBooking().getStatus() != BookingStatus.CANCELED
                     && participation.getLobbyBooking().getBooking().getStatus() != BookingStatus.FINISHED
@@ -121,11 +122,10 @@ public class LobbyBookingService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public LobbyBookingParticipate createLobbyBookingParticipate(Long lobbyBookingId, Short playersPaid) {
+    public LobbyBookingParticipate createLobbyBookingParticipate(Long lobbyBookingId, Short playersPaid, BigDecimal cost) {
 
         LobbyBooking lobbyBooking = lobbyBookingRepository.findById(lobbyBookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
-
         if (lobbyBooking.getPlayersToFind() < playersPaid) {
             throw new ConflictException(ErrorsString.NO_AVAILABLE_SPOTS);
         }
@@ -133,6 +133,11 @@ public class LobbyBookingService {
         lobbyBooking.setPlayersToFind((short) (lobbyBooking.getPlayersToFind() - playersPaid));
         lobbyBooking.setUpdatedAt(Instant.now());
         lobbyBookingRepository.save(lobbyBooking);
+
+        BigDecimal feePerPlayer = lobbyBooking.getFeePerPlayer();
+        if(cost.compareTo(feePerPlayer.multiply(BigDecimal.valueOf(playersPaid))) < 0) {
+            throw new ConflictException(ErrorsString.INVALID_CHECKOUT_AMOUNT);
+        }
 
         Optional<LobbyBookingParticipate> existingParticipation = lobbyBookingParticipateRepository
                 .findByPlayer_PlayerIdAndLobbyBooking_Booking_Id(AccountContext.getPlayerId(), lobbyBookingId);
@@ -144,7 +149,8 @@ public class LobbyBookingService {
             // Verificare se aggiunge un player in più
             participation.setPlayersPaid((short) (participation.getPlayersPaid() + playersPaid));
             participation.setUpdatedAt(Instant.now());
-
+            BigDecimal newCost = participation.getCost().add(cost);
+            participation.setCost(newCost);
             return lobbyBookingParticipateRepository.save(participation);
         }
 
@@ -152,8 +158,8 @@ public class LobbyBookingService {
         lobbyBookingParticipate.setLobbyBooking(lobbyBooking);
         lobbyBookingParticipate.setPlayer(AccountContext.getActivePlayer());
         lobbyBookingParticipate.setPlayersPaid(playersPaid);
-        lobbyBookingParticipateRepository.save(lobbyBookingParticipate);
-        return lobbyBookingParticipate;
+        lobbyBookingParticipate.setCost(cost);
+        return lobbyBookingParticipateRepository.save(lobbyBookingParticipate);
     }
 
     public Boolean isLobbyParticipationRefundedByBookingIdAndAccountId(Long bookingId, Long accountId) {
@@ -198,13 +204,15 @@ public class LobbyBookingService {
             throw new ForbiddenException(ErrorsString.YOU_MUST_OWN_THE_BOOKING);
         }
 
+        System.out.println("Creating lobby booking for player ID: " + lobbyBookingDTO.getOwnerPlayerId() + ", field ID: " + lobbyBookingDTO.getFieldId() + ", start time: " + lobbyBookingDTO.getStartTime() + ", finish time: " + lobbyBookingDTO.getFinishTime() + ", sport category: " + lobbyBookingDTO.getSportCategory() + ", total players: " + lobbyBookingDTO.getTotalPlayers());
+
         Booking booking = bookingUtilitiesService.createBooking(lobbyBookingDTO.getFieldId(),
                 lobbyBookingDTO.getStartTime(),
                 lobbyBookingDTO.getFinishTime(), lobbyBookingDTO.getSportCategory(), BookingType.LOBBY);
         LobbyBooking lobbyBooking = new LobbyBooking();
         lobbyBooking.setBooking(booking);
         lobbyBooking.setOwnerPlayer(AccountContext.getActivePlayer());
-        lobbyBooking.setPlayersToFind(lobbyBookingDTO.getPlayersToFind());
+        lobbyBooking.setPlayersToFind(lobbyBookingDTO.getTotalPlayers());
         lobbyBooking.setTotalPlayers(lobbyBookingDTO.getTotalPlayers());
 
         BigDecimal fee = booking.getField().calculatePrivateCost(booking.getStartTime(), booking.getFinishTime());
@@ -215,9 +223,11 @@ public class LobbyBookingService {
         LobbyBooking savedLobbyBooking = lobbyBookingRepository.save(lobbyBooking);
 
         Short playersToPay = (short) (lobbyBookingDTO.getTotalPlayers() - lobbyBookingDTO.getPlayersToFind());
+        BigDecimal totalCost = feePerPlayer.multiply(BigDecimal.valueOf(playersToPay)).setScale(2, RoundingMode.HALF_UP);
 
-        createLobbyBookingParticipate(lobbyBooking.getId(),
-                playersToPay);
+        createLobbyBookingParticipate(savedLobbyBooking.getId(),
+                playersToPay, totalCost);
+                        System.out.println("Created lobby booking participate for lobby ID: " + savedLobbyBooking.getId() + ", players paid: " + playersToPay);
         return savedLobbyBooking;
     }
 
@@ -232,8 +242,8 @@ public class LobbyBookingService {
         lobbyBookingDTO.setOwnerPlayerId(checkoutPayload.getOwnerPlayerId());
         lobbyBookingDTO.setPlayersToFind(checkoutPayload.getPlayersToFind());
         lobbyBookingDTO.setTotalPlayers(checkoutPayload.getTotalPlayers());
-
         LobbyBooking newLobby = createLobbyBooking(lobbyBookingDTO);
+        
         return newLobby.getId();
     }
 
