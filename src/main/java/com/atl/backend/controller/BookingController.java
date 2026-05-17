@@ -52,23 +52,26 @@ public class BookingController {
     }
 
     // Funziona così:
-    // /football/1/join-lobby?totalPlayers=4&selectedCityId=1&startTime=2024-07-01T10:00:00&finishTime=2024-07-01T12:00:00
-    @GetMapping("/join-lobby-screen/{sportCategory}")
+    // /join-lobby-screen/football/city/1?totalPlayers=4&selectedCityId=1&startTime=2024-07-01T10:00:00&finishTime=2024-07-01T12:00:00
+    @GetMapping("/join-lobby-screen/{sportCategory}/city/{selectedCityId}")
     public ResponseEntity<JoinLobbyResponse> getJoinLobbyScreen(@PathVariable String sportCategory,
-            @RequestParam(required = false) Short totalPlayers, @RequestParam(required = false) Long selectedCityId,
+            @PathVariable Long selectedCityId,
+            @RequestParam(required = false) Short totalPlayers,
             @RequestParam(required = false) String startTime, @RequestParam(required = false) String finishTime) {
         if (!sportService.isSupportedSportCategory(sportCategory)) {
             throw new BadRequestException(ErrorsString.UNSUPPORTED_SPORT_CATEGORY);
         }
-
+        System.out.println("Received parameters - Sport Category: " + sportCategory + ", Total Players: " + totalPlayers
+                + ", Selected City ID: " + selectedCityId + ", Start Time: " + startTime + ", Finish Time: "
+                + finishTime);
         Instant start = null;
         Instant end = null;
 
         try {
-            if (startTime != null) {
+            if (startTime != null && !startTime.isEmpty()) {
                 start = Instant.parse(startTime);
             }
-            if (finishTime != null) {
+            if (finishTime != null && !finishTime.isEmpty()) {
                 end = Instant.parse(finishTime);
             }
         } catch (Exception e) {
@@ -154,13 +157,15 @@ public class BookingController {
      * }
      */
     @DeleteMapping("/lobby-booking/{bookingId}/leave")
-    public ResponseEntity<Void> leaveLobbyBooking(@PathVariable Long bookingId, @RequestBody(required = false) BookingRefundRequest bookingRefundRequest) {
+    public ResponseEntity<Void> leaveLobbyBooking(@PathVariable Long bookingId,
+            @RequestBody(required = false) BookingRefundRequest bookingRefundRequest) {
         purchasesOrchestrator.leaveLobbyBooking(bookingId, bookingRefundRequest);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/private-booking/{bookingId}/refund")
-    public ResponseEntity<Void> refundPrivateBooking(@PathVariable Long bookingId, @RequestBody(required = false) BookingRefundRequest bookingRefundRequest) {
+    public ResponseEntity<Void> refundPrivateBooking(@PathVariable Long bookingId,
+            @RequestBody(required = false) BookingRefundRequest bookingRefundRequest) {
         purchasesOrchestrator.refundPrivateBooking(bookingId, bookingRefundRequest);
         return ResponseEntity.noContent().build();
     }

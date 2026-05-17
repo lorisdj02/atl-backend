@@ -28,6 +28,7 @@ import com.atl.backend.model.Transaction;
 import com.atl.backend.model.TransactionGroup;
 import com.atl.backend.model.enums.CheckoutStatus;
 import com.atl.backend.model.enums.CheckoutType;
+import com.atl.backend.model.enums.PurchaseStatus;
 import com.atl.backend.model.enums.TransactionPendingReason;
 import com.atl.backend.model.enums.TransactionSource;
 import com.atl.backend.model.enums.TransactionType;
@@ -268,8 +269,7 @@ public class PurchasesOrchestrator {
                 totalLobbyCost = lobbyBooking.getBooking().getField().calculatePrivateCost(
                         lobbyBooking.getBooking().getStartTime(), lobbyBooking.getBooking().getFinishTime());
 
-                playerCost = totalLobbyCost.divide(BigDecimal.valueOf(payload.getTotalPlayers()), 2,
-                        RoundingMode.HALF_UP);
+                playerCost = lobbyBooking.getFeePerPlayer();
 
                 if (payload.getAmount()
                         .compareTo(playerCost.multiply(BigDecimal.valueOf(payload.getPlayersPaid()))) < 0) {
@@ -318,6 +318,11 @@ public class PurchasesOrchestrator {
                         .orElseThrow(() -> new BadRequestException(ErrorsString.TEAM_NOT_FOUND)).getDescription());
                 break;
             case LOBBY_BOOKING_PARTICIPATE:
+                LobbyBooking lobbyBooking = lobbyBookingService.getLobbyBookingByBookingId(payload.getLobbyId())
+                        .orElseThrow(() -> new BadRequestException(ErrorsString.BOOKING_NOT_FOUND));
+                detail.setTitle(lobbyBooking.getBooking().getField().getName());
+                detail.setDescription(payload.getStartTime() + " - " + payload.getFinishTime());
+                break;
             case LOBBY_BOOKING_CREATE:
             case PRIVATE_BOOKING:
                 Field field = fieldService.getFieldById(payload.getFieldId())
@@ -331,7 +336,8 @@ public class PurchasesOrchestrator {
 
         String paymentIntentId = paymentIntentRequest != null ? paymentIntentRequest.getPaymentIntentId() : null;
         Purchase purchase = paymentService.payCheckout(session, useWallet, detail, paymentIntentId);
-        System.out.println("Payment processed for checkout session ID: " + sessionId + ", purchase ID: " + (purchase != null ? purchase.getId() : "null"));
+        System.out.println("Payment processed for checkout session ID: " + sessionId + ", purchase ID: "
+                + (purchase != null ? purchase.getId() : "null"));
         if (purchase == null) {
             return null;
         }
@@ -339,7 +345,8 @@ public class PurchasesOrchestrator {
         Account account = session.getAccount();
         Transaction organizationTransaction;
         try {
-            System.out.println("Processing purchase for checkout session ID: " + sessionId + ", amount: " + amountToPay + ", account ID: " + account.getId() + ", checkout type: " + session.getType());
+            System.out.println("Processing purchase for checkout session ID: " + sessionId + ", amount: " + amountToPay
+                    + ", account ID: " + account.getId() + ", checkout type: " + session.getType());
             switch (session.getType()) {
                 case TOURNAMENT_FEE:
                     tournamentParticipantService.decreseTournamentParticipation_ToPay(payload.getTournamentId(),
@@ -357,13 +364,14 @@ public class PurchasesOrchestrator {
                     System.out.println("Creating lobby booking from checkout payload for session ID: " + sessionId);
                     Long lobbyId = lobbyBookingService
                             .createLobbyBookingFromCheckoutPayload(payload);
-                            System.out.println("Created lobby booking with ID: " + lobbyId);
+                    System.out.println("Created lobby booking with ID: " + lobbyId);
                     purchase.setObjectId(lobbyId);
                     System.out.println("Created lobby booking with ID: " + lobbyId);
                     organizationTransaction = paymentService.createOrganizationTransactionForBooking(lobbyId);
                     System.out.println("Created organization transaction with ID: " + organizationTransaction.getId());
                     bookingService.updateOrganizationTransactionIdForBooking(lobbyId, organizationTransaction);
-                    System.out.println("Updated booking with organization transaction ID: " + organizationTransaction.getId());
+                    System.out.println(
+                            "Updated booking with organization transaction ID: " + organizationTransaction.getId());
                     break;
                 case PRIVATE_BOOKING:
                     Long privateBookingId = privateBookingService
@@ -376,8 +384,22 @@ public class PurchasesOrchestrator {
                     throw new BadRequestException(ErrorsString.INVALID_CHECKOUT_SESSION);
             }
         } catch (Exception e) {
-            paymentRefundService.refundPurchase(purchase.getId());
+            paymentService.cancelStripePayment(paymentIntentId, purchase.getTransactionGroup());
+            paymentService.updateCheckoutSessionStatus(sessionId, CheckoutStatus.FAILED);
             return null;
+        }
+
+        if (paymentIntentId != null && !paymentIntentId.isBlank()) {
+            boolean captured = paymentService.captureStripePayment(paymentIntentId, purchase.getTransactionGroup());
+            if (!captured) {
+                paymentService.updateCheckoutSessionStatus(sessionId, CheckoutStatus.FAILED);
+                purchase.setStatus(PurchaseStatus.CANCELED);
+                paymentService.savePurchase(purchase);
+                return null;
+            }
+        } else {
+            paymentService.updateTransactionGroupStatus(purchase.getTransactionGroup().getId(),
+                    TransactionStatus.CONFIRMED);
         }
         paymentService.updateCheckoutSessionStatus(sessionId, CheckoutStatus.SUCCEDED);
         return paymentService.savePurchase(purchase);

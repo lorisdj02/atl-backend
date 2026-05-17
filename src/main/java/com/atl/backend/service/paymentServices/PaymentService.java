@@ -65,6 +65,7 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.net.RequestOptions;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.EphemeralKeyCreateParams;
+import com.stripe.param.PaymentIntentCaptureParams;
 import com.stripe.param.PaymentIntentCreateParams;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -128,7 +129,8 @@ public class PaymentService {
         List<Transaction> transactionsToShow = new ArrayList<>();
         for (Transaction transaction : transactions) {
             if ((transaction.getSource() == TransactionSource.PRIZE_WALLET
-                    || transaction.getSource() == TransactionSource.PERSONAL_WALLET || transaction.getSource() == TransactionSource.STRIPE)
+                    || transaction.getSource() == TransactionSource.PERSONAL_WALLET
+                    || transaction.getSource() == TransactionSource.STRIPE)
                     && (transaction.getStatus() == TransactionStatus.CONFIRMED
                             || transaction.getStatus() == TransactionStatus.REFUNDED)) {
                 transactionsToShow.add(transaction);
@@ -333,6 +335,16 @@ public class PaymentService {
         return transactionRepository.save(transaction);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public Transaction createStripeTransaction(Account account, BigDecimal amount, BigDecimal netAmount, BigDecimal tax,
+            BigDecimal fee, TransactionGroup transactionGroup,
+            TransactionType type, String stripePaymentIntentId) {
+        Transaction transaction = createTransaction(account, amount, netAmount, tax, fee, transactionGroup, type,
+                TransactionSource.STRIPE, TransactionStatus.PENDING, null);
+        transaction.setStripePaymentIntentId(stripePaymentIntentId);
+        return transactionRepository.save(transaction);
+    }
+
     public TransactionGroup updateTransactionGroupStatus(Long transactionGroupId, TransactionStatus status) {
         TransactionGroup transactionGroup = transactionGroupRepository.findById(transactionGroupId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.TRANSACTION_GROUP_NOT_FOUND));
@@ -354,6 +366,7 @@ public class PaymentService {
     @Transactional(rollbackFor = Exception.class)
     public Purchase payCheckout(CheckoutSession session, Boolean useWallet, PurchaseDetail detail,
             String paymentIntentId) {
+                System.out.println("Starting payment process for checkout session ID: " + session.getId() + ", useWallet: " + useWallet);
         // TODO: verificare le fee e le tasse da applicare
         if (session.getStatus() != CheckoutStatus.PENDING) {
             throw new ConflictException(ErrorsString.CHECKOUT_SESSION_IS_NOT_PENDING);
@@ -377,8 +390,18 @@ public class PaymentService {
             throw new BadRequestException(ErrorsString.PAYMENT_AMOUNT_MUST_BE_POSITIVE);
         }
 
-        TransactionGroup transactionGroup = new TransactionGroup();
-        saveTransactionGroup(transactionGroup);
+        TransactionGroup transactionGroup = null;
+        if (paymentIntentId != null && !paymentIntentId.isBlank()) {
+            Optional<Transaction> existingStripeTransaction = transactionRepository
+                    .findByStripePaymentIntentId(paymentIntentId);
+            if (existingStripeTransaction.isPresent()) {
+                transactionGroup = existingStripeTransaction.get().getTransactionGroup();
+            }
+        }
+        if (transactionGroup == null) {
+            transactionGroup = new TransactionGroup();
+            saveTransactionGroup(transactionGroup);
+        }
         WalletBalance walletBalance = getWalletBalanceByAccountId(account.getId());
         if (useWallet && walletBalance.hasSomeBalance()) {
             // ORDINE DEI WALLET:
@@ -432,56 +455,51 @@ public class PaymentService {
             }
         }
         System.out.println("Importo da pagare dopo utilizzo wallet: " + amountToPay);
-        if (amountToPay.compareTo(BigDecimal.ZERO) > 0 && paymentIntentId != null) {
+        if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
+            if (paymentIntentId == null || paymentIntentId.isBlank()) {
+                tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
+                return null;
+            }
+
             Stripe.apiKey = stripeConfig.getSecretKey();
             try {
-                if (paymentIntentId == null || paymentIntentId.isBlank()) {
-                    transactionGroup.setStatus(TransactionStatus.FAILED);
-                    saveTransactionGroup(transactionGroup);
-                    return null;
-                }
                 RequestOptions requestOptions = RequestOptions.builder()
                         .setApiKey(stripeConfig.getSecretKey())
                         .build();
                 System.out.println("Recupero PaymentIntent da Stripe con ID: " + paymentIntentId);
                 PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId, requestOptions);
                 if (paymentIntent == null || paymentIntent.getStatus() == null) {
-                    updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.FAILED);
+                    tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
                     return null;
                 }
                 System.out.println("PaymentIntent status: " + paymentIntent.getStatus());
-                if (!"succeeded".equals(paymentIntent.getStatus())) {
-                    updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.FAILED);
+                if (!"requires_capture".equals(paymentIntent.getStatus())
+                        && !"succeeded".equals(paymentIntent.getStatus())) {
+                    tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
                     return null;
                 }
-                Long amountLong = paymentIntent.getAmountReceived() != null ? paymentIntent.getAmountReceived()
-                        : paymentIntent.getAmount();
-                BigDecimal paymentAmount = BigDecimal.valueOf(amountLong != null ? amountLong : 0L)
-                        .divide(BigDecimal.valueOf(100));
-                System.out.println("Importo pagato tramite Stripe: " + paymentAmount);
+                Long amountLong = paymentIntent.getAmount() != null ? paymentIntent.getAmount() : 0L;
+                BigDecimal paymentAmount = BigDecimal.valueOf(amountLong).divide(BigDecimal.valueOf(100));
+                System.out.println("Importo autorizzato tramite Stripe: " + paymentAmount);
                 if (paymentAmount.compareTo(amountToPay) < 0) {
-                    updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.FAILED);
+                    tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
                     return null;
                 }
-                createTransaction(account, paymentAmount, paymentAmount, BigDecimal.ZERO, BigDecimal.ZERO,
-                        transactionGroup, TransactionType.PAYMENT, TransactionSource.STRIPE,
-                        TransactionStatus.CONFIRMED, null);
-                System.out.println(
-                        "PaymentIntent " + paymentIntentId + " retrieved successfully. Amount: " + paymentAmount);
-                amountToPay = amountToPay.subtract(paymentAmount);
+
+                Optional<Transaction> existingStripeTransaction = transactionRepository
+                        .findByStripePaymentIntentId(paymentIntentId);
+                if (existingStripeTransaction.isEmpty()) {
+                    createStripeTransaction(account, paymentAmount, paymentAmount, BigDecimal.ZERO, BigDecimal.ZERO,
+                            transactionGroup, TransactionType.PAYMENT, paymentIntentId);
+                }
+                amountToPay = BigDecimal.ZERO;
             } catch (Exception e) {
                 System.out.println("Errore durante il recupero del PaymentIntent da Stripe: " + e.getMessage());
-                updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.FAILED);
+                tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
                 return null;
             }
         }
-
-        if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
-            updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.FAILED);
-            return null;
-        }
-
-        updateTransactionGroupStatus(transactionGroup.getId(), TransactionStatus.CONFIRMED);
+        System.out.println("Importo finale da pagare dopo verifica Stripe: " + amountToPay);
 
         Purchase purchase = new Purchase();
         purchase.setAccount(account);
@@ -489,9 +507,7 @@ public class PaymentService {
         purchase.setDetail(detail);
         purchase.setTransactionGroup(transactionGroup);
         purchase.setType(session.getType());
-        purchase.setObjectId(-1L); // mocked, verrà aggiornato successivamente dagli orchestrator specifici in base
-                                   // al tipo di acquisto
-                                   System.out.println("Creazione acquisto con importo: " + originalAmountToPay + ", tipo: " + session.getType());
+        purchase.setObjectId(-1L);
         return savePurchase(purchase);
     }
 
@@ -553,7 +569,8 @@ public class PaymentService {
     public Transaction createOrganizationTransactionForBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(ErrorsString.BOOKING_NOT_FOUND));
-                System.out.println("Creating organization transaction for booking ID: " + bookingId + ", booking status: " + booking.getStatus());
+        System.out.println("Creating organization transaction for booking ID: " + bookingId + ", booking status: "
+                + booking.getStatus());
         if (booking.getStatus() == BookingStatus.BOOKED) {
             Field field = booking.getField();
             Account organizationAccount = field.getOrganization().getAccount();
@@ -570,7 +587,7 @@ public class PaymentService {
             return createTransaction(organizationAccount, amount, amount, BigDecimal.ZERO, BigDecimal.ZERO,
                     transactionGroup, TransactionType.FEE, TransactionSource.PERSONAL_WALLET,
                     TransactionStatus.PENDING, TransactionPendingReason.BOOKING_NOT_STARTED);
-        }else{
+        } else {
             throw new ConflictException(ErrorsString.BOOKING_NOT_IN_BOOKED_STATUS);
         }
     }
@@ -586,6 +603,7 @@ public class PaymentService {
         return accountIds;
     }
 
+    @Transactional
     public StripePaymentSheetData createPaymentIntent(Long sessionId, Boolean useWallet) {
         Account account = AccountContext.getActiveAccount();
         CheckoutSession session = checkoutSessionRepository.findById(sessionId)
@@ -638,15 +656,21 @@ public class PaymentService {
                     .build();
             EphemeralKey ephemeralKey = EphemeralKey.create(ephemeralKeyParams);
 
-            PaymentIntentCreateParams intentParams = PaymentIntentCreateParams.builder()
+                PaymentIntentCreateParams intentParams = PaymentIntentCreateParams.builder()
                     .setAmount(toStripeAmount(amount))
                     .setCurrency("eur")
                     .setCustomer(customerId)
+                    .setCaptureMethod(PaymentIntentCreateParams.CaptureMethod.MANUAL)
                     .setAutomaticPaymentMethods(
                             PaymentIntentCreateParams.AutomaticPaymentMethods.builder().setEnabled(true).build())
                     .putMetadata("checkoutSessionId", String.valueOf(sessionId))
                     .build();
             PaymentIntent paymentIntent = PaymentIntent.create(intentParams);
+
+                TransactionGroup transactionGroup = new TransactionGroup();
+                saveTransactionGroup(transactionGroup);
+                createStripeTransaction(account, amount, amount, BigDecimal.ZERO, BigDecimal.ZERO, transactionGroup,
+                    TransactionType.PAYMENT, paymentIntent.getId());
 
             StripePaymentSheetData data = new StripePaymentSheetData();
             data.setPaymentIntentId(paymentIntent.getId());
@@ -657,6 +681,81 @@ public class PaymentService {
             return data;
         } catch (StripeException e) {
             throw new PaymentRequiredException(ErrorsString.PAYMENT_FAILED);
+        }
+    }
+
+    public boolean captureStripePayment(String paymentIntentId, TransactionGroup transactionGroup) {
+        if (paymentIntentId == null || paymentIntentId.isBlank()) {
+            tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
+            return false;
+        }
+
+        Stripe.apiKey = stripeConfig.getSecretKey();
+        try {
+            RequestOptions requestOptions = RequestOptions.builder()
+                    .setApiKey(stripeConfig.getSecretKey())
+                    .build();
+            PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId, requestOptions);
+            if (paymentIntent == null || paymentIntent.getStatus() == null) {
+                tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
+                return false;
+            }
+
+            if ("succeeded".equals(paymentIntent.getStatus())) {
+                tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.CONFIRMED);
+                return true;
+            }
+
+            if (!"requires_capture".equals(paymentIntent.getStatus())) {
+                tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
+                return false;
+            }
+
+            PaymentIntentCaptureParams captureParams = PaymentIntentCaptureParams.builder().build();
+            PaymentIntent captured = paymentIntent.capture(captureParams, requestOptions);
+            if (captured == null || !"succeeded".equals(captured.getStatus())) {
+                tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
+                return false;
+            }
+
+            tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.CONFIRMED);
+            return true;
+        } catch (Exception e) {
+            tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
+            return false;
+        }
+    }
+
+    public void cancelStripePayment(String paymentIntentId, TransactionGroup transactionGroup) {
+        if (paymentIntentId == null || paymentIntentId.isBlank()) {
+            tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
+            return;
+        }
+
+        Stripe.apiKey = stripeConfig.getSecretKey();
+        try {
+            RequestOptions requestOptions = RequestOptions.builder()
+                    .setApiKey(stripeConfig.getSecretKey())
+                    .build();
+            PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId, requestOptions);
+            if (paymentIntent != null && "requires_capture".equals(paymentIntent.getStatus())) {
+                paymentIntent.cancel(requestOptions);
+            }
+        } catch (Exception e) {
+            System.out.println("Errore durante l'annullamento del PaymentIntent: " + e.getMessage());
+        }
+
+        tryUpdateTransactionGroupStatus(transactionGroup, TransactionStatus.FAILED);
+    }
+
+    private void tryUpdateTransactionGroupStatus(TransactionGroup transactionGroup, TransactionStatus status) {
+        if (transactionGroup == null) {
+            return;
+        }
+        try {
+            updateTransactionGroupStatus(transactionGroup.getId(), status);
+        } catch (Exception e) {
+            System.out.println("Impossibile aggiornare lo stato della transaction group: " + e.getMessage());
         }
     }
 
