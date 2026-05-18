@@ -1,6 +1,7 @@
 package com.atl.backend.dto;
 
 import com.atl.backend.model.Coordinator;
+import com.atl.backend.util.PublicUrlUtil;
 
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
@@ -51,7 +52,7 @@ public class CoordinatorDTO {
         dto.setSurname(coordinator.getAccount().getSurname());
         dto.setAccountId(coordinator.getAccount().getId());
         dto.setUsername(coordinator.getAccount().getUsername());
-        dto.setImageUrl(coordinator.getAccount().getImageUrl());
+        dto.setImageUrl(PublicUrlUtil.toPublicUrl(coordinator.getAccount().getImageUrl()));
         dto.setPreferredCityId(coordinator.getAccount().getPreferredCity() != null
                 ? coordinator.getAccount().getPreferredCity().getId()
                 : null);

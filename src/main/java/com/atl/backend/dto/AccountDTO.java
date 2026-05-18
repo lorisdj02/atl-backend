@@ -1,6 +1,7 @@
 package com.atl.backend.dto;
 
 import com.atl.backend.model.Account;
+import com.atl.backend.util.PublicUrlUtil;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -73,7 +74,7 @@ public class AccountDTO {
         dto.setSurname(account.getSurname());
         dto.setEmail(account.getEmail());
         dto.setPhone(account.getPhone());
-        dto.setImageUrl(account.getImageUrl());
+        dto.setImageUrl(PublicUrlUtil.toPublicUrl(account.getImageUrl()));
         dto.setRole(account.getRole().toString());
         dto.setBirthdate(account.getBirthdate() != null ? account.getBirthdate().toString() : null);
         dto.setIsVip(account.getIsVip());

@@ -1,6 +1,7 @@
 package com.atl.backend.dto;
 
 import com.atl.backend.model.Player;
+import com.atl.backend.util.PublicUrlUtil;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -64,7 +65,7 @@ public class PlayerDTO {
         dto.setUsername(player.getAccount().getUsername());
         dto.setName(player.getAccount().getName());
         dto.setSurname(player.getAccount().getSurname());
-        dto.setImageUrl(player.getAccount().getImageUrl());
+        dto.setImageUrl(PublicUrlUtil.toPublicUrl(player.getAccount().getImageUrl()));
         dto.setIsVip(player.getAccount().getIsVip());
         dto.setVipType(player.getAccount().getVipType() != null ? player.getAccount().getVipType().toString() : null);
         dto.setVipStart(

@@ -29,10 +29,12 @@ import com.atl.backend.response.HasNotificationsResponse;
 import com.atl.backend.response.LoginResponse;
 import com.atl.backend.service.matchServices.MatchRefereeService;
 import com.atl.backend.service.paymentServices.PaymentService;
+import com.atl.backend.service.storage.ImageStorageService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.Instant;
@@ -66,6 +68,8 @@ public class AccountService {
     private OrganizationService organizationService;
     @Autowired
     private WalletRepository walletRepository;
+    @Autowired
+    private ImageStorageService imageStorageService;
 
     public Optional<Account> getInviterAccount(String inviteCode) {
         // Adesso invite code = username, quindi cerco l'account con quel username
@@ -331,15 +335,15 @@ public class AccountService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Account updateAccountInfos(UpdateAccountInfosRequest updateAccountInfosRequest) {
+    public Account updateAccountInfos(UpdateAccountInfosRequest updateAccountInfosRequest, MultipartFile file) {
         Account account = AccountContext.getActiveAccount();
-        if (updateAccountInfosRequest.getUsername() != null) {
+        if (updateAccountInfosRequest.getUsername() != null && !updateAccountInfosRequest.getUsername().isBlank()) {
             account.setUsername(updateAccountInfosRequest.getUsername());
         }
-        if (updateAccountInfosRequest.getPhone() != null) {
+        if (updateAccountInfosRequest.getPhone() != null && !updateAccountInfosRequest.getPhone().isBlank()) {
             account.setPhone(updateAccountInfosRequest.getPhone());
         }
-        if (updateAccountInfosRequest.getBirthdate() != null) {
+        if (updateAccountInfosRequest.getBirthdate() != null && !updateAccountInfosRequest.getBirthdate().isBlank()) {
             LocalDate birthdate;
             try {
                 birthdate = LocalDate.parse(updateAccountInfosRequest.getBirthdate());
@@ -348,15 +352,19 @@ public class AccountService {
             }
             account.setBirthdate(birthdate);
         }
-        if (updateAccountInfosRequest.getImageUrl() != null) {
-            account.setImageUrl(updateAccountInfosRequest.getImageUrl());
+        System.out.println("Received file in updateAccountInfos: " + (file != null ? file.getOriginalFilename() : "null"));
+        if (file != null && !file.isEmpty()) {
+            String imageUrl = imageStorageService.storeProfilePicture(account, file);
+            account.setImageUrl(imageUrl);
         }
-        if(updateAccountInfosRequest.getPreferredCityId() != null){
+
+        if (updateAccountInfosRequest.getPreferredCityId() != null) {
             City preferredCity = cityRepository.findById(updateAccountInfosRequest.getPreferredCityId())
                     .orElseThrow(() -> new NotFoundException(ErrorsString.CITY_NOT_FOUND));
             account.setPreferredCity(preferredCity);
         }
 
+        System.out.println("Saving account with ID: " + account.getId());
         accountRepository.save(account);
 
         return account;
@@ -387,6 +395,16 @@ public class AccountService {
         }
 
         softDeleteAccount(accountId);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public String uploadProfilePicture(MultipartFile file) {
+        Account account = getAccountById(AccountContext.getAccountId())
+                .orElseThrow(() -> new NotFoundException(ErrorsString.ACCOUNT_NOT_FOUND));
+        String imageUrl = imageStorageService.storeProfilePicture(account, file);
+        account.setImageUrl(imageUrl);
+        accountRepository.save(account);
+        return imageUrl;
     }
 
 }
