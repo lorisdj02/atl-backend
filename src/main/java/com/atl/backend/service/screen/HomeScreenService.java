@@ -199,10 +199,13 @@ public class HomeScreenService {
                 Map<Long, Short> minutesRoundPerTournament = new HashMap<>();
                 Map<Long, Short> minutesPausePerTournament = new HashMap<>();
 
-                Long sixMonthsAgoEpoch = Instant.now().minusSeconds(6 * 30 * 24 * 3600).getEpochSecond();
+                //Long sixMonthsAgoEpoch = Instant.now().minusSeconds(6 * 30 * 24 * 3600).getEpochSecond();
 
-                activeTournaments = tournamentService.getRecentTournamentsByCoordinatorIdAndSportCategory(coordinatorId,
-                                sportCategory, Instant.now().minusSeconds(sixMonthsAgoEpoch)); // Last 6 months tournaments
+                //activeTournaments = tournamentService.getRecentTournamentsByCoordinatorIdAndSportCategory(coordinatorId,
+                //                sportCategory, Instant.now().minusSeconds(sixMonthsAgoEpoch)); // Last 6 months tournaments
+                activeTournaments = tournamentService.getActiveTournamentsByCoordinatorIdAndSportCategory(coordinatorId,
+                                sportCategory); // Active tournaments
+                System.out.println("Active Tournaments: " + activeTournaments.size());
 
                 for (Tournament tournament : activeTournaments) {
                         switch (sportCategory) {
